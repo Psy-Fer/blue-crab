@@ -16,14 +16,14 @@ A quick overview of files formats. Mostly my opinion.
 
 Extensions: `.fast5`
 
-The first file format released for nanopore signal data. Based on the HDF5 format, the fast5 scheme contains various metadata along with the signal data. Most metadata is repeated for each read. HDF5 has a major limitation of not being 'thread-safe' and so cannot use multi-threading. Using multiprocessing is not an efficient workaround either. Fast5 will soon be phased out moving to pod5
+The first file format released for nanopore signal data. Based on the HDF5 format, the fast5 scheme contains various metadata along with the signal data. Most metadata is repeated for each read. HDF5 has a major limitation of not being 'thread-efficient' and so cannot use multi-threading. Using multiprocessing is not an efficient workaround either. Fast5 will soon be phased out moving to pod5
 
 
 #### slow5:
 
 Extensions: `.slow5`-(ASCII) `.blow5`-(binary) `blow5.idx`-(index) (like sam/bam/bai)
 
-Slow5 is a community developed file format and scheme, created from scratch, specifically for nanopore signal data and associated metadata. It is 'thread-safe', is faster the read than fast5, and has a smaller file size when using similar compression methods. It is specifically designed to reduce memory footprint, and work efficiently with both SSD/NVME and HDD disks and how they access data. This ensures workloads scale in a performant manner, unlike both fast5 and pod5.
+Slow5 is a community developed file format and scheme, created from scratch, specifically for nanopore signal data and associated metadata. It is 'thread-efficient', is faster the read than fast5, and has a smaller file size when using similar compression methods. It is specifically designed to reduce memory footprint, and work efficiently with both SSD/NVME and HDD disks and how they access data. This ensures workloads scale in a performant manner, unlike both fast5 and pod5.
 
 
 #### pod5:
