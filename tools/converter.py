@@ -3,8 +3,6 @@
 import argparse
 import sys
 from pathlib import Path
-import multiprocessing as mp
-from queue import Empty
 import numpy as np
 import pyslow5
 import pod5_format
@@ -21,7 +19,6 @@ def kill_program():
     sys.exit(1)
 
 
-
 def run_info_to_flat_dic(run_info):
     info_dic = {}
     for name, value in run_info._asdict().items():
@@ -33,39 +30,13 @@ def run_info_to_flat_dic(run_info):
     return info_dic
 
 
-# def get_all_slow5(input):
-#     '''
-#     yield slow5 reads using input path
-#     '''
-#     s5 = pyslow5.Open(input, 'r')
-#     for read in s5.seq_reads_multi(threads=threads, batch_size=1000, aux='all'):
-#         # do stuff
-#         slow5_read = {
-#             "read_id": read.read_id,
-#             "read_group": read.read_group,
-#             "digitisation": read.digitisation,
-#             "offset": read.offset,
-#             "range": read.range,
-#             "sampling_rate": read.sampling_rate,
-#             "len_raw_signal": read.len_raw_signal,
-#             "signal": read.signal,
-#             "channel_number": read.channel_number,
-#             "median_before": read.median_before,
-#             "read_number": read.read_number,
-#             "start_mux": read.start_mux,
-#             "start_time": read.start_time,
-#             }
-#         print("slow5_read:")
-#         yield slow5_read
-
-
-
-def get_all_pod5(input):
+def get_all_pod5(batch_id, filename):
     '''
     yield slow5 reads using input path
     '''
-    file = pod5_format.open_combined_file(input)
-    for read in file.reads():
+    file = pod5_format.open_combined_file(filename)
+    batch = file.get_batch(batch_id)
+    for read in batch.reads():
         # return with pod5 format names, do conversion in pipeline
         sample_count = read.sample_count
         byte_count = read.byte_count
@@ -99,10 +70,8 @@ def pod52slow5(args):
     pod5_file = args.input
     slow5_file = args.output
     # open slow5 file for writing
-    print(f"INFO: Opening slow5 file: {slow5_file}")
-    s5 = pyslow5.Open(slow5_file, 'w', DEBUG=1)
-    print(f"INFO: Opened slow5 file: {slow5_file}")
-    # header = s5.get_empty_header()
+    print("INFO: Opening slow5 file: {}".format(slow5_file))
+    s5 = pyslow5.Open(slow5_file, 'w')
     header = {}
     sampling_rate = 0
     scale_hack = False
@@ -110,71 +79,79 @@ def pod52slow5(args):
     # get header info in first read
     # Get pod5 reads
     count = 0
-    for read, info in get_all_pod5(pod5_file):
-        # convert pod5 read into slow5 read structure
-        if count == 0:
-            # write header
-            for k in list(info.keys()):
-                # if k not in header:
-                #     print(f"WARNING: {k} not found in default slow5 header, adding it")
-                header[k] = info[k]
-                if k == "sample_frequency":
-                    sampling_rate = float(info[k])
-                elif k == "adc_max":
-                    adc_max = int(info[k])
-                elif k == "adc_min":
-                    adc_min = int(info[k])
-            print("INFO: Writing header...")
-            ret = s5.write_header(header) # limitation: only 1 read group for now
-            if ret != 0:
-                print("ERROR: Header not written, see stderr output")
-                kill_program()
-            print("INFO: Header written")
+    print("INFO: Reading pod5 file: {}".format(pod5_file))
+    file = pod5_format.open_combined_file(pod5_file)
+    batches = list(range(file.batch_count))
+    total_batchs = file.batch_count
+    b_count = 1
+    for batch in batches:
+        print("INFO: Processing batch {}/{}".format(b_count, total_batchs))
+        for read, info in get_all_pod5(batch, pod5_file):
+            # convert pod5 read into slow5 read structure
+            if count == 0:
+                # write header
+                for k in list(info.keys()):
+                    # if k not in header:
+                    #     print(f"WARNING: {k} not found in default slow5 header, adding it")
+                    header[k] = info[k]
+                    if k == "sample_frequency":
+                        sampling_rate = float(info[k])
+                    elif k == "adc_max":
+                        adc_max = int(info[k])
+                    elif k == "adc_min":
+                        adc_min = int(info[k])
+                print("INFO: Writing header...")
+                ret = s5.write_header(header) # limitation: only 1 read group for now
+                if ret != 0:
+                    print("ERROR: Slow5 header not written, see stderr output")
+                    kill_program()
+                print("INFO: Slow5 header written")
 
-            # TODO: this is still in flux in pod5, so default to hack for now
-            # check for adc_max/min to calculate digitisation
-            # digitisation = adc_max - adc_min
-            # if can't get digitisation, make range = scale, and digitisation=1
-            # because digitisation is the denominator in scale=range/digitisation
-            # scale = range if digitisation = 1
-            if digitisation == 0:
-                digitisation = 1
-                scale_hack = True
+                # TODO: this is still in flux in pod5, so default to hack for now
+                # check for adc_max/min to calculate digitisation
+                # digitisation = adc_max - adc_min
+                # if can't get digitisation, make range = scale, and digitisation=1
+                # because digitisation is the denominator in scale=range/digitisation
+                # scale = range if digitisation = 1
+                if digitisation == 0:
+                    digitisation = 1
+                    scale_hack = True
 
-        if count > 0:
-            for k in list(info.keys()):
-                if k not in prev_info:
-                    print(f"ERROR: {k} not in previous run_info")
-                if info[k] != prev_info[k]:
-                    print(f"ERROR: {k} does not match prev value: 0: {prev_info[k]} 1: {info[k]}")
+            if count > 0:
+                for k in list(info.keys()):
+                    if k not in prev_info:
+                        print("ERROR: {} not in previous run_info".format(k))
+                    if info[k] != prev_info[k]:
+                        print("ERROR: {} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
 
-        # do slow5 stuff
-        record, aux = s5.get_empty_record(aux=True)
-        # convert pod5 -> slow5
-        record['read_id'] = str(read["read_id"])
-        record['read_group'] = 0
-        record['offset'] = float(read["offset"])
-        record['sampling_rate'] = sampling_rate
-        record['len_raw_signal'] = int(read["sample_count"])
-        record['signal'] = np.array(read["signal"], np.int16)
-        record['digitisation'] = float(digitisation)
-        if scale_hack:
-            record['range'] = float(read['scale'])
-        # else:
-        #     record['range'] = read['range']
-        # aux fields
-        aux["channel_number"] = str(read["channel"])
-        aux["median_before"] = float(read["median_before"])
-        aux["read_number"] = int(read["read_number"])
-        aux["start_mux"] = int(read["well"])
-        aux["start_time"] = int(read["start_sample"])
-        # end reason will be lost for now...it's complicated
-        # aux["end_reason"] = str(read["end_reason"])
+            # do slow5 stuff
+            record, aux = s5.get_empty_record(aux=True)
+            # convert pod5 -> slow5
+            record['read_id'] = str(read["read_id"])
+            record['read_group'] = 0
+            record['offset'] = float(read["offset"])
+            record['sampling_rate'] = sampling_rate
+            record['len_raw_signal'] = int(read["sample_count"])
+            record['signal'] = np.array(read["signal"], np.int16)
+            record['digitisation'] = float(digitisation)
+            if scale_hack:
+                record['range'] = float(read['scale'])
+            # else:
+            #     record['range'] = read['range']
+            # aux fields
+            aux["channel_number"] = str(read["channel"])
+            aux["median_before"] = float(read["median_before"])
+            aux["read_number"] = int(read["read_number"])
+            aux["start_mux"] = int(read["well"])
+            aux["start_time"] = int(read["start_sample"])
+            # end reason will be lost for now...it's complicated
+            # aux["end_reason"] = str(read["end_reason"])
 
-        # write slow5 read
-        s5.write_record(record, aux)
-        count += 1
-        prev_info = info
+            # write slow5 read
+            s5.write_record(record, aux)
+            count += 1
+            prev_info = info
+        b_count += 1
     # close slow5 file
     s5.close()
 
@@ -190,6 +167,7 @@ def main():
     epilog="Citation:...",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    # Create submodules
     subcommand = parser.add_subparsers(help='subcommand --help for help messages', dest="command")
 
     # POD5 to SLOW5
@@ -199,10 +177,10 @@ def main():
     p2s.add_argument("output")
 
     # SLOW5 to POD5
-    # s2p = subcommand.add_parser('s2p', help='SLOW5 -> POD5',
-    #                              formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # s2p.add_argument("input")
-    # s2p.add_argument("output", type=Path)
+    s2p = subcommand.add_parser('s2p', help='SLOW5 -> POD5 (TODO: not complete yet))',
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    s2p.add_argument("input")
+    s2p.add_argument("output", type=Path)
 
     args = parser.parse_args()
 
@@ -213,8 +191,11 @@ def main():
 
     if args.command == "p2s":
         pod52slow5(args)
-    # elif args.command == "s2p":
-    #     slow52pod5(args)
+        print("INFO: pod5 -> slow5 complete")
+    elif args.command == "s2p":
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+        # slow52pod5(args)
     else:
         parser.print_help(sys.stderr)
         sys.exit(1)
