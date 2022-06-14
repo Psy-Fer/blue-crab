@@ -85,7 +85,7 @@ slow5tools f2s -c zstd -s svb-zd -d 1_slow5/ 1_fast5/PAF25452_pass_bfdfd1d8_11.f
 convert `.fast5` file to pod5 file. Default compression is also using svb-zd on the signal
 
 ```bash
-pod5-convert-fast5 --active-readers 3 1_fast5/ 1_pod5/
+pod5-convert-from-fast5 --active-readers 4 1_fast5/ 1_pod5/
 ```
 
 
@@ -110,7 +110,7 @@ You will find the header will also have some differences, as we dump the metadat
 
 One notable difference, is the absence of `end_reason` in our pod5->slow5 file. This is on the list to fix. This field currently isn't used in anything of note we have seen yet, and its history is complicated. It has changed many times in the fast5 files, which makes it difficult to make non breaking compatible code.
 
-One last difference, is in our pod5->blow5 file output, you will note `digitisation=1` and `range` is a float < 1. That is because ONT removed range and digitisation from pod5. While digitisation can be calculated from `adc_max - adc_min`, when converting fast5 files, they are both 0. The reason these are needed are for conversion of the raw signal values into pA values using the following array maths:
+<!-- One last difference, is in our pod5->blow5 file output, you will note `digitisation=1` and `range` is a float < 1. That is because ONT removed range and digitisation from pod5. While digitisation can be calculated from `adc_max - adc_min`, when converting fast5 files, they are both 0. The reason these are needed are for conversion of the raw signal values into pA values using the following array maths:
 
 ```
 scale = range / digitisation
@@ -132,7 +132,7 @@ scale = range / digitisation
 
 So effectively, scale = range, and they are both of the same double/float type.
 
-This way, we don't break other tools while ONT decide how many tools they want to break in the process of finalising the pod5 format.
+This way, we don't break other tools while ONT decide how many tools they want to break in the process of finalising the pod5 format. -->
 
 
 
