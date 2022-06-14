@@ -54,6 +54,8 @@ def get_all_pod5(batch_id, filename):
             "median_before": read.median_before,
             "sample_count": read.sample_count,
             "byte_count": read.byte_count,
+            "digitisation": read.calibration_digitisation,
+            "range": read.calibration_range,
             "signal_compression_ratio": f"{read.byte_count / float(read.sample_count*2):.3f}",
             "scale": read.calibration.scale,
             "offset": read.calibration.offset,
@@ -96,26 +98,12 @@ def pod52slow5(args):
                     header[k] = info[k]
                     if k == "sample_frequency":
                         sampling_rate = float(info[k])
-                    elif k == "adc_max":
-                        adc_max = int(info[k])
-                    elif k == "adc_min":
-                        adc_min = int(info[k])
                 print("INFO: Writing header...")
                 ret = s5.write_header(header) # limitation: only 1 read group for now
                 if ret != 0:
                     print("ERROR: Slow5 header not written, see stderr output")
                     kill_program()
                 print("INFO: Slow5 header written")
-
-                # TODO: this is still in flux in pod5, so default to hack for now
-                # check for adc_max/min to calculate digitisation
-                # digitisation = adc_max - adc_min
-                # if can't get digitisation, make range = scale, and digitisation=1
-                # because digitisation is the denominator in scale=range/digitisation
-                # scale = range if digitisation = 1
-                if digitisation == 0:
-                    digitisation = 1
-                    scale_hack = True
 
             if count > 0:
                 for k in list(info.keys()):
@@ -133,11 +121,8 @@ def pod52slow5(args):
             record['sampling_rate'] = sampling_rate
             record['len_raw_signal'] = int(read["sample_count"])
             record['signal'] = np.array(read["signal"], np.int16)
-            record['digitisation'] = float(digitisation)
-            if scale_hack:
-                record['range'] = float(read['scale'])
-            # else:
-            #     record['range'] = read['range']
+            record['digitisation'] = float(read["digitisation"])
+            record['range'] = float(read["range"])
             # aux fields
             aux["channel_number"] = str(read["channel"])
             aux["median_before"] = float(read["median_before"])
