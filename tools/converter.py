@@ -146,6 +146,8 @@ def pod52slow5(args):
 
 def main():
 
+    VERSION = "v0.0.2"
+
     parser = MyParser(description="Converter - SLOW5 <-> POD5 converter",
     epilog="Citation:...",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -164,6 +166,9 @@ def main():
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     s2p.add_argument("input")
     s2p.add_argument("output", type=Path)
+
+    parser.add_argument("-v", "--version", action='version', version="SLOW5 <-> POD5 converter version: {}".format(VERSION),
+                        help="Prints version")
 
     args = parser.parse_args()
 
