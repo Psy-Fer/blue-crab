@@ -76,8 +76,6 @@ def pod52slow5(args):
     s5 = pyslow5.Open(slow5_file, 'w')
     header = {}
     sampling_rate = 0
-    scale_hack = False
-    digitisation = 0
     # get header info in first read
     # Get pod5 reads
     count = 0
