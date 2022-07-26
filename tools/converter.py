@@ -21,7 +21,7 @@ def kill_program():
 
 def run_info_to_flat_dic(run_info):
     info_dic = {}
-    for name, value in run_info._asdict().items():
+    for name, value in run_info.__dict__.items():
         if isinstance(value, list):
             for k, v in value:
                 info_dic[k] = v
@@ -34,7 +34,7 @@ def get_all_pod5(batch_id, filename):
     '''
     yield slow5 reads using input path
     '''
-    file = pod5_format.open_combined_file(filename)
+    file = pod5_format.CombinedReader(filename)
     batch = file.get_batch(batch_id)
     for read in batch.reads():
         # return with pod5 format names, do conversion in pipeline
@@ -80,7 +80,7 @@ def pod52slow5(args):
     # Get pod5 reads
     count = 0
     print("INFO: Reading pod5 file: {}".format(pod5_file))
-    file = pod5_format.open_combined_file(pod5_file)
+    file = pod5_format.CombinedReader(pod5_file)
     batches = list(range(file.batch_count))
     total_batchs = file.batch_count
     b_count = 1
