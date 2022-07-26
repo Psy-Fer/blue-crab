@@ -146,7 +146,7 @@ def pod52slow5(args):
 
 def main():
 
-    VERSION = "v0.0.2"
+    VERSION = "v0.0.3"
 
     parser = MyParser(description="Converter - SLOW5 <-> POD5 converter",
     epilog="Citation:...",
