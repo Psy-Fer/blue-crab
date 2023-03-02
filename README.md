@@ -1,6 +1,14 @@
 # project_blue_crab
 This is a conversion tool to convert from ONT's new file format pod5 to slow5/blow5.
 
+### Build
+
+```
+conda create -n p2s python=3.10 -y
+conda activate p2s
+pip install -r requirements.txt
+```
+
 ### Usage
 POD5 is still in development and subject to change.
 A backward compatible pod5 reading API cannot be expected yet. 
