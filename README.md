@@ -1,7 +1,17 @@
 # project_blue_crab
-crab go snap snap
+This is a conversion tool to convert from ONT's new file format pod5 to slow5/blow5.
 
 ### Usage
+POD5 is still in development and subject to change.
+A backward compatible pod5 reading API cannot be expected yet. 
+Hence, it is difficult to provide a stable conversion tool at the moment.
+
+To convert pod5 files with version `0.1.5` and read table version `ReadTableVersion.V3` use the following command.
+```
+python3 ./tools/converter_for_v015.py p2s my_pod5_file.pod5 my_slow5_file.slow5
+```
+
+The following command may work with pod5 files with version older than `0.1.5`
 ```
 python3 ./tools/converter.py p2s my_pod5_file.pod5 my_slow5_file.slow5
 ```
