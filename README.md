@@ -24,6 +24,11 @@ The following command may work with pod5 files with version older than `0.1.5`
 python3 ./tools/converter.py p2s my_pod5_file.pod5 my_slow5_file.slow5
 ```
 
+To go back from slow5 to pod5 use the following script.
+```
+./scripts/s2p_conversion_beta.sh input.slow5 output.pod5
+```
+
 ### Data conversion walkthrough
 
 Here I will attempt to direct the user to become familiar with conversion tools as well as understand the various nanopore signal formats.
