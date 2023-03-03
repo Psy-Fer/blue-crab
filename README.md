@@ -10,7 +10,8 @@ pip install -r requirements.txt
 ```
 
 ### Usage
-POD5 is still in development and subject to change.
+
+POD5 is still in development and subject to change, and has had a number of backward compatibility changes so far.
 A backward compatible pod5 reading API cannot be expected yet. 
 Hence, it is difficult to provide a stable conversion tool at the moment.
 
@@ -24,7 +25,7 @@ The following command may work with pod5 files with version older than `0.1.5`
 python3 ./tools/converter.py p2s my_pod5_file.pod5 my_slow5_file.slow5
 ```
 
-To go back from slow5 to pod5 use the following script.
+To go back from slow5 to pod5 use the following script. This will use fast5 as an intermediary format.
 ```
 ./scripts/s2p_conversion_alpha.sh input.slow5 output.pod5
 ```
@@ -46,7 +47,7 @@ The first file format released for nanopore signal data. Based on the HDF5 forma
 
 Extensions: `.slow5`-(ASCII) `.blow5`-(binary) `blow5.idx`-(index) (like sam/bam/bai)
 
-Slow5 is a community developed file format and scheme, created from scratch, specifically for nanopore signal data and associated metadata. It is 'thread-efficient', is faster the read than fast5, and has a smaller file size when using similar compression methods. It is specifically designed to reduce memory footprint, and work efficiently with both SSD/NVME and HDD disks and how they access data. This ensures workloads scale in a performant manner, unlike both fast5 and pod5.
+Slow5 is a community developed file format and scheme, created from scratch, specifically for nanopore signal data and associated metadata. It is 'thread-efficient', is faster to read than fast5, and has a smaller file size when using similar compression methods. It is specifically designed to reduce the memory footprint, and work efficiently with both SSD/NVME and HDD disks and how they access data. This ensures workloads scale in a performant manner, unlike both fast5 and pod5.
 
 
 #### pod5:
@@ -131,7 +132,7 @@ are in a different order. This is within the slow5 spec.
 
 You will find the header will also have some differences, as we dump the metadata from pod5 into the slow5 header, as there are some new/renamed fields.
 
-One notable difference, is the absence of `end_reason` in our pod5->slow5 file. This is on the list to fix. This field currently isn't used in anything of note we have seen yet, and its history is complicated. It has changed many times in the fast5 files, which makes it difficult to make non breaking compatible code.
+<!-- One notable difference, is the absence of `end_reason` in our pod5->slow5 file. This is on the list to fix. This field currently isn't used in anything of note we have seen yet, and its history is complicated. It has changed many times in the fast5 files, which makes it difficult to make non breaking compatible code. -->
 
 <!-- One last difference, is in our pod5->blow5 file output, you will note `digitisation=1` and `range` is a float < 1. That is because ONT removed range and digitisation from pod5. While digitisation can be calculated from `adc_max - adc_min`, when converting fast5 files, they are both 0. The reason these are needed are for conversion of the raw signal values into pA values using the following array maths:
 
