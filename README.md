@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 ### Usage
 
-POD5 is still in development and subject to change, and has had a number of backward compatibility changes so far.
+POD5 is still in development and subject to change, and has had a number of backward compatibility breaking changes so far.
 A backward compatible pod5 reading API cannot be expected yet. 
 Hence, it is difficult to provide a stable conversion tool at the moment.
 
