@@ -148,7 +148,7 @@ def pod52slow5(args):
     s5 = slow5.Open(slow5_file, 'w')
     header = {}
     sampling_rate = 0
-    end_reason_labels = ["unknown", "partial", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
+    end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
     # get header info in first read
     # Get pod5 reads
     count = 0
@@ -207,7 +207,14 @@ def pod52slow5(args):
                 aux["read_number"] = int(read["read_number"])
                 aux["start_mux"] = int(read["well"])
                 aux["start_time"] = int(read["start_sample"])
-                aux["end_reason"] = int(read["end_reason"])
+                aux["end_reason"] = int(read["end_reason"] or None)
+                aux["tracked_scaling_shift"] = read.get("tracked_scaling_shift", None)
+                aux["tracked_scaling_scale"] = read.get("tracked_scaling_scale", None)
+                aux["predicted_scaling_shift"] = read.get("predicted_scaling_shift", None)
+                aux["predicted_scaling_scale"] = read.get("predicted_scaling_scale", None)
+                aux["num_reads_since_mux_change"] = read.get("num_reads_since_mux_change", None)
+                aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
+                aux["num_minknow_events"] = read.get("num_minknow_events", None)
 
                 # write slow5 read
                 s5.write_record(record, aux)
