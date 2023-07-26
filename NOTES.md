@@ -6,20 +6,24 @@
 Need to clean these up and match them with slow5 attributes
 
 #### dir(file)
+```
 ['__class__', '__del__', '__delattr__', '__dict__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_cached_calibrations', '_cached_end_reasons', '_cached_pores', '_cached_run_infos', '_cached_signal_batches', '_get_signal_batch', '_is_vbz_compressed', '_lookup_calibration', '_lookup_dict_value', '_lookup_end_reason', '_lookup_pore', '_lookup_run_info', '_plan_traversal', '_read_reader', '_read_some_batches', '_reader', '_reads', '_reads_batches', '_select_read_batches', '_select_reads', '_signal_batch_row_count', '_signal_reader', 'batch_count', 'close', 'get_batch', 'read_batches', 'reads']
-
+```
 #### vars(file)
+```
 {'_reader': <pod5_format.pod5_format_pybind.Pod5FileReader object at 0x7efc88225db0>, '_read_reader': <pod5_format.reader.SubFileReader object at 0x7efc8820cd00>, '_signal_reader': <pod5_format.reader.SubFileReader object at 0x7efc8820cc70>, '_cached_signal_batches': {}, '_cached_run_infos': {}, '_cached_end_reasons': {}, '_cached_calibrations': {}, '_cached_pores': {}, '_is_vbz_compressed': True, '_signal_batch_row_count': 100}
-
+```
 #### dir(read)
+```
 ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_batch', '_batch_signal_cache', '_find_signal_row_index', '_get_signal_for_row', '_reader', '_row', '_selected_batch_index', 'byte_count', 'calibration', 'calibration_index', 'end_reason', 'end_reason_index', 'has_cached_signal', 'median_before', 'pore', 'pore_index', 'read_id', 'read_number', 'run_info', 'run_info_index', 'sample_count', 'signal', 'signal_for_chunk', 'signal_rows', 'start_sample']
-
+```
 #### vars(read)
+```
 {'_reader': <pod5_format.reader_pyarrow.FileReader object at 0x7efc8820cdc0>, '_batch': <pod5_format.reader_pyarrow.ReadBatchPyArrow object at 0x7efc8820ce80>, '_row': 0, '_batch_signal_cache': None, '_selected_batch_index': None}
-
+```
 
 #### read.run_info dump
-
+```
 run info
     acquisition_id: bfdfd1d840e2acaf5c061241fd9b8e5c3cfe729f
     acquisition_start_time: 2020-10-27 05:41:50+00:00
@@ -86,9 +90,9 @@ run info
       satellite_firmware_version: 2.0.14
       usb_config: firm_1.2.3_ware#rbt_4.5.6_rbt#ctrl#USB3
       version: 4.0.3
-
+```
 ### pod5_read dic output so far
-
+```
 read_id: 000dab68-15a2-43c1-b33d-9598d95b37de
 channel: 861
 well: 1
@@ -102,12 +106,13 @@ byte_count: 226302
 signal_compression_ratio: 0.341
 scale: 0.36551764607429504
 offset: -223.0
-
+```
 
 
 ### slow5 output same read
 
 #### read aux='all'
+```
 read_id: 000dab68-15a2-43c1-b33d-9598d95b37de
 read_group: 0
 digitisation: 2048.0
@@ -122,8 +127,9 @@ start_mux: 1
 median_before: 204.18502807617188
 end_reason: 4
 channel_number: 861
-
+```
 #### header
+```
 asic_id: 0004A30B00F25467
 asic_id_eeprom: 0004A30B00F25467
 asic_temp: 31.996552
@@ -172,7 +178,7 @@ satellite_firmware_version: 2.0.14
 sequencing_kit: sqk-lsk109
 usb_config: firm_1.2.3_ware#rbt_4.5.6_rbt#ctrl#USB3
 version: 4.0.3
-
+```
 
 ### Conversion table
 
@@ -180,6 +186,7 @@ version: 4.0.3
 slow5 : pod5
 
 #### header
+```
 "asic_id": tracking_id.asic_id,
 "asic_id_eeprom": tracking_id.asic_id_eeprom,
 "asic_temp": tracking_id.asic_temp,
@@ -218,10 +225,10 @@ slow5 : pod5
 "version": tracking_id,
 "hublett_board_id": tracking_id,
 "satellite_firmware_version": tracking_id}
-
+```
 
 #### read
-
+```
 read_id: 000dab68-15a2-43c1-b33d-9598d95b37de = read_id
 read_group: 0
 digitisation: 2048.0 = ? if can't get it, make it 1
@@ -299,12 +306,12 @@ satellite_board_id: 013c763bef6cca9d
 satellite_firmware_version: 2.0.14
 usb_config: firm_1.2.3_ware#rbt_4.5.6_rbt#ctrl#USB3
 version: 4.0.3
+```
 
 
 
 
-
-
+```
 sample_count = read.sample_count
 byte_count = read.byte_count
 pore_data = read.pore
@@ -341,3 +348,72 @@ py_aux_types = {"channel_number": type("string"),
                 "start_mux": type(1),
                 "start_time": type(100),
                 "end_reason": None}
+```
+
+
+```
+> pod5 inspect debug PAF25452_pass_bfdfd1d8_11.pod5
+Contains 4000 reads, in 4 batches: [1000, 1000, 1000, 1000]
+Reads span from sample 3468816 to 4225550
+419753607 samples, 286611358 bytes: 34.1 % signal compression ratio
+Run info 0:
+	acquisition_id: bfdfd1d840e2acaf5c061241fd9b8e5c3cfe729f
+	acquisition_start_time: 2020-10-27 05:41:50+00:00
+	adc_max: 2047
+	adc_min: 0
+	context_tags: {'barcoding_enabled': '0', 'basecall_config_filename': 'dna_r9.4.1_450bps_hac_prom.cfg', 'experiment_duration_set': '4320', 'experiment_type': 'genomic_dna', 'local_basecalling': '1', 'package': 'bream4', 'package_version': '6.0.7', 'sample_frequency': '4000', 'sequencing_kit': 'sqk-lsk109'}
+	experiment_name: 
+	flow_cell_id: PAF25452
+	flow_cell_product_code: FLO-PRO002
+	protocol_name: sequencing/sequencing_PRO002_DNA:FLO-PRO002:SQK-LSK109
+	protocol_run_id: 97d631c6-c622-473d-9e7d-3cb9297b0036
+	protocol_start_time: 1970-01-01 00:00:00+00:00
+	sample_id: NA12878_SRE
+	sample_rate: 4000
+	sequencing_kit: sqk-lsk109
+	sequencer_position: 3A
+	sequencer_position_type: promethion
+	software: blue-crab SLOW5<->POD5 converter
+	system_name: 
+	system_type: 
+	tracking_id: {'asic_id': '0004A30B00F25467', 'asic_id_eeprom': '0004A30B00F25467', 'asic_temp': '31.996552', 'asic_version': 'Unknown', 'auto_update': '0', 'auto_update_source': 'https://mirror.oxfordnanoportal.com/software/MinKNOW/', 'bream_is_standard': '0', 'configuration_version': '4.0.13', 'device_id': '3A', 'device_type': 'promethion', 'distribution_status': 'stable', 'distribution_version': '20.06.9', 'exp_script_name': 'sequencing/sequencing_PRO002_DNA:FLO-PRO002:SQK-LSK109', 'exp_script_purpose': 'sequencing_run', 'exp_start_time': '2020-10-27T05:41:50Z', 'flow_cell_id': 'PAF25452', 'flow_cell_product_code': 'FLO-PRO002', 'guppy_version': '4.0.11+f1071ce', 'heatsink_temp': '32.164288', 'hostname': 'PC24A004', 'hublett_board_id': '013b01308fa78662', 'hublett_firmware_version': '2.0.14', 'installation_type': 'nc', 'ip_address': '', 'local_firmware_file': '1', 'mac_address': '', 'operating_system': 'ubuntu 16.04', 'protocol_group_id': 'PLPN243131', 'protocol_run_id': '97d631c6-c622-473d-9e7d-3cb9297b0036', 'protocols_version': '6.0.7', 'run_id': 'bfdfd1d840e2acaf5c061241fd9b8e5c3cfe729f', 'sample_id': 'NA12878_SRE', 'satellite_board_id': '013c763bef6cca9d', 'satellite_firmware_version': '2.0.14', 'usb_config': 'firm_1.2.3_ware#rbt_4.5.6_rbt#ctrl#USB3', 'version': '4.0.3'}
+```
+
+
+original from fast5
+```
+> pod5 inspect debug ../1_pod5/PAF25452_pass_bfdfd1d8_11.pod5 
+
+Contains 4000 reads, in 4 batches: [1000, 1000, 1000, 1000]
+Reads span from sample 3468816 to 4225550
+419753607 samples, 286611296 bytes: 34.1 % signal compression ratio
+Run info 0:
+	acquisition_id: bfdfd1d840e2acaf5c061241fd9b8e5c3cfe729f
+	acquisition_start_time: 2020-10-27 05:41:50+00:00
+	adc_max: 2047
+	adc_min: 0
+	context_tags: {'barcoding_enabled': '0', 'basecall_config_filename': 'dna_r9.4.1_450bps_hac_prom.cfg', 'experiment_duration_set': '4320', 'experiment_type': 'genomic_dna', 'local_basecalling': '1', 'package': 'bream4', 'package_version': '6.0.7', 'sample_frequency': '4000', 'sequencing_kit': 'sqk-lsk109'}
+	experiment_name: 
+	flow_cell_id: PAF25452
+	flow_cell_product_code: FLO-PRO002
+	protocol_name: sequencing/sequencing_PRO002_DNA:FLO-PRO002:SQK-LSK109
+	protocol_run_id: 97d631c6-c622-473d-9e7d-3cb9297b0036
+	protocol_start_time: 1970-01-01 00:00:00+00:00
+	sample_id: NA12878_SRE
+	sample_rate: 4000
+	sequencing_kit: sqk-lsk109
+	sequencer_position: 3A
+	sequencer_position_type: promethion
+	software: python-pod5-converter
+	system_name: 
+	system_type: 
+	tracking_id: {'asic_id': '0004A30B00F25467', 'asic_id_eeprom': '0004A30B00F25467', 'asic_temp': '31.996552', 'asic_version': 'Unknown', 'auto_update': '0', 'auto_update_source': 'https://mirror.oxfordnanoportal.com/software/MinKNOW/', 'bream_is_standard': '0', 'configuration_version': '4.0.13', 'device_id': '3A', 'device_type': 'promethion', 'distribution_status': 'stable', 'distribution_version': '20.06.9', 'exp_script_name': 'sequencing/sequencing_PRO002_DNA:FLO-PRO002:SQK-LSK109', 'exp_script_purpose': 'sequencing_run', 'exp_start_time': '2020-10-27T05:41:50Z', 'flow_cell_id': 'PAF25452', 'flow_cell_product_code': 'FLO-PRO002', 'guppy_version': '4.0.11+f1071ce', 'heatsink_temp': '32.164288', 'hostname': 'PC24A004', 'hublett_board_id': '013b01308fa78662', 'hublett_firmware_version': '2.0.14', 'installation_type': 'nc', 'ip_address': '', 'local_firmware_file': '1', 'mac_address': '', 'operating_system': 'ubuntu 16.04', 'protocol_group_id': 'PLPN243131', 'protocol_run_id': '97d631c6-c622-473d-9e7d-3cb9297b0036', 'protocols_version': '6.0.7', 'run_id': 'bfdfd1d840e2acaf5c061241fd9b8e5c3cfe729f', 'sample_id': 'NA12878_SRE', 'satellite_board_id': '013c763bef6cca9d', 'satellite_firmware_version': '2.0.14', 'usb_config': 'firm_1.2.3_ware#rbt_4.5.6_rbt#ctrl#USB3', 'version': '4.0.3'}
+
+```
+
+
+
+
+
+# Test commands
+

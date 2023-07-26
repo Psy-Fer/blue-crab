@@ -109,6 +109,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+blue-crab-env
+blue-crab-venv
 
 # Spyder project settings
 .spyderproject

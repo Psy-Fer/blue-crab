@@ -1,5 +1,48 @@
-# project_blue_crab
-This is a conversion tool to convert from ONT's new file format pod5 to slow5/blow5.
+# blue-crab
+This is a conversion tool to convert from ONT's pod5 format to the community maintained slow5/blow5 format
+
+
+# WARNING
+
+Current state does not include some fields from pod5. 
+
+Please wait for a release where this will be fixed.
+
+Use at your own risk.
+
+
+## Setup
+
+```
+python3 -m venv ./blue-crab-venv
+source ./blue-crab-venv/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install setuptools wheel
+# do this separately, after the libs above
+# for zstd build, run the following
+export PYSLOW5_ZSTD=1
+python3 setup.py install
+
+blue-crab --help
+```
+
+## pod5 -> slow5/blow5
+
+```
+blue-crab p2s example.pod5 example.blow5
+```
+
+# slow5/blow5 -> pod5
+
+```
+blue-crab s2p example.blow5 example.pod5
+```
+
+
+---
+---
+
+# Old README.md
 
 ### Build
 
