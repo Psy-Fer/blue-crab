@@ -132,7 +132,14 @@ def get_data_from_pod5_record(read):
         "signal_compression_ratio": f"{read.byte_count / float(read.sample_count*2):.3f}",
         "scale": read.calibration.scale,
         "offset": read.calibration.offset,
-        "signal": read.signal
+        "signal": read.signal,
+        "tracked_scaling_shift": read.tracked_scaling_shift,
+        "tracked_scaling_scale": read.tracked_scaling_scale,
+        "predicted_scaling_shift": read.predicted_scaling_shift,
+        "predicted_scaling_scale": read.predicted_scaling_scale,
+        "num_reads_since_mux_change": read.num_reads_since_mux_change,
+        "time_since_mux_change": read.time_since_mux_change,
+        "num_minknow_events": read.num_minknow_events,
     }
     info_dic = run_info_to_flat_dic(read.run_info)
     yield pod5_read, info_dic
