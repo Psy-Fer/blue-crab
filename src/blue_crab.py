@@ -115,12 +115,12 @@ def get_data_from_pod5_record(read):
     end_reason = p2s_end_reason_convert(end_reason_data.name)
     end_reason_forced = end_reason_data.forced
     tracked_scaling = read.tracked_scaling
-    tracked_scaling_shift = tracked_scaling[0]
-    tracked_scaling_scale = tracked_scaling[1]
+    tracked_scaling_shift = tracked_scaling.shift
+    tracked_scaling_scale = tracked_scaling.scale
     predicted_scaling = read.predicted_scaling
-    predicted_scaling_shift = predicted_scaling[0]
-    predicted_scaling_scale = predicted_scaling[1]
-    
+    predicted_scaling_shift = predicted_scaling.shift
+    predicted_scaling_scale = predicted_scaling.scale
+
     pod5_read = {
         "read_id": read.read_id,
         "channel": pore_data.channel,
@@ -155,7 +155,6 @@ def pod52slow5(args):
     '''
     pipeline for converting ONT pod5 files to slow5 files
     '''
-    # probably can do proper file/dir checks, but whatever for now
     pod5_file_list = []
     pod5_path = False
     if os.path.isdir(args.input):
@@ -177,7 +176,6 @@ def pod52slow5(args):
     end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
     # get header info in first read
     # Get pod5 reads
-    # TODO: read a dir of multiple pod5 files
     count = 0
     print("INFO: Reading pod5 file/s: {}".format(args.input))
     for pfile in pod5_file_list:
@@ -244,21 +242,6 @@ def pod52slow5(args):
                     aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
                     aux["num_minknow_events"] = read.get("num_minknow_events", None)
                     
-                    # ensure new aux fields are written
-                    if count == 0:
-                        new_aux = ["tracked_scaling_shift",
-                                   "tracked_scaling_scale",
-                                   "predicted_scaling_shift",
-                                   "predicted_scaling_scale",
-                                   "num_reads_since_mux_change",
-                                   "time_since_mux_change",
-                                   "num_minknow_events"]
-                        for a in new_aux:
-                            if aux[a] is None:
-                                if a in ["num_reads_since_mux_change", "num_minknow_events"]:
-                                    aux[a] = 0
-                                else:
-                                    aux[a] = 0.0
                         
                     # write slow5 read
                     s5.write_record(record, aux)
