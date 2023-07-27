@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+import os
 from pathlib import Path
 import datetime
 import iso8601
@@ -141,7 +142,19 @@ def pod52slow5(args):
     '''
     pipeline for converting ONT pod5 files to slow5 files
     '''
-    pod5_file = args.input
+    # probably can do proper file/dir checks, but whatever for now
+    pod5_file_list = []
+    pod5_path = False
+    if os.path.isdir(args.input):
+        pod5_path = args.input
+        for dirpath, _, files in os.walk(pod5_path):
+            for pfile in files:
+                if pfile.endswith(('.pod5')):
+                    pod5_file_list.append(pfile)
+    else:
+        pod5_file_list = [args.input]
+
+
     slow5_file = args.output
     # open slow5 file for writing
     print("INFO: Opening s/blow5 file: {}".format(slow5_file))
@@ -151,75 +164,77 @@ def pod52slow5(args):
     end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
     # get header info in first read
     # Get pod5 reads
+    # TODO: read a dir of multiple pod5 files
     count = 0
-    print("INFO: Reading pod5 file: {}".format(pod5_file))
-    with p5.Reader(pod5_file) as reader:
-        # TODO: potentially do batches with multiprocessing -> slow5 multithreading
-        # total_batchs = reader.batch_count
-        # if total_batchs != 1:
-        #     print("ERROR: multiple batch support is not implemented for this version of pod5 yet")
-        #     exit()
-        for pod_read_record in reader.reads():
-            # convert pod5 read into slow5 read structure
-            for read, info in get_data_from_pod5_record(pod_read_record):
-                if count == 0:
-                    # write header
-                    for k in list(info.keys()):
-                        # if k not in header:
-                        #     print(f"WARNING: {k} not found in default slow5 header, adding it")
-                        header[k] = info[k]
-                        if k == "sample_frequency":
-                            sampling_rate = float(info[k])
-                    print("INFO: Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
-                    # TODO: I should dump the full metadata table to figure out the read groups
-                    # assign them numbers, then trigger based on read_info to label reads
-                    ret = s5.write_header(header, end_reason_labels=end_reason_labels)  # limitation: only 1 read group for now
-                    if ret != 0:
-                        print("ERROR: Slow5 header not written, see stderr output")
-                        kill_program()
-                    print("INFO: Slow5 header written")
-
-                if count > 0:
-                    for k in list(info.keys()):
-                        if k not in prev_info:
-                            print("ERROR: {} not in previous run_info".format(k))
-                            print("ERROR: More than 1 read_group present - split your pod5")
+    print("INFO: Reading pod5 file/s: {}".format(args.input))
+    for pfile in pod5_file_list:
+        with p5.Reader(pfile) as reader:
+            # TODO: potentially do batches with multiprocessing -> slow5 multithreading
+            # total_batchs = reader.batch_count
+            # if total_batchs != 1:
+            #     print("ERROR: multiple batch support is not implemented for this version of pod5 yet")
+            #     exit()
+            for pod_read_record in reader.reads():
+                # convert pod5 read into slow5 read structure
+                for read, info in get_data_from_pod5_record(pod_read_record):
+                    if count == 0:
+                        # write header
+                        for k in list(info.keys()):
+                            # if k not in header:
+                            #     print(f"WARNING: {k} not found in default slow5 header, adding it")
+                            header[k] = info[k]
+                            if k == "sample_frequency":
+                                sampling_rate = float(info[k])
+                        print("INFO: Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
+                        # TODO: I should dump the full metadata table to figure out the read groups
+                        # assign them numbers, then trigger based on read_info to label reads
+                        ret = s5.write_header(header, end_reason_labels=end_reason_labels)  # limitation: only 1 read group for now
+                        if ret != 0:
+                            print("ERROR: Slow5 header not written, see stderr output")
                             kill_program()
-                        if info[k] != prev_info[k]:
-                            print("ERROR: {} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
-                            print("ERROR: More than 1 read_group present - split your pod5")
-                            kill_program()
+                        print("INFO: Slow5 header written")
 
-                # do slow5 stuff
-                record, aux = s5.get_empty_record(aux=True)
-                # convert pod5 -> slow5
-                record['read_id'] = str(read["read_id"])
-                record['read_group'] = 0
-                record['offset'] = float(read["offset"])
-                record['sampling_rate'] = sampling_rate
-                record['len_raw_signal'] = int(read["sample_count"])
-                record['signal'] = np.array(read["signal"], np.int16)
-                record['digitisation'] = float(read["digitisation"])
-                record['range'] = float(read["range"])
-                # aux fields
-                aux["channel_number"] = str(read["channel"])
-                aux["median_before"] = float(read["median_before"])
-                aux["read_number"] = int(read["read_number"])
-                aux["start_mux"] = int(read["well"])
-                aux["start_time"] = int(read["start_sample"])
-                aux["end_reason"] = int(read["end_reason"] or None)
-                aux["tracked_scaling_shift"] = read.get("tracked_scaling_shift", None)
-                aux["tracked_scaling_scale"] = read.get("tracked_scaling_scale", None)
-                aux["predicted_scaling_shift"] = read.get("predicted_scaling_shift", None)
-                aux["predicted_scaling_scale"] = read.get("predicted_scaling_scale", None)
-                aux["num_reads_since_mux_change"] = read.get("num_reads_since_mux_change", None)
-                aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
-                aux["num_minknow_events"] = read.get("num_minknow_events", None)
+                    if count > 0:
+                        for k in list(info.keys()):
+                            if k not in prev_info:
+                                print("ERROR: {} not in previous run_info".format(k))
+                                print("ERROR: More than 1 read_group present - split your pod5")
+                                kill_program()
+                            if info[k] != prev_info[k]:
+                                print("ERROR: {} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
+                                print("ERROR: More than 1 read_group present - split your pod5")
+                                kill_program()
 
-                # write slow5 read
-                s5.write_record(record, aux)
-                count += 1
-                prev_info = info
+                    # do slow5 stuff
+                    record, aux = s5.get_empty_record(aux=True)
+                    # convert pod5 -> slow5
+                    record['read_id'] = str(read["read_id"])
+                    record['read_group'] = 0
+                    record['offset'] = float(read["offset"])
+                    record['sampling_rate'] = sampling_rate
+                    record['len_raw_signal'] = int(read["sample_count"])
+                    record['signal'] = np.array(read["signal"], np.int16)
+                    record['digitisation'] = float(read["digitisation"])
+                    record['range'] = float(read["range"])
+                    # aux fields
+                    aux["channel_number"] = str(read["channel"])
+                    aux["median_before"] = float(read["median_before"])
+                    aux["read_number"] = int(read["read_number"])
+                    aux["start_mux"] = int(read["well"])
+                    aux["start_time"] = int(read["start_sample"])
+                    aux["end_reason"] = int(read["end_reason"] or None)
+                    aux["tracked_scaling_shift"] = read.get("tracked_scaling_shift", None)
+                    aux["tracked_scaling_scale"] = read.get("tracked_scaling_scale", None)
+                    aux["predicted_scaling_shift"] = read.get("predicted_scaling_shift", None)
+                    aux["predicted_scaling_scale"] = read.get("predicted_scaling_scale", None)
+                    aux["num_reads_since_mux_change"] = read.get("num_reads_since_mux_change", None)
+                    aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
+                    aux["num_minknow_events"] = read.get("num_minknow_events", None)
+
+                    # write slow5 read
+                    s5.write_record(record, aux)
+                    count += 1
+                    prev_info = info
     # close slow5 file
     s5.close()
 
