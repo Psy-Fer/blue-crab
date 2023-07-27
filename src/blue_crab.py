@@ -120,7 +120,7 @@ def get_data_from_pod5_record(read):
     predicted_scaling = read.predicted_scaling
     predicted_scaling_shift = predicted_scaling[0]
     predicted_scaling_scale = predicted_scaling[1]
-1
+    
     pod5_read = {
         "read_id": read.read_id,
         "channel": pore_data.channel,
