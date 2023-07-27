@@ -230,7 +230,23 @@ def pod52slow5(args):
                     aux["num_reads_since_mux_change"] = read.get("num_reads_since_mux_change", None)
                     aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
                     aux["num_minknow_events"] = read.get("num_minknow_events", None)
-
+                    
+                    # ensure new aux fields are written
+                    if count == 0:
+                        new_aux = ["tracked_scaling_shift",
+                                   "tracked_scaling_scale",
+                                   "predicted_scaling_shift",
+                                   "predicted_scaling_scale",
+                                   "num_reads_since_mux_change",
+                                   "time_since_mux_change",
+                                   "num_minknow_events"]
+                        for a in new_aux:
+                            if aux[a] is None:
+                                if a in ["num_reads_since_mux_change", "num_minknow_events"]:
+                                    aux[a] = 0
+                                else:
+                                    aux[a] = 0.0
+                        
                     # write slow5 read
                     s5.write_record(record, aux)
                     count += 1
