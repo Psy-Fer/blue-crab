@@ -162,10 +162,9 @@ def pod52slow5(args):
         for dirpath, _, files in os.walk(pod5_path):
             for pfile in files:
                 if pfile.endswith(('.pod5')):
-                    pod5_file_list.append(pfile)
+                    pod5_file_list.append(os.path.join(dirpath, pfile))
     else:
         pod5_file_list = [args.input]
-
 
     slow5_file = args.output
     # open slow5 file for writing
