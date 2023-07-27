@@ -114,7 +114,13 @@ def get_data_from_pod5_record(read):
     # the lower case string of end_reason
     end_reason = p2s_end_reason_convert(end_reason_data.name)
     end_reason_forced = end_reason_data.forced
-
+    tracked_scaling = read.tracked_scaling
+    tracked_scaling_shift = tracked_scaling[0]
+    tracked_scaling_scale = tracked_scaling[1]
+    predicted_scaling = read.predicted_scaling
+    predicted_scaling_shift = predicted_scaling[0]
+    predicted_scaling_scale = predicted_scaling[1]
+1
     pod5_read = {
         "read_id": read.read_id,
         "channel": pore_data.channel,
@@ -133,10 +139,10 @@ def get_data_from_pod5_record(read):
         "scale": read.calibration.scale,
         "offset": read.calibration.offset,
         "signal": read.signal,
-        "tracked_scaling_shift": read.tracked_scaling_shift,
-        "tracked_scaling_scale": read.tracked_scaling_scale,
-        "predicted_scaling_shift": read.predicted_scaling_shift,
-        "predicted_scaling_scale": read.predicted_scaling_scale,
+        "tracked_scaling_shift": tracked_scaling_shift,
+        "tracked_scaling_scale": tracked_scaling_scale,
+        "predicted_scaling_shift": predicted_scaling_shift,
+        "predicted_scaling_scale": predicted_scaling_scale,
         "num_reads_since_mux_change": read.num_reads_since_mux_change,
         "time_since_mux_change": read.time_since_mux_change,
         "num_minknow_events": read.num_minknow_events,
