@@ -13,6 +13,8 @@ Use at your own risk.
 
 ## Setup
 
+Minimum python3.8
+
 ```
 python3 -m venv ./blue-crab-venv
 source ./blue-crab-venv/bin/activate

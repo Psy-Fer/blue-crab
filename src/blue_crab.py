@@ -14,6 +14,8 @@ import pyslow5 as slow5
 import pod5 as p5
 from pod5.signal_tools import DEFAULT_SIGNAL_CHUNK_SIZE, vbz_compress_signal_chunked
 
+import cProfile, pstats, io
+
 from ._version import __version__
 
 
@@ -154,6 +156,19 @@ def get_data_from_pod5_record(read):
 def pod52slow5(args):
     '''
     pipeline for converting ONT pod5 files to slow5 files
+
+    multiprocessing strategy
+
+    - make a proc pool
+    - submit pod5 files to queue
+    - each proc consumes from queue
+        - reads 1 pod5 file
+        - writes matching 1 blow5 file
+        - closes
+        - pulls next pod5 file from queue repeat
+    
+        - check length of list to not spin up more procs than files
+
     '''
     pod5_file_list = []
     pod5_path = False
@@ -169,7 +184,7 @@ def pod52slow5(args):
     slow5_file = args.output
     # open slow5 file for writing
     print("INFO: Opening s/blow5 file: {}".format(slow5_file))
-    s5 = slow5.Open(slow5_file, 'w')
+    s5 = slow5.Open(slow5_file, 'w', DEBUG=0)
     header = {}
     sampling_rate = 0
     end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
@@ -177,6 +192,9 @@ def pod52slow5(args):
     # Get pod5 reads
     count = 0
     print("INFO: Reading pod5 file/s: {}".format(args.input))
+    records = {}
+    auxs = {}
+    batchsize = 1000
     for pfile in pod5_file_list:
         with p5.Reader(pfile) as reader:
             # TODO: potentially do batches with multiprocessing -> slow5 multithreading
@@ -241,9 +259,18 @@ def pod52slow5(args):
                     aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
                     aux["num_minknow_events"] = read.get("num_minknow_events", None)
                     
-                        
+                    records[record['read_id']] = record
+                    auxs[record['read_id']] = aux
                     # write slow5 read
-                    s5.write_record(record, aux)
+                    # if s5.write_record(record, aux) != 0:
+                    #     print("ERROR: slow5 write_record failed")
+                    #     kill_program()
+                    if len(records) >= batchsize:
+                        if s5.write_record_batch(records, threads=8, batchsize=1000, aux=auxs) != 0:
+                            print("ERROR: slow5 write_record failed")
+                            kill_program()
+                        records = {}
+                        auxs = {}
                     count += 1
                     prev_info = info
     # close slow5 file
@@ -532,6 +559,8 @@ def main():
     s2p.add_argument("output", type=Path,
                      help="pod5 file to save")
 
+    parser.add_argument("--profile", action="store_true",
+                        help="run cProfile on all processes - for debugging benchmarking")
     parser.add_argument("-v", "--version", action='version', version="SLOW5/BLOW5 <-> POD5 converter version: {}".format(VERSION),
                         help="Prints version")
 
@@ -540,6 +569,10 @@ def main():
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
+
+    if args.profile:
+        pr = cProfile.Profile()
+        pr.enable()
 
     if args.command == "p2s":
         pod52slow5(args)
@@ -550,6 +583,17 @@ def main():
     else:
         parser.print_help(sys.stderr)
         sys.exit(1)
+    
+    # if profiling, dump info into log files in current dir
+    if args.profile:
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        with open("blue_crab_profile.log", 'w') as f:
+            print(s.getvalue(), file=f)
+
 
 
 if __name__ == '__main__':

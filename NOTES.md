@@ -58,9 +58,9 @@ run info
       asic_id_eeprom: 0004A30B00F25467
       asic_temp: 31.996552
       asic_version: Unknown
-      auto_update: 0
-      auto_update_source: https://mirror.oxfordnanoportal.com/software/MinKNOW/
-      bream_is_standard: 0
+      -auto_update: 0
+      -auto_update_source: https://mirror.oxfordnanoportal.com/software/MinKNOW/
+      -bream_is_standard: 0
       configuration_version: 4.0.13
       device_id: 3A
       device_type: promethion
@@ -91,6 +91,78 @@ run info
       usb_config: firm_1.2.3_ware#rbt_4.5.6_rbt#ctrl#USB3
       version: 4.0.3
 ```
+
+### New 5khz zymo pod5
+
+```
+pod5 inspect debug FAW84365_pass_f93564bc_c6df34f0_0.pod5
+Contains 10000 reads, in 1 batches: [10000]
+Reads span from sample 206269 to 3332372
+843308797 samples, 709869731 bytes: 42.1 % signal compression ratio
+Run info 0:
+	acquisition_id: c6df34f043d40f6f45debe33276597a09b8a14a6
+	acquisition_start_time: 2023-06-02 14:12:59.057000+00:00
+	adc_max: 4095
+	adc_min: -4096
+	context_tags: 
+    'barcoding_enabled': '0'
+    'basecall_config_filename': 'dna_r10.4.1_e8.2_400bps_5khz_sup.cfg'
+    'experiment_type': 'genomic_dna'
+    'local_basecalling': '1'
+    'package': 'bream4'
+    'package_version': '7.5.9'
+    'sample_frequency': '5000'
+    'selected_speed_bases_per_second': '400'
+    'sequencing_kit': 'sqk-lsk114'
+	experiment_name: 2023-06-02_np_FAW84365
+	flow_cell_id: FAW84365
+	flow_cell_product_code: FLO-MIN114
+	protocol_name: sequencing/sequencing_MIN114_DNA_e8_2_400K:FLO-MIN114:SQK-LSK114:400
+	protocol_run_id: f93564bc-772a-4e1b-b994-aca663c6481e
+	protocol_start_time: 2023-06-02 14:09:10.618000+00:00
+	sample_id: zymo_hmw_mock_5khz
+	sample_rate: 5000
+	sequencing_kit: sqk-lsk114
+	sequencer_position: X1
+	sequencer_position_type: GridION
+	software: MinKNOW 23.04.5 (Bream 7.5.9, Core 5.5.3, Guppy 6.5.7+ca6d6af)
+	system_name: GXB03098
+	system_type: GridION X5 Mk1
+	tracking_id: 
+    'asic_id': '684234483'
+    'asic_id_eeprom': '8810678'
+    'asic_temp': '43.029125'
+    'asic_version': 'IA02D'
+    'configuration_version': '5.5.13'
+    'device_id': 'X1'
+    'device_type': 'gridion'
+    'distribution_status': 'stable'
+    'distribution_version': '23.04.5'
+    'exp_script_name': 'sequencing/sequencing_MIN114_DNA_e8_2_400K:FLO-MIN114:SQK-LSK114:400'
+    'exp_script_purpose': 'sequencing_run'
+    'exp_start_time': '2023-06-02T16:12:59.057120+02:00'
+    'flow_cell_id': 'FAW84365'
+    'flow_cell_product_code': 'FLO-MIN114'
+    'guppy_version': '6.5.7+ca6d6af'
+    'heatsink_temp': '34.953125'
+    'host_product_code': 'GRD-X5B003'
+    'host_product_serial_number': 'GXB03098'
+    'hostname': 'GXB03098'
+    'installation_type': 'nc'
+    'operating_system': 'ubuntu 20.04'
+    'protocol_group_id': '2023-06-02_np_FAW84365'
+    'protocol_run_id': 'f93564bc-772a-4e1b-b994-aca663c6481e'
+    'protocol_start_time': '2023-06-02T16:09:10.618973+02:00'
+    'protocols_version': '7.5.9'
+    'run_id': 'c6df34f043d40f6f45debe33276597a09b8a14a6'
+    'sample_id': 'zymo_hmw_mock_5khz'
+    'usb_config': 'fx3_1.2.5#fpga_1.2.1#bulk#USB300'
+    'version': '5.5.3'
+
+```
+
+
+
 ### pod5_read dic output so far
 ```
 read_id: 000dab68-15a2-43c1-b33d-9598d95b37de
@@ -412,8 +484,16 @@ Run info 0:
 ```
 
 
+read_id, filename, read_number, channel,mux,end_reason,start_time,start_sample,duration,num_samples,minknow_events,sample_rate,median_before,predicted_scaling_scale,predicted_scaling_shift,tracked_scaling_scale,tracked_scaling_shift,num_reads_since_mux_change,time_since_mux_change,run_id,sample_id,experiment_id,flow_cell_id,pore_type
+70bb81b7-1e0f-42ac-8506-fa7b2704eb72, FAW84365_pass_f93564bc_c6df34f0_0.pod5, 14,403,1,signal_positive,41.96920000,209846,3.76540000,18827,2007,5000,NaN,8.03192234,-4.84858322,-0.00000000,-0.00000000,1
+,3.76539993,f93564bc-772a-4e1b-b994-aca663c6481e,zymo_hmw_mock_5khz,2023-06-02_np_FAW84365,FAW84365,not_set
+
 
 
 
 # Test commands
+
+/usr/bin/time -v blue-crab p2s FAW84365_pass_f93564bc_c6df34f0_0.pod5 FAW84365_pass_f93564bc_c6df34f0_0.blow5
+
+/usr/bin/time -v blue-crab s2p FAW84365_pass_f93564bc_c6df34f0_0.blow5 FAW84365_pass_f93564bc_c6df34f0_0_4.pod5
 
