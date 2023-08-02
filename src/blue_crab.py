@@ -9,6 +9,7 @@ import iso8601
 import pytz
 import uuid
 import numpy as np
+import multiprocessing as mp
 
 import pyslow5 as slow5
 import pod5 as p5
@@ -170,21 +171,182 @@ def pod52slow5(args):
         - check length of list to not spin up more procs than files
 
     '''
-    pod5_file_list = []
-    pod5_path = False
-    if os.path.isdir(args.input):
-        pod5_path = args.input
-        for dirpath, _, files in os.walk(pod5_path):
-            for pfile in files:
-                if pfile.endswith(('.pod5')):
-                    pod5_file_list.append(os.path.join(dirpath, pfile))
-    else:
-        pod5_file_list = [args.input]
 
-    slow5_file = args.output
+    # set up mp stuff
+    mp.set_start_method('spawn')
+    input_queue = mp.JoinableQueue()
+    processes = []
+
+    # pod5 logic
+    pod5_filepath_set = set()
+    pod5_filename_set = set()
+    for input_pod5 in args.input:
+        if os.path.isdir(input_pod5):
+            pod5_path = input_pod5
+            for dirpath, _, files in os.walk(pod5_path):
+                for pfile in files:
+                    if pfile.endswith('.pod5'):
+                        if pfile not in pod5_filename_set:
+                            pod5_filepath_set.add(os.path.join(dirpath, pfile))
+                            pod5_filename_set.add(pfile)
+                        else:
+                            print("ERROR: File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
+                            kill_program()
+        else:
+            if input_pod5 not in pod5_filepath_set:
+                # small logic hole here if 2 files with diff paths but same name
+                # TODO: I should break the input down to filename only then check....
+                pod5_filepath_set.add(input_pod5)
+            else:
+                print("ERROR: File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
+                kill_program()
+
+    
+    # check that pod5 files are actually found, otherwise exit
+    if len(pod5_filepath_set) < 1:
+        print("ERROR: no .pod5 files detected... exiting")
+        kill_program()
+
+    # slow5 output logic
+    if args.out_dir:
+        if os.path.isdir(args.out_dir):
+            slow5_out = args.out_dir
+            if len(pod5_filepath_set) > 1:
+                print("INFO: {} pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(len(pod5_filepath_set), slow5_out))
+                print("INFO: writing s/blow5 to dir: {}".format(slow5_out))
+                # send all the pod5 files to input_queue to be consumed by workers
+                for pod5_file in pod5_filepath_set:
+                    input_queue.put(pod5_file)
+                # add kill switches for the procs at the end to consume
+                for _ in range(args.iop):
+                    input_queue.put(None)
+                
+                # start up many to many workers
+                for i in range(args.iop):
+                    m2m_worker = mp.Process(target=m2m_worker, args=(args, input_queue, slow5_out), daemon=True, name='m2m_worker{}'.format(i))
+                    m2m_worker.start()
+                    processes.append(m2m_worker)
+                
+                for p in processes:
+                    p.join()
+            else:
+                print("INFO: 1 pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(slow5_out))
+                # pops out the 1 file - destructive
+                pfile = pod5_filepath_set.pop()
+                s2s_worker(args, pfile, slow5_out)
+
+
+        else:
+             print("ERROR: --out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
+    if args.output:
+        if args.output.endswith(('.slow5', '.blow5')):
+            slow5_out = args.output
+            if len(pod5_filepath_set) > 1:
+                print("INFO: {} pod5 files detected as input. Writing many pod5 to one s/blow5 file: {}".format(len(pod5_filepath_set), slow5_out))
+                m2s_worker(args, pod5_filepath_set, slow5_out)
+            else:
+                print("INFO: 1 pod5 files detected as input. Writing 1:1 pod5->s/blow5 to file: {}".format(slow5_out))
+                # pops out the 1 file - destructive
+                pfile = pod5_filepath_set.pop()
+                s2s_worker(args, pfile, slow5_out)
+        else:
+             print("ERROR: --output is not a slow5/blow5 file. For directory output please use --out-dir. output: {}".format(args.output))
+
+    
+
+def m2m_worker(args, input_queue, slow5_out):
+    '''
+    many to many worker to consume input queue
+    for each pod5 file, write s/blow5 file
+    this is for the many to many workflow
+    '''
+    batchsize = args.batchsize
+    slow5_threads = args.slow5_threads
+    while True:
+        pfile = input_queue.get()
+        if pfile is None:
+            break
+        filepath, filename = os.path.split(pfile)
+        # replace pod5 filename extention with .blow5
+        slow5_filename = ".".join(filename.split(".")[:-1]) + ".blow5"
+        slow5_filepath = os.path.join(slow5_out, slow5_filename)
+        # open slow5 file for writing
+        s5 = slow5.Open(slow5_filepath, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
+        header = {}
+        sampling_rate = 0
+        end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
+        # get header info in first read
+        # Get pod5 reads
+        count = 0
+        # print("INFO: Reading pod5 file/s: {}".format(args.input))
+        records = {}
+        auxs = {}
+        with p5.Reader(pfile) as reader:
+            for pod_read_record in reader.reads():
+                # convert pod5 read into slow5 read structure
+                for read, info in get_data_from_pod5_record(pod_read_record):
+                    if count == 0:
+                        # write header
+                        for k in list(info.keys()):
+                            header[k] = info[k]
+                            if k == "sample_frequency":
+                                sampling_rate = float(info[k])
+                        # print("INFO: Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
+                        # limitation: only 1 read group for now
+                        ret = s5.write_header(header, end_reason_labels=end_reason_labels)
+                        if ret != 0:
+                            print("ERROR: Slow5 header not written, see stderr output")
+                            kill_program()
+                        # print("INFO: Slow5 header written")
+
+                    if count > 0:
+                        for k in list(info.keys()):
+                            if k not in prev_info:
+                                print("ERROR: {} not in previous run_info".format(k))
+                                print("ERROR: More than 1 read_group present - split your pod5")
+                                kill_program()
+                            if info[k] != prev_info[k]:
+                                print("ERROR: {} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
+                                print("ERROR: More than 1 read_group present - split your pod5")
+                                kill_program()
+
+                    # do slow5 stuff
+                    rec, au = s5.get_empty_record(aux=True)
+                    record, aux = process_pod52slow5(read, rec, au, sampling_rate)
+                    records[record['read_id']] = record
+                    auxs[record['read_id']] = aux
+                    # write slow5 read
+                    # if s5.write_record(record, aux) != 0:
+                    #     print("ERROR: slow5 write_record failed")
+                    #     kill_program()
+                    if len(records) >= batchsize:
+                        if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
+                            print("ERROR: slow5 write_record failed")
+                            kill_program()
+                        records = {}
+                        auxs = {}
+                    count += 1
+                    prev_info = info
+        # close slow5 file
+        s5.close()
+        input_queue.task_done()
+
+
+def m2s_worker(args, pod5_filepath_set, slow5_out):
+    '''
+    many to single worker
+    this consumes pod5 files and writes to 1 file
+    I could use this as a consumer and producer pushing to an output queue
+    then write that queue to a single file...but i think i might be bottlenecked anyway doing that
+    so let's just try sequential reading of the many pod5 files for now.
+    Better to do many to many and merge anyway from a conversion safety point of view
+    But i want to give users the option. If they want it faster, they can ask
+    '''
+
+    batchsize = args.batchsize
+    slow5_threads = args.slow5_threads
     # open slow5 file for writing
-    print("INFO: Opening s/blow5 file: {}".format(slow5_file))
-    s5 = slow5.Open(slow5_file, 'w', DEBUG=0)
+    s5 = slow5.Open(slow5_out, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
     header = {}
     sampling_rate = 0
     end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
@@ -194,29 +356,20 @@ def pod52slow5(args):
     print("INFO: Reading pod5 file/s: {}".format(args.input))
     records = {}
     auxs = {}
-    batchsize = 1000
-    for pfile in pod5_file_list:
+    for pfile in pod5_filepath_set:
         with p5.Reader(pfile) as reader:
-            # TODO: potentially do batches with multiprocessing -> slow5 multithreading
-            # total_batchs = reader.batch_count
-            # if total_batchs != 1:
-            #     print("ERROR: multiple batch support is not implemented for this version of pod5 yet")
-            #     exit()
             for pod_read_record in reader.reads():
                 # convert pod5 read into slow5 read structure
                 for read, info in get_data_from_pod5_record(pod_read_record):
                     if count == 0:
                         # write header
                         for k in list(info.keys()):
-                            # if k not in header:
-                            #     print(f"WARNING: {k} not found in default slow5 header, adding it")
                             header[k] = info[k]
                             if k == "sample_frequency":
                                 sampling_rate = float(info[k])
                         print("INFO: Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
-                        # TODO: I should dump the full metadata table to figure out the read groups
-                        # assign them numbers, then trigger based on read_info to label reads
-                        ret = s5.write_header(header, end_reason_labels=end_reason_labels)  # limitation: only 1 read group for now
+                        # limitation: only 1 read group for now
+                        ret = s5.write_header(header, end_reason_labels=end_reason_labels)
                         if ret != 0:
                             print("ERROR: Slow5 header not written, see stderr output")
                             kill_program()
@@ -234,31 +387,8 @@ def pod52slow5(args):
                                 kill_program()
 
                     # do slow5 stuff
-                    record, aux = s5.get_empty_record(aux=True)
-                    # convert pod5 -> slow5
-                    record['read_id'] = str(read["read_id"])
-                    record['read_group'] = 0
-                    record['offset'] = float(read["offset"])
-                    record['sampling_rate'] = sampling_rate
-                    record['len_raw_signal'] = int(read["sample_count"])
-                    record['signal'] = np.array(read["signal"], np.int16)
-                    record['digitisation'] = float(read["digitisation"])
-                    record['range'] = float(read["range"])
-                    # aux fields
-                    aux["channel_number"] = str(read["channel"])
-                    aux["median_before"] = float(read["median_before"])
-                    aux["read_number"] = int(read["read_number"])
-                    aux["start_mux"] = int(read["well"])
-                    aux["start_time"] = int(read["start_sample"])
-                    aux["end_reason"] = int(read["end_reason"] or None)
-                    aux["tracked_scaling_shift"] = read.get("tracked_scaling_shift", None)
-                    aux["tracked_scaling_scale"] = read.get("tracked_scaling_scale", None)
-                    aux["predicted_scaling_shift"] = read.get("predicted_scaling_shift", None)
-                    aux["predicted_scaling_scale"] = read.get("predicted_scaling_scale", None)
-                    aux["num_reads_since_mux_change"] = read.get("num_reads_since_mux_change", None)
-                    aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
-                    aux["num_minknow_events"] = read.get("num_minknow_events", None)
-                    
+                    rec, au = s5.get_empty_record(aux=True)
+                    record, aux = process_pod52slow5(read, rec, au, sampling_rate)
                     records[record['read_id']] = record
                     auxs[record['read_id']] = aux
                     # write slow5 read
@@ -266,7 +396,7 @@ def pod52slow5(args):
                     #     print("ERROR: slow5 write_record failed")
                     #     kill_program()
                     if len(records) >= batchsize:
-                        if s5.write_record_batch(records, threads=8, batchsize=1000, aux=auxs) != 0:
+                        if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
                             print("ERROR: slow5 write_record failed")
                             kill_program()
                         records = {}
@@ -275,6 +405,115 @@ def pod52slow5(args):
                     prev_info = info
     # close slow5 file
     s5.close()
+
+def s2s_worker(args, pfile, slow5_out):
+    '''
+    single pod5 file to single s/blow5 file
+    skip the queue and mp stuff and just get it done.
+    Can still use slow5 threading for the writes though
+    '''
+    batchsize = args.batchsize
+    slow5_threads = args.slow5_threads
+    if os.path.isdir(slow5_out):
+        filepath, filename = os.path.split(pfile)
+        # replace pod5 filename extention with .blow5
+        slow5_filename = ".".join(filename.split(".")[:-1]) + ".blow5"
+        slow5_filepath = os.path.join(slow5_out, slow5_filename)
+    else:
+        slow5_filepath = slow5_out
+     
+    # open slow5 file for writing
+    print("INFO: opening slow5 file: {}".format(slow5_filepath))
+    s5 = slow5.Open(slow5_filepath, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
+    header = {}
+    sampling_rate = 0
+    end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
+    # get header info in first read
+    # Get pod5 reads
+    count = 0
+    print("INFO: Reading pod5 file: {}".format(pfile))
+    records = {}
+    auxs = {}
+    with p5.Reader(pfile) as reader:
+        for pod_read_record in reader.reads():
+            # convert pod5 read into slow5 read structure
+            for read, info in get_data_from_pod5_record(pod_read_record):
+                if count == 0:
+                    # write header
+                    for k in list(info.keys()):
+                        header[k] = info[k]
+                        if k == "sample_frequency":
+                            sampling_rate = float(info[k])
+                    print("INFO: Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
+                    # limitation: only 1 read group for now
+                    ret = s5.write_header(header, end_reason_labels=end_reason_labels)
+                    if ret != 0:
+                        print("ERROR: Slow5 header not written, see stderr output")
+                        kill_program()
+                    print("INFO: Slow5 header written")
+
+                if count > 0:
+                    for k in list(info.keys()):
+                        if k not in prev_info:
+                            print("ERROR: {} not in previous run_info".format(k))
+                            print("ERROR: More than 1 read_group present - split your pod5")
+                            kill_program()
+                        if info[k] != prev_info[k]:
+                            print("ERROR: {} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
+                            print("ERROR: More than 1 read_group present - split your pod5")
+                            kill_program()
+
+                # do slow5 stuff
+                rec, au = s5.get_empty_record(aux=True)
+                record, aux = process_pod52slow5(read, rec, au, sampling_rate)
+                records[record['read_id']] = record
+                auxs[record['read_id']] = aux
+                # write slow5 read
+                # if s5.write_record(record, aux) != 0:
+                #     print("ERROR: slow5 write_record failed")
+                #     kill_program()
+                if len(records) >= batchsize:
+                    if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
+                        print("ERROR: slow5 write_record failed")
+                        kill_program()
+                    records = {}
+                    auxs = {}
+                count += 1
+                prev_info = info
+    # close slow5 file
+    s5.close()
+
+
+def process_pod52slow5(read, record, aux, sampling_rate):
+    '''
+    take read dic and push into records and aux
+    '''
+    # convert pod5 -> slow5
+    record['read_id'] = str(read["read_id"])
+    record['read_group'] = 0
+    record['offset'] = float(read["offset"])
+    record['sampling_rate'] = sampling_rate
+    record['len_raw_signal'] = int(read["sample_count"])
+    record['signal'] = np.array(read["signal"], np.int16)
+    record['digitisation'] = float(read["digitisation"])
+    record['range'] = float(read["range"])
+    # aux fields
+    aux["channel_number"] = str(read["channel"])
+    aux["median_before"] = float(read["median_before"])
+    aux["read_number"] = int(read["read_number"])
+    aux["start_mux"] = int(read["well"])
+    aux["start_time"] = int(read["start_sample"])
+    aux["end_reason"] = int(read["end_reason"] or None)
+    aux["tracked_scaling_shift"] = read.get("tracked_scaling_shift", None)
+    aux["tracked_scaling_scale"] = read.get("tracked_scaling_scale", None)
+    aux["predicted_scaling_shift"] = read.get("predicted_scaling_shift", None)
+    aux["predicted_scaling_scale"] = read.get("predicted_scaling_scale", None)
+    aux["num_reads_since_mux_change"] = read.get("num_reads_since_mux_change", None)
+    aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
+    aux["num_minknow_events"] = read.get("num_minknow_events", None)
+    
+    return record, aux
+
 
 def slow52pod5(args):
     '''
@@ -544,15 +783,31 @@ def main():
     subcommand = parser.add_subparsers(help='subcommand --help for help messages', dest="command")
 
     # POD5 to SLOW5
-    p2s = subcommand.add_parser('p2s', help='POD5 -> SLOW5/BLOW5',
+    p2s = subcommand.add_parser('p2s', help='POD5 -> SLOW5/BLOW5', description="Convert POD5 -> SLOW5/BLOW5",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    p2s.add_argument("input", type=Path,
-                     help="pod5 file to convert")
-    p2s.add_argument("output",
-                     help="s/blow5 file to save")
+    # make -o and -d mutually exclusive groups
+    outputs = p2s.add_mutually_exclusive_group()
+    p2s.add_argument("input", type=Path, metavar="POD5", nargs='+',
+                     help="pod5 file/s to convert")
+    outputs.add_argument("-d", "--out-dir",
+                     help="output to directory")
+    outputs.add_argument("-o", "--output", metavar="S/BLOW5",
+                     help="output to FILE")
+    p2s.add_argument("-c", "--compress", default="zlib", choices=["zlib", "zstd", "none"],
+                     help="record compression method (only for blow5 format)")
+    p2s.add_argument("-s", "--sig-compress", default="svb_zd", choices=["svb_zd", "none"],
+                     help="signal compression method (only for blow5 format)")
+    p2s.add_argument("-p", "--iop", type=int, default=4,
+                     help="number of I/O processes")
+    p2s.add_argument("--slow5-threads", type=int, default=4,
+                     help="number of threads to use to compress reads on slow5 write")
+    p2s.add_argument("--batchsize", type=int, default=1000,
+                     help="number of reads to write at a time on slow5 write")
+    # p2s.add_argument("--retain", action="store_true",
+    #                  help="retain the same directory structure in the converted output as the input (experimental)")
 
     # SLOW5 to POD5
-    s2p = subcommand.add_parser('s2p', help='SLOW5/BLOW5 -> POD5',
+    s2p = subcommand.add_parser('s2p', help='SLOW5/BLOW5 -> POD5', description="Convert SLOW5/BLOW5 -> POD5",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     s2p.add_argument("input",
                      help="s/blow5 file to convert")
