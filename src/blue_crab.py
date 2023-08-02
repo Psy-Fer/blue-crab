@@ -223,9 +223,9 @@ def pod52slow5(args):
                 
                 # start up many to many workers
                 for i in range(args.iop):
-                    m2m_worker = mp.Process(target=m2m_worker, args=(args, input_queue, slow5_out), daemon=True, name='m2m_worker{}'.format(i))
-                    m2m_worker.start()
-                    processes.append(m2m_worker)
+                    m2m_worker_proc = mp.Process(target=m2m_worker, args=(args, input_queue, slow5_out), daemon=True, name='m2m_worker{}'.format(i))
+                    m2m_worker_proc.start()
+                    processes.append(m2m_worker_proc)
                 
                 for p in processes:
                     p.join()
