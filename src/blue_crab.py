@@ -180,6 +180,8 @@ def pod52slow5(args):
     # pod5 logic
     pod5_filepath_set = set()
     pod5_filename_set = set()
+    retain_path_set = set()
+    retain_file_set = set()
     for input_pod5 in args.input:
         if os.path.isdir(input_pod5):
             pod5_path = input_pod5
@@ -188,6 +190,22 @@ def pod52slow5(args):
                     if pfile.endswith('.pod5'):
                         if pfile not in pod5_filename_set:
                             pod5_filepath_set.add(os.path.join(dirpath, pfile))
+                            # retain folder structure. This SHOULD work, but damn path manipulation is hard
+                            if args.retain:
+                                if not args.out_dir:
+                                    print("ERROR: --retain can only be used with --out-dir, exiting")
+                                    kill_program()
+                                # this is the easiest way to get 99% of the cases without doing some batshit methods to get 100% correct
+                                # at least as i can see thinking about this for a day. Hopefully someone better at this stuff does a pull request lol
+                                mkdirpath = os.path.join(args.out_dir, dirpath.lstrip(input_pod5))
+                                # make sure we are only trying to create directories once
+                                if mkdirpath not in retain_path_set:
+                                    print("INFO: creating dir: {}".format(mkdirpath))
+                                    # take the path and subtract the input path
+                                    Path(mkdirpath).mkdir(parents=True, exist_ok=True)
+                                    retain_path_set.add(mkdirpath)
+                                retain_file_set.add((os.path.join(dirpath, pfile), mkdirpath))
+                            
                             pod5_filename_set.add(pfile)
                         else:
                             print("ERROR: File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
@@ -215,8 +233,12 @@ def pod52slow5(args):
                 print("INFO: {} pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(len(pod5_filepath_set), slow5_out))
                 print("INFO: writing s/blow5 to dir: {}".format(slow5_out))
                 # send all the pod5 files to input_queue to be consumed by workers
-                for pod5_file in pod5_filepath_set:
-                    input_queue.put(pod5_file)
+                if args.retain:
+                    for pod5_file in retain_file_set:
+                        input_queue.put(pod5_file)
+                else:
+                    for pod5_file in pod5_filepath_set:
+                        input_queue.put(pod5_file)
                 # add kill switches for the procs at the end to consume
                 for _ in range(args.iop):
                     input_queue.put(None)
@@ -234,10 +256,9 @@ def pod52slow5(args):
                 # pops out the 1 file - destructive
                 pfile = pod5_filepath_set.pop()
                 s2s_worker(args, pfile, slow5_out)
-
-
         else:
              print("ERROR: --out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
+    
     if args.output:
         if args.output.endswith(('.slow5', '.blow5')):
             slow5_out = args.output
@@ -258,18 +279,26 @@ def m2m_worker(args, input_queue, slow5_out):
     '''
     many to many worker to consume input queue
     for each pod5 file, write s/blow5 file
-    this is for the many to many workflow
     '''
     batchsize = args.batchsize
     slow5_threads = args.slow5_threads
     while True:
-        pfile = input_queue.get()
-        if pfile is None:
+        q = input_queue.get()
+        if q is None:
             break
+        # expect a tuple if --retain
+        if args.retain:
+            (pfile, retain_path) = q
+        else:
+            pfile = q
+
         filepath, filename = os.path.split(pfile)
-        # replace pod5 filename extention with .blow5
         slow5_filename = ".".join(filename.split(".")[:-1]) + ".blow5"
-        slow5_filepath = os.path.join(slow5_out, slow5_filename)
+        if retain_path is not None:
+            slow5_filepath = os.path.join(retain_path, slow5_filename)
+        else:
+            # replace pod5 filename extention with .blow5
+            slow5_filepath = os.path.join(slow5_out, slow5_filename)
         # open slow5 file for writing
         s5 = slow5.Open(slow5_filepath, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
         header = {}
@@ -539,16 +568,6 @@ def slow52pod5(args):
     # slow5_end_reason_labels = ['unknown', 'partial', 'mux_change', 'unblock_mux_change', 'signal_positive', 'signal_negative']
     with p5.Writer(pod5_file) as writer:
         for read in reads:
-            '''
-            TODO: new aux fields needed in slow5 - need to allow user defined aux fields/types in pythin API
-            -num_minknow_events,
-            -tracked_scaling_scale,
-            -tracked_scaling_shift,
-            -predicted_scaling_scale,
-            -predicted_scaling_shift,
-            -num_reads_since_mux_change,
-            -time_since_mux_change,
-            '''
             # TODO: try/except around this and give meaninful error
             # Populate container classes for read metadata
             read_group = read["read_group"]
@@ -787,7 +806,7 @@ def main():
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # make -o and -d mutually exclusive groups
     outputs = p2s.add_mutually_exclusive_group()
-    p2s.add_argument("input", type=Path, metavar="POD5", nargs='+',
+    p2s.add_argument("input", metavar="POD5", nargs='+',
                      help="pod5 file/s to convert")
     outputs.add_argument("-d", "--out-dir",
                      help="output to directory")
@@ -799,19 +818,19 @@ def main():
                      help="signal compression method (only for blow5 format)")
     p2s.add_argument("-p", "--iop", type=int, default=4,
                      help="number of I/O processes")
-    p2s.add_argument("--slow5-threads", type=int, default=4,
+    p2s.add_argument("--slow5-threads", type=int, default=8,
                      help="number of threads to use to compress reads on slow5 write")
     p2s.add_argument("--batchsize", type=int, default=1000,
                      help="number of reads to write at a time on slow5 write")
-    # p2s.add_argument("--retain", action="store_true",
-    #                  help="retain the same directory structure in the converted output as the input (experimental)")
+    p2s.add_argument("--retain", action="store_true",
+                     help="retain the same directory structure in the converted output as the input (experimental)")
 
     # SLOW5 to POD5
     s2p = subcommand.add_parser('s2p', help='SLOW5/BLOW5 -> POD5', description="Convert SLOW5/BLOW5 -> POD5",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    s2p.add_argument("input",
+    s2p.add_argument("input", metavar="SLOW5",
                      help="s/blow5 file to convert")
-    s2p.add_argument("output", type=Path,
+    s2p.add_argument("-o", "--output", type=Path, metavar="POD5",
                      help="pod5 file to save")
 
     parser.add_argument("--profile", action="store_true",
