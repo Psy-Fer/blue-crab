@@ -1,19 +1,17 @@
 # blue-crab
-This is a conversion tool to convert from ONT's pod5 format to the community maintained slow5/blow5 format
 
+blue-crab is a conversion tool to convert from ONT's POD5 format to the community maintained SLOW5/BLOW5 format.
 
 # WARNING
 
 Current state does not include some fields from pod5. 
-
 Please wait for a release where this will be fixed.
-
 Use at your own risk.
 
 
 ## Setup
 
-Minimum python3.8
+Minimum python 3.8 would be required.
 
 ```
 python3 -m venv ./blue-crab-venv
