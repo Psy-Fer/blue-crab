@@ -325,6 +325,7 @@ def m2m_worker(args, input_queue, slow5_out):
                 # convert pod5 read into slow5 read structure
                 for read, info in get_data_from_pod5_record(pod_read_record):
                     if count == 0:
+                        prev_info = info
                         # write header
                         for k in list(info.keys()):
                             header[k] = info[k]
@@ -375,6 +376,7 @@ def m2m_worker(args, input_queue, slow5_out):
         # close slow5 file
         s5.close()
         input_queue.task_done()
+        prev_info = {}
 
 
 def m2s_worker(args, pod5_filepath_set, slow5_out):
