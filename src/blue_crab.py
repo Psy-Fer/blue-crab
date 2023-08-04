@@ -202,7 +202,7 @@ def pod52slow5(args):
                                 mkdirpath = os.path.join(args.out_dir, dirpath.lstrip(input_pod5))
                                 # make sure we are only trying to create directories once
                                 if mkdirpath not in retain_path_set:
-                                    print("INFO: creating dir: {}".format(mkdirpath))
+                                    print("INFO: Creating directory: {}".format(mkdirpath))
                                     # take the path and subtract the input path
                                     Path(mkdirpath).mkdir(parents=True, exist_ok=True)
                                     retain_path_set.add(mkdirpath)
@@ -901,6 +901,16 @@ def main():
             if not args.output.endswith(('.slow5', '.blow5')):
                 print("ERROR: --output argument not a valid .slow5 or .blow5 file. Given argument: {}".format(args.output))
                 kill_program()
+        # if out-dir exist, must be empty. if not exist, make it.
+        if args.out_dir:
+            if os.path.isdir(args.out_dir):
+                if os.listdir(args.out_dir):
+                    # it's not empty
+                    print("ERROR: --out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
+                    kill_program()
+            else:
+                print("INFO: Creating directory: {}".format(args.out_dir))
+                Path(args.out_dir).mkdir(parents=True, exist_ok=False)
         
         pod52slow5(args)
     elif args.command == "s2p":
