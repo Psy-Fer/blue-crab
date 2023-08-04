@@ -1,0 +1,35 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  ubuntu:
+    name: ubuntu-20.04
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: install packages
+      run: sudo apt-get update && sudo apt-get install -y zlib1g-dev gcc python3 python3-pip && pip3 install setuptools cython numpy
+    - name: slow5lib-dev
+      run: git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install --user && cd ..
+    - name: install
+      run:  python3 setup.py install --user && blue-crab --help
+    # - name: test
+    #   run: make test
+  # os_x:
+  #   name: OSX
+  #   runs-on: macos-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       submodules: recursive
+  #   - name: build
+  #     run: make
+  #   - name: test
+  #     run: make test
