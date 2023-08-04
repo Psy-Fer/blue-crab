@@ -29,7 +29,7 @@ def kill_program():
 class MyParser(argparse.ArgumentParser):
     def error(self, message):
         sys.stderr.write('error: %s\n' % message)
-        self.print_help(sys.stdout)
+        self.print_help(sys.stderr)
         sys.exit(2)
 
 def run_info_to_flat_dic(run_info):
@@ -366,6 +366,12 @@ def m2m_worker(args, input_queue, slow5_out):
                         auxs = {}
                     count += 1
                     prev_info = info
+        if len(records) > 0:
+            if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
+                print("ERROR: slow5 write_record failed")
+                kill_program()
+            records = {}
+            auxs = {}
         # close slow5 file
         s5.close()
         input_queue.task_done()
@@ -442,6 +448,12 @@ def m2s_worker(args, pod5_filepath_set, slow5_out):
                         auxs = {}
                     count += 1
                     prev_info = info
+    if len(records) > 0:
+        if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
+            print("ERROR: slow5 write_record failed")
+            kill_program()
+        records = {}
+        auxs = {}
     # close slow5 file
     s5.close()
 
@@ -519,6 +531,12 @@ def s2s_worker(args, pfile, slow5_out):
                     auxs = {}
                 count += 1
                 prev_info = info
+    if len(records) > 0:
+        if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
+            print("ERROR: slow5 write_record failed")
+            kill_program()
+        records = {}
+        auxs = {}
     # close slow5 file
     s5.close()
 
@@ -853,7 +871,7 @@ def main():
     args = parser.parse_args()
 
     if len(sys.argv) == 1:
-        parser.print_help(sys.stdout)
+        parser.print_help(sys.stderr)
         sys.exit(1)
 
     if args.profile:
@@ -871,7 +889,7 @@ def main():
     elif args.command == "s2p":
         slow52pod5(args)
     else:
-        parser.print_help(sys.stdout)
+        parser.print_help(sys.stderr)
         sys.exit(1)
     
     # if profiling, dump info into log files in current dir
