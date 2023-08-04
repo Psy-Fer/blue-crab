@@ -75,4 +75,4 @@ Note: Before converting a SLOW5 file having multiple read groups, split the file
 *  `-V, --version`:<br/>
     Print the blue-crab version number.
 * `--profile:<br/>
-    Run cProfile on all processes - for profiling benchmarks [default value: False].	
+    Run cProfile on all processes - for profiling benchmarks [default value: False].

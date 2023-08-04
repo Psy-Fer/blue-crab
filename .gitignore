@@ -130,3 +130,11 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .idea/
+
+# test stuff
+test/tmp
+test/data/out
+
+# slow5lib for development
+/slow5lib
+

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Run p2s, s2p, and again p2s and check if first produced slow5s are same as the last set.
 Usage1="p2s_s2p_integrity_test.sh"
-Usage2="p2s_s2p_integrity_test.sh [path to pod5 directory] [path to create a temporary directory][-c or --to (optional) [clean_fscache -f (optional)]"
+Usage2="p2s_s2p_integrity_test.sh [path to pod5 directory] [path to create a temporary directory] [clean_fscache -f (optional)]"
 
 # Relative path to "slow5/tests/"
 REL_PATH="$(dirname $0)/"
@@ -17,7 +17,7 @@ die() {
     exit 1
 }
 
-pod5_DIR="$REL_PATH/data/raw/p2s_s2p_integrity/"
+pod5_DIR="$REL_PATH/data/raw/p2s/pod5/"
 TEMP_DIR="$REL_PATH/data/out/p2s_s2p_integrity/"
 if [[ "$#" -ge 2 ]]; then
   pod5_DIR=$1
@@ -28,10 +28,6 @@ p2s_atm1_OUTPUT="$TEMP_DIR/p2s_attempt1"
 s2p_OUTPUT="$TEMP_DIR/s2p"
 p2s_atm2_OUTPUT="$TEMP_DIR/p2s_attempt2"
 
-SLOW5_FORMAT="--to slow5"
-if [[ "$#" -eq 4 ]]; then
-    SLOW5_FORMAT=$4
-fi
 
 test -d "$TEMP_DIR" && rm -r "$TEMP_DIR"
 mkdir "$TEMP_DIR" || die "Creating $TEMP_DIR failed"

@@ -24,21 +24,21 @@ my_diff() {
 
 ret=0
 
-TESTCASE_NAME="f2s test"
+TESTCASE_NAME="p2s test"
 echo_test $TESTCASE_NAME
-if ! ./test/test_f2s.sh; then
+if ! ./test/test_p2s.sh; then
     fail "$TESTCASE_NAME"
 fi
 
 TESTCASE_NAME="p2s_s2p integrity test"
 echo_test $TESTCASE_NAME
-if ! ./test/test_f2s_s2f_integrity.sh; then
+if ! ./test/test_p2s_s2p_integrity.sh; then
     fail "$TESTCASE_NAME"
 fi
 
 TESTCASE_NAME="s2p test"
 echo_test $TESTCASE_NAME
-if ! ./test/test_s2f.sh ; then
+if ! ./test/test_s2p.sh ; then
     fail "$TESTCASE_NAME"
 fi
 
