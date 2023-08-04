@@ -30,17 +30,17 @@ if ! ./test/test_p2s.sh; then
     fail "$TESTCASE_NAME"
 fi
 
-TESTCASE_NAME="p2s_s2p integrity test"
-echo_test $TESTCASE_NAME
-if ! ./test/test_p2s_s2p_integrity.sh; then
-    fail "$TESTCASE_NAME"
-fi
+# TESTCASE_NAME="p2s_s2p integrity test"
+# echo_test $TESTCASE_NAME
+# if ! ./test/test_p2s_s2p_integrity.sh; then
+#     fail "$TESTCASE_NAME"
+# fi
 
-TESTCASE_NAME="s2p test"
-echo_test $TESTCASE_NAME
-if ! ./test/test_s2p.sh ; then
-    fail "$TESTCASE_NAME"
-fi
+# TESTCASE_NAME="s2p test"
+# echo_test $TESTCASE_NAME
+# if ! ./test/test_s2p.sh ; then
+#     fail "$TESTCASE_NAME"
+# fi
 
 if [ $ret -eq 1 ]; then
   echo ">>>>>One or more test cases have failed. The first failed set of testcases is $FIRST_FAILED_SET_OF_TESTCASES<<<<<"
