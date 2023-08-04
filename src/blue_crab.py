@@ -185,7 +185,9 @@ def pod52slow5(args):
     for input_pod5 in args.input:
         if os.path.isdir(input_pod5):
             pod5_path = input_pod5
-            for dirpath, _, files in os.walk(pod5_path):
+            for dirpath, folders, files in os.walk(pod5_path):
+                folders.sort()
+                files.sort()
                 for pfile in files:
                     if pfile.endswith('.pod5'):
                         if pfile not in pod5_filename_set:
