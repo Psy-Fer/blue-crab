@@ -294,8 +294,11 @@ def m2m_worker(args, input_queue, slow5_out):
 
         filepath, filename = os.path.split(pfile)
         slow5_filename = ".".join(filename.split(".")[:-1]) + ".blow5"
-        if retain_path is not None:
-            slow5_filepath = os.path.join(retain_path, slow5_filename)
+        if args.retain:
+            if retain_path is not None:
+                slow5_filepath = os.path.join(retain_path, slow5_filename)
+            else:
+                slow5_filepath = os.path.join(slow5_out, slow5_filename)
         else:
             # replace pod5 filename extention with .blow5
             slow5_filepath = os.path.join(slow5_out, slow5_filename)
