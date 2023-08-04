@@ -29,7 +29,7 @@ def kill_program():
 class MyParser(argparse.ArgumentParser):
     def error(self, message):
         sys.stderr.write('error: %s\n' % message)
-        self.print_help()
+        self.print_help(sys.stdout)
         sys.exit(2)
 
 def run_info_to_flat_dic(run_info):
@@ -261,6 +261,7 @@ def pod52slow5(args):
                 s2s_worker(args, pfile, slow5_out)
         else:
              print("ERROR: --out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
+             kill_program()
     
     if args.output:
         if args.output.endswith(('.slow5', '.blow5')):
@@ -275,6 +276,9 @@ def pod52slow5(args):
                 s2s_worker(args, pfile, slow5_out)
         else:
              print("ERROR: --output is not a slow5/blow5 file. For directory output please use --out-dir. output: {}".format(args.output))
+             kill_program()
+    
+    print("INFO: pod5 -> s/blow5 complete")
 
     
 
@@ -792,6 +796,8 @@ def slow52pod5(args):
             
             # Write the read object
             writer.add_read(read)
+    
+    print("INFO: s/blow5 -> pod5 complete")
 
 
 
@@ -847,7 +853,7 @@ def main():
     args = parser.parse_args()
 
     if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
+        parser.print_help(sys.stdout)
         sys.exit(1)
 
     if args.profile:
@@ -855,13 +861,17 @@ def main():
         pr.enable()
 
     if args.command == "p2s":
+        # let's do some arg validation
+        if args.output:
+            if not args.output.endswith(('.slow5', '.blow5')):
+                print("ERROR: --output file not a valid .slow5 or .blow5 file. Given input: {}".format(args.output))
+                kill_program()
+        
         pod52slow5(args)
-        print("INFO: pod5 -> s/blow5 complete")
     elif args.command == "s2p":
         slow52pod5(args)
-        print("INFO: s/blow5 -> pod5 complete")
     else:
-        parser.print_help(sys.stderr)
+        parser.print_help(sys.stdout)
         sys.exit(1)
     
     # if profiling, dump info into log files in current dir
