@@ -844,7 +844,7 @@ def main():
                      help="output to FILE")
     p2s.add_argument("-c", "--compress", default="zlib", choices=["zlib", "zstd", "none"],
                      help="record compression method (only for blow5 format)")
-    p2s.add_argument("-s", "--sig-compress", default="svb_zd", choices=["svb_zd", "none"],
+    p2s.add_argument("-s", "--sig-compress", default="svb-zd", choices=["svb-zd", "none"],
                      help="signal compression method (only for blow5 format)")
     p2s.add_argument("-p", "--iop", type=int, default=4,
                      help="number of I/O processes")
@@ -880,9 +880,18 @@ def main():
 
     if args.command == "p2s":
         # let's do some arg validation
+        if not args.output and not args.out_dir:
+            print("ERROR: --output or --out-dir must be provided. stdout writing not supported")
+            kill_program()
+
+        for pfile in args.input:
+            if not os.path.isdir(pfile):
+                if not pfile.endswith(".pod5"):
+                    print("ERROR: input argument not a dir or a .pod5 file. Given argument: {}".format(args.input))
+                    kill_program()
         if args.output:
             if not args.output.endswith(('.slow5', '.blow5')):
-                print("ERROR: --output file not a valid .slow5 or .blow5 file. Given input: {}".format(args.output))
+                print("ERROR: --output argument not a valid .slow5 or .blow5 file. Given argument: {}".format(args.output))
                 kill_program()
         
         pod52slow5(args)
