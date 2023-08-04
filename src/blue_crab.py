@@ -3,6 +3,7 @@
 import argparse
 import sys
 import os
+import logging
 from pathlib import Path
 import datetime
 import iso8601
@@ -20,9 +21,20 @@ import cProfile, pstats, io
 from ._version import __version__
 
 
+# set up logger
+logger = logging.getLogger("blue-crab")
+logger.setLevel(logging.INFO)
+loghandler = logging.StreamHandler()
+loghandler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - [%(levelname)s]: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+loghandler.setFormatter(formatter)
+logger.addHandler(loghandler)
+
+
+
 def kill_program():
     ''' exit program due to error '''
-    print("ERROR: Error encounted, exiting...")
+    logger.error("Error encounted, exiting.")
     sys.exit(1)
 
 
@@ -82,7 +94,7 @@ def s2p_end_reason_convert(end_reason):
     try:
         ret = pod5_end_dic[end_reason]
     except:
-        print("s2p_end_reason_convert: end_reason - {} - not found, please contact developers".format(end_reason))
+        logger.error("s2p_end_reason_convert: end_reason - {} - not found, please contact developers".format(end_reason))
         sys.exit(1)
     return ret[0], ret[1]
 
@@ -103,7 +115,7 @@ def p2s_end_reason_convert(end_reason):
     try:
         ret = slow5_end_dic[end_reason]
     except:
-        print("p2s_end_reason_convert: end_reason - {} - not found, please contact developers".format(end_reason))
+        logger.error("p2s_end_reason_convert: end_reason - {} - not found, please contact developers".format(end_reason))
         sys.exit(1)
     return ret
 
@@ -195,14 +207,14 @@ def pod52slow5(args):
                             # retain folder structure. This SHOULD work, but damn path manipulation is hard
                             if args.retain:
                                 if not args.out_dir:
-                                    print("ERROR: --retain can only be used with --out-dir, exiting")
+                                    logger.error("--retain can only be used with --out-dir, exiting")
                                     kill_program()
                                 # this is the easiest way to get 99% of the cases without doing some batshit methods to get 100% correct
                                 # at least as i can see thinking about this for a day. Hopefully someone better at this stuff does a pull request lol
                                 mkdirpath = os.path.join(args.out_dir, dirpath.lstrip(input_pod5))
                                 # make sure we are only trying to create directories once
                                 if mkdirpath not in retain_path_set:
-                                    print("INFO: Creating directory: {}".format(mkdirpath))
+                                    logger.info("Creating directory: {}".format(mkdirpath))
                                     # take the path and subtract the input path
                                     Path(mkdirpath).mkdir(parents=True, exist_ok=True)
                                     retain_path_set.add(mkdirpath)
@@ -210,24 +222,24 @@ def pod52slow5(args):
                             
                             pod5_filename_set.add(pfile)
                         else:
-                            print("ERROR: File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
+                            logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
                             kill_program()
         else:
             if args.retain:
-                 print("ERROR: --retain cannot be used with single files")
+                 logger.error("--retain cannot be used with single files")
                  kill_program()
             if input_pod5 not in pod5_filepath_set:
                 # small logic hole here if 2 files with diff paths but same name
                 # TODO: I should break the input down to filename only then check....
                 pod5_filepath_set.add(input_pod5)
             else:
-                print("ERROR: File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
+                logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
                 kill_program()
 
     
     # check that pod5 files are actually found, otherwise exit
     if len(pod5_filepath_set) < 1:
-        print("ERROR: no .pod5 files detected... exiting")
+        logger.error("no .pod5 files detected... exiting")
         kill_program()
 
     # slow5 output logic
@@ -235,8 +247,8 @@ def pod52slow5(args):
         if os.path.isdir(args.out_dir):
             slow5_out = args.out_dir
             if len(pod5_filepath_set) > 1:
-                print("INFO: {} pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(len(pod5_filepath_set), slow5_out))
-                print("INFO: writing s/blow5 to dir: {}".format(slow5_out))
+                logger.info("m2m: {} pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(len(pod5_filepath_set), slow5_out))
+                logger.info("writing s/blow5 to dir: {}".format(slow5_out))
                 # send all the pod5 files to input_queue to be consumed by workers
                 if args.retain:
                     for pod5_file in retain_file_set:
@@ -257,30 +269,30 @@ def pod52slow5(args):
                 for p in processes:
                     p.join()
             else:
-                print("INFO: 1 pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(slow5_out))
+                logger.info("s2s: 1 pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(slow5_out))
                 # pops out the 1 file - destructive
                 pfile = pod5_filepath_set.pop()
                 s2s_worker(args, pfile, slow5_out)
         else:
-             print("ERROR: --out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
+             logger.error("--out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
              kill_program()
     
     if args.output:
         if args.output.endswith(('.slow5', '.blow5')):
             slow5_out = args.output
             if len(pod5_filepath_set) > 1:
-                print("INFO: {} pod5 files detected as input. Writing many pod5 to one s/blow5 file: {}".format(len(pod5_filepath_set), slow5_out))
+                logger.info("m2s: {} pod5 files detected as input. Writing many pod5 to one s/blow5 file: {}".format(len(pod5_filepath_set), slow5_out))
                 m2s_worker(args, pod5_filepath_set, slow5_out)
             else:
-                print("INFO: 1 pod5 files detected as input. Writing 1:1 pod5->s/blow5 to file: {}".format(slow5_out))
+                logger.info("s2s: 1 pod5 files detected as input. Writing 1:1 pod5->s/blow5 to file: {}".format(slow5_out))
                 # pops out the 1 file - destructive
                 pfile = pod5_filepath_set.pop()
                 s2s_worker(args, pfile, slow5_out)
         else:
-             print("ERROR: --output is not a slow5/blow5 file. For directory output please use --out-dir. output: {}".format(args.output))
+             logger.error("--output is not a slow5/blow5 file. For directory output please use --out-dir. output: {}".format(args.output))
              kill_program()
     
-    print("INFO: pod5 -> s/blow5 complete")
+    logger.info("pod5 -> s/blow5 complete")
 
     
 
@@ -319,7 +331,7 @@ def m2m_worker(args, input_queue, slow5_out):
         # get header info in first read
         # Get pod5 reads
         count = 0
-        # print("INFO: Reading pod5 file/s: {}".format(args.input))
+        # logger.info("m2m: Reading pod5 file/s: {}".format(args.input))
         records = {}
         auxs = {}
         with p5.Reader(pfile) as reader:
@@ -333,23 +345,23 @@ def m2m_worker(args, input_queue, slow5_out):
                             header[k] = info[k]
                             if k == "sample_frequency":
                                 sampling_rate = float(info[k])
-                        # print("INFO: Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
+                        # logger.info("Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
                         # limitation: only 1 read group for now
                         ret = s5.write_header(header, end_reason_labels=end_reason_labels)
                         if ret != 0:
-                            print("ERROR: Slow5 header not written, see stderr output")
+                            logger.error("Slow5 header not written, see stderr output")
                             kill_program()
-                        # print("INFO: Slow5 header written")
+                        # logger.info("Slow5 header written")
 
                     if count > 0:
                         for k in list(info.keys()):
                             if k not in prev_info:
-                                print("ERROR: {} not in previous run_info".format(k))
-                                print("ERROR: More than 1 read_group present - split your pod5")
+                                logger.error("{} not in previous run_info".format(k))
+                                logger.error("More than 1 read_group present - split your pod5")
                                 kill_program()
                             if info[k] != prev_info[k]:
-                                print("ERROR: {} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
-                                print("ERROR: More than 1 read_group present - split your pod5")
+                                logger.error("{} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
+                                logger.error("More than 1 read_group present - split your pod5")
                                 kill_program()
 
                     # do slow5 stuff
@@ -359,11 +371,11 @@ def m2m_worker(args, input_queue, slow5_out):
                     auxs[record['read_id']] = aux
                     # write slow5 read
                     # if s5.write_record(record, aux) != 0:
-                    #     print("ERROR: slow5 write_record failed")
+                    #     logger.error("slow5 write_record failed")
                     #     kill_program()
                     if len(records) >= batchsize:
                         if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
-                            print("ERROR: slow5 write_record failed")
+                            logger.error("slow5 write_record failed")
                             kill_program()
                         records = {}
                         auxs = {}
@@ -371,7 +383,7 @@ def m2m_worker(args, input_queue, slow5_out):
                     prev_info = info
         if len(records) > 0:
             if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
-                print("ERROR: slow5 write_record failed")
+                logger.error("slow5 write_record failed")
                 kill_program()
             records = {}
             auxs = {}
@@ -395,6 +407,7 @@ def m2s_worker(args, pod5_filepath_set, slow5_out):
     batchsize = args.batchsize
     slow5_threads = args.slow5_threads
     # open slow5 file for writing
+    logger.info("opening slow5 file: {}".format(slow5_out))
     s5 = slow5.Open(slow5_out, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
     header = {}
     sampling_rate = 0
@@ -402,7 +415,7 @@ def m2s_worker(args, pod5_filepath_set, slow5_out):
     # get header info in first read
     # Get pod5 reads
     count = 0
-    print("INFO: Reading pod5 file/s: {}".format(args.input))
+    logger.info("m2s: Reading pod5 file/s: {}".format(args.input))
     records = {}
     auxs = {}
     for pfile in pod5_filepath_set:
@@ -416,23 +429,23 @@ def m2s_worker(args, pod5_filepath_set, slow5_out):
                             header[k] = info[k]
                             if k == "sample_frequency":
                                 sampling_rate = float(info[k])
-                        print("INFO: Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
+                        logger.info("Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
                         # limitation: only 1 read group for now
                         ret = s5.write_header(header, end_reason_labels=end_reason_labels)
                         if ret != 0:
-                            print("ERROR: Slow5 header not written, see stderr output")
+                            logger.error("Slow5 header not written, see stderr output")
                             kill_program()
-                        print("INFO: Slow5 header written")
+                        logger.info("Slow5 header written")
 
                     if count > 0:
                         for k in list(info.keys()):
                             if k not in prev_info:
-                                print("ERROR: {} not in previous run_info".format(k))
-                                print("ERROR: More than 1 read_group present - split your pod5")
+                                logger.error("{} not in previous run_info".format(k))
+                                logger.error("More than 1 read_group present - split your pod5")
                                 kill_program()
                             if info[k] != prev_info[k]:
-                                print("ERROR: {} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
-                                print("ERROR: More than 1 read_group present - split your pod5")
+                                logger.error("{} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
+                                logger.error("More than 1 read_group present - split your pod5")
                                 kill_program()
 
                     # do slow5 stuff
@@ -442,11 +455,11 @@ def m2s_worker(args, pod5_filepath_set, slow5_out):
                     auxs[record['read_id']] = aux
                     # write slow5 read
                     # if s5.write_record(record, aux) != 0:
-                    #     print("ERROR: slow5 write_record failed")
+                    #     logger.error("slow5 write_record failed")
                     #     kill_program()
                     if len(records) >= batchsize:
                         if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
-                            print("ERROR: slow5 write_record failed")
+                            logger.error("slow5 write_record failed")
                             kill_program()
                         records = {}
                         auxs = {}
@@ -454,7 +467,7 @@ def m2s_worker(args, pod5_filepath_set, slow5_out):
                     prev_info = info
     if len(records) > 0:
         if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
-            print("ERROR: slow5 write_record failed")
+            logger.error("slow5 write_record failed")
             kill_program()
         records = {}
         auxs = {}
@@ -478,7 +491,7 @@ def s2s_worker(args, pfile, slow5_out):
         slow5_filepath = slow5_out
      
     # open slow5 file for writing
-    print("INFO: opening slow5 file: {}".format(slow5_filepath))
+    logger.info("opening slow5 file: {}".format(slow5_filepath))
     s5 = slow5.Open(slow5_filepath, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
     header = {}
     sampling_rate = 0
@@ -486,7 +499,7 @@ def s2s_worker(args, pfile, slow5_out):
     # get header info in first read
     # Get pod5 reads
     count = 0
-    print("INFO: Reading pod5 file: {}".format(pfile))
+    logger.info("s2s: Reading pod5 file: {}".format(pfile))
     records = {}
     auxs = {}
     with p5.Reader(pfile) as reader:
@@ -499,23 +512,23 @@ def s2s_worker(args, pfile, slow5_out):
                         header[k] = info[k]
                         if k == "sample_frequency":
                             sampling_rate = float(info[k])
-                    print("INFO: Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
+                    logger.info("Writing header - limited to 1 read group for now, split your pod5 if it's a merged file")
                     # limitation: only 1 read group for now
                     ret = s5.write_header(header, end_reason_labels=end_reason_labels)
                     if ret != 0:
-                        print("ERROR: Slow5 header not written, see stderr output")
+                        logger.error("Slow5 header not written, see stderr output")
                         kill_program()
-                    print("INFO: Slow5 header written")
+                    logger.info("Slow5 header written")
 
                 if count > 0:
                     for k in list(info.keys()):
                         if k not in prev_info:
-                            print("ERROR: {} not in previous run_info".format(k))
-                            print("ERROR: More than 1 read_group present - split your pod5")
+                            logger.error("{} not in previous run_info".format(k))
+                            logger.error("More than 1 read_group present - split your pod5")
                             kill_program()
                         if info[k] != prev_info[k]:
-                            print("ERROR: {} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
-                            print("ERROR: More than 1 read_group present - split your pod5")
+                            logger.error("{} does not match prev value: 0: {} 1: {}".format(k, prev_info[k], info[k]))
+                            logger.error("More than 1 read_group present - split your pod5")
                             kill_program()
 
                 # do slow5 stuff
@@ -525,11 +538,11 @@ def s2s_worker(args, pfile, slow5_out):
                 auxs[record['read_id']] = aux
                 # write slow5 read
                 # if s5.write_record(record, aux) != 0:
-                #     print("ERROR: slow5 write_record failed")
+                #     logger.error("slow5 write_record failed")
                 #     kill_program()
                 if len(records) >= batchsize:
                     if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
-                        print("ERROR: slow5 write_record failed")
+                        logger.error("slow5 write_record failed")
                         kill_program()
                     records = {}
                     auxs = {}
@@ -537,7 +550,7 @@ def s2s_worker(args, pfile, slow5_out):
                 prev_info = info
     if len(records) > 0:
         if s5.write_record_batch(records, threads=slow5_threads, batchsize=batchsize, aux=auxs) != 0:
-            print("ERROR: slow5 write_record failed")
+            logger.error("slow5 write_record failed")
             kill_program()
         records = {}
         auxs = {}
@@ -582,7 +595,7 @@ def slow52pod5(args):
     '''
     slow5_file = args.input
     pod5_file = args.output
-    print("INFO: Opening s/blow5 file: {}".format(slow5_file))
+    logger.info("Opening s/blow5 file: {}".format(slow5_file))
     # open slow5 file for writing
     s5 = slow5.Open(slow5_file, 'r')
     # get header (don't know read_group_num yet, so need to do slow way of lookup every read....lame, i'll fix this)
@@ -819,7 +832,7 @@ def slow52pod5(args):
             # Write the read object
             writer.add_read(read)
     
-    print("INFO: s/blow5 -> pod5 complete")
+    logger.info("s/blow5 -> pod5 complete")
 
 
 
@@ -871,12 +884,22 @@ def main():
                         help="run cProfile - for profiling benchmarking")
     parser.add_argument("-V", "--version", action='version', version="SLOW5/BLOW5 <-> POD5 converter version: {}".format(VERSION),
                         help="Prints version")
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+                        help="Verbose output [v/vv/vvv]")
 
     args = parser.parse_args()
 
+    # print help if no args given
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
+    
+    # set up logging level
+    if args.verbose > 0:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+    
 
     if args.profile:
         pr = cProfile.Profile()
@@ -885,31 +908,31 @@ def main():
     if args.command == "p2s":
         # let's do some arg validation
         if not args.output and not args.out_dir:
-            print("ERROR: --output or --out-dir must be provided. stdout writing not supported")
+            logger.error("--output or --out-dir must be provided. stdout writing not supported")
             kill_program()
 
         for pfile in args.input:
             if not os.path.isdir(pfile):
                 if not pfile.endswith(".pod5"):
-                    print("ERROR: input argument not a dir or a .pod5 file. Given argument: {}".format(args.input))
+                    logger.error("input argument not a dir or a .pod5 file. Given argument: {}".format(args.input))
                     kill_program()
                 if not os.path.isfile(pfile):
-                    print("ERROR: {} does not exist".format(pfile))
+                    logger.error("{} does not exist".format(pfile))
                     kill_program()
 
         if args.output:
             if not args.output.endswith(('.slow5', '.blow5')):
-                print("ERROR: --output argument not a valid .slow5 or .blow5 file. Given argument: {}".format(args.output))
+                logger.error("--output argument not a valid .slow5 or .blow5 file. Given argument: {}".format(args.output))
                 kill_program()
         # if out-dir exist, must be empty. if not exist, make it.
         if args.out_dir:
             if os.path.isdir(args.out_dir):
                 if os.listdir(args.out_dir):
                     # it's not empty
-                    print("ERROR: --out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
+                    logger.error("--out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
                     kill_program()
             else:
-                print("INFO: Creating directory: {}".format(args.out_dir))
+                logger.info("Creating directory: {}".format(args.out_dir))
                 Path(args.out_dir).mkdir(parents=True, exist_ok=False)
         
         pod52slow5(args)
