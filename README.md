@@ -4,8 +4,8 @@ blue-crab is a conversion tool to convert from ONT's POD5 format to the communit
 
 # WARNING
 
-Current state does not include some fields from pod5. 
-Please wait for a release where this will be fixed.
+Currently under testing
+Please wait for a release.
 Use at your own risk.
 
 
