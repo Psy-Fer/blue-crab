@@ -837,8 +837,8 @@ def main():
                      help="pod5 file to save")
 
     parser.add_argument("--profile", action="store_true",
-                        help="run cProfile on all processes - for debugging benchmarking")
-    parser.add_argument("-v", "--version", action='version', version="SLOW5/BLOW5 <-> POD5 converter version: {}".format(VERSION),
+                        help="run cProfile - for profiling benchmarking")
+    parser.add_argument("-V", "--version", action='version', version="SLOW5/BLOW5 <-> POD5 converter version: {}".format(VERSION),
                         help="Prints version")
 
     args = parser.parse_args()
