@@ -889,6 +889,10 @@ def main():
                 if not pfile.endswith(".pod5"):
                     print("ERROR: input argument not a dir or a .pod5 file. Given argument: {}".format(args.input))
                     kill_program()
+                if not os.path.isfile(pfile):
+                    print("ERROR: {} does not exist".format(pfile))
+                    kill_program()
+
         if args.output:
             if not args.output.endswith(('.slow5', '.blow5')):
                 print("ERROR: --output argument not a valid .slow5 or .blow5 file. Given argument: {}".format(args.output))
