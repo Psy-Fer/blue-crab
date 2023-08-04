@@ -211,6 +211,9 @@ def pod52slow5(args):
                             print("ERROR: File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
                             kill_program()
         else:
+            if args.retain:
+                 print("ERROR: --retain cannot be used with single files")
+                 kill_program()
             if input_pod5 not in pod5_filepath_set:
                 # small logic hole here if 2 files with diff paths but same name
                 # TODO: I should break the input down to filename only then check....
@@ -810,7 +813,7 @@ def main():
     # make -o and -d mutually exclusive groups
     outputs = p2s.add_mutually_exclusive_group()
     p2s.add_argument("input", metavar="POD5", nargs='+',
-                     help="pod5 file/s to convert")
+                     help="pod5 file/s or directories to convert")
     outputs.add_argument("-d", "--out-dir",
                      help="output to directory")
     outputs.add_argument("-o", "--output", metavar="S/BLOW5",
