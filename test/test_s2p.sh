@@ -1,4 +1,29 @@
 #!/bin/bash
+
+# MIT License
+
+# Copyright (c) 2020 Hiruna Samarakoon
+# Copyright (c) 2020 Sasha Jenner
+# Copyright (c) 2020,2023 Hasindu Gamaarachchi
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 # Run s2p with different file, input and output formats.
 Usage="test_s2p.sh"
 
@@ -45,28 +70,36 @@ blue-crab s2p $RAW_DIR/a.slow5 -o $OUTPUT_DIR/a.pod5 || die "testcase $TESTCASE_
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 TESTCASE_NO=2
-TESTNAME=".slow5 to .pod5 (output directory given)"
+TESTNAME=".blow5 to .pod5"
 echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
-blue-crab s2p $RAW_DIR/a.slow5 -d $OUTPUT_DIR/a || die "testcase $TESTCASE_NO failed"
+blue-crab s2p $RAW_DIR/z2.blow5 -o $OUTPUT_DIR/b.pod5 || die "testcase $TESTCASE_NO failed"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+
+#overwrite?
+
+# TESTCASE_NO=2
+# TESTNAME=".slow5 to .pod5 (output directory given)"
+# echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
+# blue-crab s2p $RAW_DIR/a.slow5 -d $OUTPUT_DIR/a || die "testcase $TESTCASE_NO failed"
+# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 TESTCASE_NO=3
 TESTNAME=".slow5 (in current directory) to .pod5"
 echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
 cd $RAW_DIR
 CD_BACK=../../../..
-$CD_BACK/blue-crab s2p a.slow5 -o $CD_BACK/$OUTPUT_DIR/b.pod5 || die "testcase $TESTCASE_NO failed"
+blue-crab s2p a.slow5 -o $CD_BACK/$OUTPUT_DIR/c.pod5 || die "testcase $TESTCASE_NO failed"
 cd $CD_BACK
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-TESTCASE_NO=4
-TESTNAME=".slow5 (in current directory) to .pod5 (output directory given)"
-echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
-cd $RAW_DIR
-CD_BACK=../../../..
-$CD_BACK/blue-crab s2p a.slow5 -d $CD_BACK/$OUTPUT_DIR/b || die "testcase $TESTCASE_NO failed"
-cd $CD_BACK
-echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+# TESTCASE_NO=4
+# TESTNAME=".slow5 (in current directory) to .pod5 (output directory given)"
+# echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
+# cd $RAW_DIR
+# CD_BACK=../../../..
+# $CD_BACK/blue-crab s2p a.slow5 -d $CD_BACK/$OUTPUT_DIR/b || die "testcase $TESTCASE_NO failed"
+# cd $CD_BACK
+# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 rm -r $OUTPUT_DIR || die "Removing $OUTPUT_DIR failed"
 

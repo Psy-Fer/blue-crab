@@ -1,4 +1,29 @@
 #!/bin/bash
+
+# MIT License
+
+# Copyright (c) 2020 Hiruna Samarakoon
+# Copyright (c) 2020 Sasha Jenner
+# Copyright (c) 2020,2023 Hasindu Gamaarachchi
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 # Run p2s with different file, input and output formats.
 Usage="test_p2s.sh"
 
@@ -58,25 +83,37 @@ blue-crab p2s $POD5_DIR/pod5/z/z2.pod5 --iop 1 -o $OUTPUT_DIR/out.blow5 || die "
 diff -q $EXP_SLOW5_DIR/pod5-output/z2.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
+echo
+TESTCASE_NO=1.4
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file process:single_process output:directory-------------------"
+blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 -d $OUTPUT_DIR/pod5-output --iop 1 || die "testcase $TESTCASE_NO failed"
+diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5-output/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+
+echo
+TESTCASE_NO=1.5
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file process:single_process output:empty existing directory-------------------"
+rm $OUTPUT_DIR/pod5-output/*
+blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 -d $OUTPUT_DIR/pod5-output --iop 1 || die "testcase $TESTCASE_NO failed"
+diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5-output/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+
+echo
+TESTCASE_NO=1.6
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file process:single_process output:overwrite non empty directory-------------------"
+blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 -d $OUTPUT_DIR/pod5-output --iop 1 && die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+
 # echo
-# TESTCASE_NO=1.4
-# echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file process:single_process output:directory-------------------"
-# blue-crab p2s $POD5_DIR/pod5/ssm2.pod5 -d $OUTPUT_DIR/pod5-output --iop 1 || die "testcase $TESTCASE_NO failed"
-# diff -q $EXP_SLOW5_DIR/pod5-output/ssm2.blow5 $OUTPUT_DIR/pod5-output/0.slow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-
-
-# echo
-# TESTCASE_NO=1.5
+# TESTCASE_NO=1.7
 # echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:single_process output:file-------------------"
 # blue-crab p2s $POD5_DIR/pod5/z --iop 1 -o $OUTPUT_DIR/out.blow5 || die "testcase $TESTCASE_NO failed"
 # diff -q $EXP_SLOW5_DIR/pod5-output/directory_z.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'p2s format:pod5 input:directory process:single_process output"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 # echo
-# rm -f $OUTPUT_DIR/pod5/*
-# TESTCASE_NO=1.6
+# rm -rf $OUTPUT_DIR/pod5
+# TESTCASE_NO=1.8
 # echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:single_process output:directory-------------------"
 # blue-crab p2s $POD5_DIR/pod5 --iop 1 -d $OUTPUT_DIR/pod5 || die "testcase $TESTCASE_NO failed"
 # diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
@@ -84,8 +121,12 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 # diff -q $EXP_SLOW5_DIR/pod5-output/b1.blow5 $OUTPUT_DIR/pod5/b1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
+
+
+# COMBINATIONS LIKE MULTIPLE INPUT FILES AND MIX OF DIR AND FILES?
+
 echo
-TESTCASE_NO=1.7
+TESTCASE_NO=1.9
 echo "------------------- p2s testcase $TESTCASE_NO >>> current directory:pod5 file directory output: out-------------------"
 cd $POD5_DIR/pod5
 CD_BACK=../../../../..
@@ -96,13 +137,13 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 # ----------------------------------------------- multi process --------------------------------------------
 
-# echo
-# rm -f $OUTPUT_DIR/pod5-output/*
-# TESTCASE_NO=2.1
-# echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file process:multi output:directory-------------------"
-# blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 -d $OUTPUT_DIR/pod5-output --iop 4 || die "testcase $TESTCASE_NO failed"
-# diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5-output/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:multi output"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+echo
+rm -f $OUTPUT_DIR/pod5-output/*
+TESTCASE_NO=2.1
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file process:multi output:directory-------------------"
+blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 -d $OUTPUT_DIR/pod5-output --iop 4 || die "testcase $TESTCASE_NO failed"
+diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5-output/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:multi output"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 # echo
 # rm $OUTPUT_DIR/pod5-output/*
@@ -118,12 +159,12 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 #----------------------------------------- run id conflicts -------------------------------------------
 
-echo
-TESTCASE_NO=3.1
-echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:single_process output:out run_id_conflicts-------------------"
-blue-crab p2s $POD5_DIR/pod5 --iop 1 -o $OUTPUT_DIR/out.blow5 && die "testcase $TESTCASE_NO failed"
-echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-echo
+# echo
+# TESTCASE_NO=3.1
+# echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:single_process output:out run_id_conflicts-------------------"
+# blue-crab p2s $POD5_DIR/pod5 --iop 1 -o $OUTPUT_DIR/out.blow5 && die "testcase $TESTCASE_NO failed"
+# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+# echo
 
 ## Output formats
 
@@ -193,6 +234,9 @@ echo
 # blue-crab p2s $POD5_DIR/pod5/ $POD5_DIR/pod5/ -d $OUTPUT_DIR/dupli 2> $OUTPUT_DIR/err.log && die "testcase $TESTCASE_NO failed"
 # grep -q "ERROR.* Two or more pod5 files have the same filename.*" $OUTPUT_DIR/err.log || die "ERROR: p2s_test testcase $TESTCASE_NO failed"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+
+
+## unsupported POD5
 
 
 rm -r $OUTPUT_DIR || die "Removing $OUTPUT_DIR failed"
