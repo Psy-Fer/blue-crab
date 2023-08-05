@@ -2,6 +2,21 @@
 
 Here are the docs including example commands and workflows for converting between pod5 and s/blow5
 
+If your POD5 files are of version `0.1.5` and read table version `ReadTableVersion.V3` you may also try the following command.
+```
+python3 ./archived/converter_for_v015.py p2s my_pod5_file.pod5 my_slow5_file.slow5
+```
+
+The following command may work with pod5 files with version older than `0.1.5`
+```
+python3 ./archived/converter_pre_v015.py p2s my_pod5_file.pod5 my_slow5_file.slow5
+```
+
+To go back from slow5 to pod5 use the following script. This will use fast5 as an intermediary format.
+```
+s2p_conversion_alpha.sh input.slow5 output.pod5
+```
+
 ### Data conversion walkthrough
 
 Here I will attempt to direct the user to become familiar with conversion tools as well as understand the various nanopore signal formats.

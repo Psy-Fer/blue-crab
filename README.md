@@ -49,7 +49,7 @@ pip install -r requirements.txt
 
 Please visit the [manual page](docs/cli.md) for all the commands and options. Some examples are give below:
 
-``````
+```
 # pod5 file -> slow5/blow5 file
 blue-crab p2s example.pod5 -o example.blow5
 
@@ -63,22 +63,8 @@ blue-crab s2p example.blow5 -o example.pod5
 
 # Notes
 
-POD5 is still in development and subject to change, and has had a number of backward compatibility breaking changes so far. This version of blue-crab is only tested on most recent pod5 files.
+POD5 has had a number of backward compatibility breaking changes so far. This version of blue-crab is only tested on most recent pod5 files. blue-crab simply relies on ONT's POD5 API for reading and writing POD5 files, thus, leaving the burden of managing a library that can handle all the variants of POD5 and cleaning up the mess they create. We will not invest time to handle all these various idiosyncrasies in POD5, unlike we did for hundreds of different FAST5 formats when developing slow5tools. If your POD5 files are v0.1.5 or lower, you may check [this old readme](archived/old_readme.md) out.
 
-To convert pod5 files with version `0.1.5` and read table version `ReadTableVersion.V3` use the following command.
-```
-python3 ./archived/converter_for_v015.py p2s my_pod5_file.pod5 my_slow5_file.slow5
-```
-
-The following command may work with pod5 files with version older than `0.1.5`
-```
-python3 ./archived/converter_pre_v015.py p2s my_pod5_file.pod5 my_slow5_file.slow5
-```
-
-To go back from slow5 to pod5 use the following script. This will use fast5 as an intermediary format.
-```
-./scripts/s2p_conversion_alpha.sh input.slow5 output.pod5
-```
 
 
 # Acknowledgement
