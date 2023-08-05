@@ -1,0 +1,10 @@
+#!/bin/bash
+
+REALPATH=$(dirname "$(readlink -f "$0")")
+
+test -z ${REALPATH} && echo "REALPATH could not be deduced" && exit 1
+source ${REALPATH}/../blue-crab-venv/bin/activate || { echo "${REALPATH}/../blue-crab-venv could not be activated" && exit 1; }
+blue-crab "$@"
+exit_code=$?
+deactivate
+exit "$exit_code"
