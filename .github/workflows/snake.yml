@@ -65,7 +65,7 @@ jobs:
     - name: install packages
       run: pip3 install numpy
     - name: slow5lib-dev
-      run: git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install --user --install-option="--no-deps" && cd ..
+      run: git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib && echo "numpy"  > requirements.txt && python3 setup.py install --user && cd ..
     - name: install
       run:  python3 setup.py install --user && blue-crab --help
     - name: test
@@ -80,7 +80,7 @@ jobs:
     - name: install packages
       run: pip3 install numpy
     - name: slow5lib-dev
-      run: git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install --user --install-option="--no-deps" && cd ..
+      run: git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib && echo "numpy"  > requirements.txt && python3 setup.py install --user && cd ..
     - name: install
       run:  python3 setup.py install --user && blue-crab --help
     - name: test
