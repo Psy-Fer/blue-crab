@@ -59,11 +59,11 @@ Note: Before converting a SLOW5 file having multiple read groups, split the file
 *  `-o FILE`, `--output FILE`:<br/>
     Outputs data to FILE and FILE must have .pod5 extension.
 *  `-p, --iop INT`:<br/>
-    Specifies the number of I/O processes to use during conversion [default value: 8]. Increasing the number of I/O processes makes p2s significantly faster, especially on HPC with RAID systems (multiple disks) where a large value number of processes can be used (e.g., `-p 64`).
+    Specifies the number of I/O processes to use during conversion of multiple files [default value: 8]. Increasing the number of I/O processes makes p2s significantly faster, especially on HPC with RAID systems (multiple disks) where a large value number of processes can be used (e.g., `-p 64`).
 * `-t, --threads INT`:<br/>
-    Number of threads used for decoding S/BLOW5 records [default value: 8].
+    Number of threads used for decoding S/BLOW5 records in a single process [default value: 8].
 * `-K, --batchsize`:<br/>
-    The batch size used for decoding S/BLOW5 records. This is the number of S/BLOW5 records on the memory at once [default value: 1000]. An increased batch size improves multi-threaded performance at cost of higher RAM.
+    The batch size used for decoding S/BLOW5 records in a single process. This is the number of S/BLOW5 records on the memory at once [default value: 1000]. An increased batch size improves multi-threaded performance at cost of higher RAM.
 *  `-h, --help`:<br/>
    Prints the help menu.
 
@@ -74,5 +74,8 @@ Note: Before converting a SLOW5 file having multiple read groups, split the file
     Prints the help menu.
 *  `-V, --version`:<br/>
     Print the blue-crab version number.
+*  `-v, --verbose`:<br/>
+    Verbose output [v/vv/vvv] (default: 0)
+    Verbose output [v/vv/vvv] (default: 0)
 * `--profile:<br/>
     Run cProfile on all processes - for profiling benchmarks [default value: False].
