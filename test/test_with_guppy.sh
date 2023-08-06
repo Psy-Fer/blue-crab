@@ -28,7 +28,7 @@
 
 # first do p2s, s2p and then basecall
 
-Usage="test_s2p_with_guppy.sh [path to pod5 directory] [path to create a temporary directory] [path to slow5tools executable] [path to guppy executable]"
+Usage="test_s2p_with_guppy.sh [path to pod5 directory] [path to create a temporary directory] [path to slow5tools executable] [path to guppy executable] [path to bluecrab]"
 
 if [[ "$#" -lt 4 ]]; then
 	echo "Usage: $Usage"
@@ -48,6 +48,7 @@ POD5_DIR=$1
 OUTPUT_DIR=$2/test_with_guppy_test
 SLOW5TOOLS=$3
 GUPPY_BASECALLER=$4
+BLUECRAB=$5
 
 P2S_OUTPUT_DIR=$OUTPUT_DIR/p2s
 S2P_OUTPUT_DIR=$OUTPUT_DIR/s2p
@@ -61,12 +62,12 @@ mkdir $OUTPUT_DIR || die "mkdir $OUTPUT_DIR failed"
 
 IOP=40
 
-$SLOW5TOOLS p2s  $POD5_DIR -d $P2S_OUTPUT_DIR --iop $IOP || die "slow5tools p2s failed"
+$BLUECRAB p2s  $POD5_DIR -d $P2S_OUTPUT_DIR --iop $IOP || die "slow5tools p2s failed"
 $SLOW5TOOLS merge $P2S_OUTPUT_DIR -o $OUTPUT_DIR/merged.blow5 -t $IOP || die "slow5tools merge failed"
 $SLOW5TOOLS split $OUTPUT_DIR/merged.blow5  -d $OUTPUT_DIR/split -r 4000 || die "slow5tools split failed"
 CONFIG=dna_r10.4.1_e8.2_400bps_5khz_fast.cfg
 
-$SLOW5TOOLS s2p $OUTPUT_DIR/split -d $S2P_OUTPUT_DIR --iop $IOP || die "slow5tools s2p failed"
+$BLUECRAB s2p $OUTPUT_DIR/split -d $S2P_OUTPUT_DIR --iop $IOP || die "slow5tools s2p failed"
 
 $GUPPY_BASECALLER -c ${CONFIG} -i $POD5_DIR -s $GUPPY_OUTPUT_ORIGINAL -r --device cuda:all || die "Guppy failed"
 $GUPPY_BASECALLER -c ${CONFIG}  -i $S2P_OUTPUT_DIR -s $GUPPY_OUTPUT_S2P -r --device cuda:all || die "Guppy failed"

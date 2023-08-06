@@ -46,18 +46,20 @@ TMP_DIR=/data/slow5-testdata/tmp/
 test -d $TMP_DIR && rm -r $TMP_DIR
 rm -f *.log
 guppy_basecaller --version > /dev/null || die "guppy_basecaller not in path"
+bluecrab --version > /dev/null || die "bluecrab not in path"
+slow5tools --version > /dev/null || die "slow5tools not in path"
 
 echo "********************************zymo****************************************"
 DATA_ZYMO=/data/jamfer/zymo/
 test -d $DATA_ZYMO || die "ERROR: $DATA_ZYMO not found. Download from https://slow5.page.link/na12878_prom_sub and extract"
 mkdir $TMP_DIR || die "Creating $TMP_DIR failed"
-test/test_with_guppy.sh $DATA_ZYMO/fast5 $TMP_DIR ./slow5tools guppy_basecaller &> test_s2f_with_guppy_sub.log || die "test_s2f_with_guppy failed"
+test/test_with_guppy.sh $DATA_ZYMO/pod5 $TMP_DIR slow5tools /install/ont-guppy-6.5.7/bin/guppy_basecaller blue-crab &> test_s2p_with_guppy_sub.log || die "test_s2p_with_guppy failed"
 rm -r $TMP_DIR
 echo "Guppy test passed yey!"
 mkdir $TMP_DIR || die "Creating $TMP_DIR failed"
-test/test_f2s_s2f_integrity.sh $DATA_ZYMO/fast5 $TMP_DIR &> f2s_s2f_integrity_test.txt || die "f2s_s2f_integrity_test failed"
+test/test_p2s_s2p_integrity.sh $DATA_ZYMO/pod5 $TMP_DIR &> p2s_s2p_integrity_test.txt || die "p2s_s2p_integrity_test failed"
 rm -r $TMP_DIR
-echo "test_f2s_s2f_integrity passed!"
+echo "test_p2s_s2p_integrity passed!"
 echo ""
 
 echo "all done!"
