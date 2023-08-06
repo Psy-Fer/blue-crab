@@ -42,11 +42,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - run: docker run --rm --privileged multiarch/qemu-user-static:register --reset
-    - uses: docker://multiarch/ubuntu-core:arm64-bionic
+    - uses: docker://multiarch/ubuntu-core:arm64-focal
       with:
         args: 'uname -a'
     - uses: actions/checkout@v1
-    - uses: docker://multiarch/ubuntu-core:arm64-bionic
+    - uses: docker://multiarch/ubuntu-core:arm64-focal
       with:
         args: >
           bash -c "apt-get update &&
