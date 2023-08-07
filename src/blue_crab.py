@@ -302,7 +302,7 @@ def m2m_worker(args, input_queue, slow5_out):
     for each pod5 file, write s/blow5 file
     '''
     batchsize = args.batchsize
-    slow5_threads = args.slow5_threads
+    slow5_threads = args.threads
     while True:
         q = input_queue.get()
         if q is None:
@@ -405,7 +405,7 @@ def m2s_worker(args, pod5_filepath_set, slow5_out):
     '''
 
     batchsize = args.batchsize
-    slow5_threads = args.slow5_threads
+    slow5_threads = args.threads
     # open slow5 file for writing
     logger.info("opening slow5 file: {}".format(slow5_out))
     s5 = slow5.Open(slow5_out, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
@@ -481,7 +481,7 @@ def s2s_worker(args, pfile, slow5_out):
     Can still use slow5 threading for the writes though
     '''
     batchsize = args.batchsize
-    slow5_threads = args.slow5_threads
+    slow5_threads = args.threads
     if os.path.isdir(slow5_out):
         filepath, filename = os.path.split(pfile)
         # replace pod5 filename extention with .blow5
