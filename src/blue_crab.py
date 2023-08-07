@@ -247,7 +247,7 @@ def pod52slow5(args):
         if os.path.isdir(args.out_dir):
             slow5_out = args.out_dir
             if len(pod5_filepath_set) > 1:
-                logger.info("m2m: {} pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(len(pod5_filepath_set), slow5_out))
+                logger.info("many2many: {} pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(len(pod5_filepath_set), slow5_out))
                 logger.info("writing s/blow5 to dir: {}".format(slow5_out))
                 # send all the pod5 files to input_queue to be consumed by workers
                 if args.retain:
@@ -269,7 +269,7 @@ def pod52slow5(args):
                 for p in processes:
                     p.join()
             else:
-                logger.info("s2s: 1 pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(slow5_out))
+                logger.info("single2single: 1 pod5 file detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(slow5_out))
                 # pops out the 1 file - destructive
                 pfile = pod5_filepath_set.pop()
                 s2s_worker(args, pfile, slow5_out)
@@ -281,10 +281,10 @@ def pod52slow5(args):
         if args.output.endswith(('.slow5', '.blow5')):
             slow5_out = args.output
             if len(pod5_filepath_set) > 1:
-                logger.info("m2s: {} pod5 files detected as input. Writing many pod5 to one s/blow5 file: {}".format(len(pod5_filepath_set), slow5_out))
+                logger.info("many2single: {} pod5 files detected as input. Writing many pod5 to one s/blow5 file: {}".format(len(pod5_filepath_set), slow5_out))
                 m2s_worker(args, pod5_filepath_set, slow5_out)
             else:
-                logger.info("s2s: 1 pod5 files detected as input. Writing 1:1 pod5->s/blow5 to file: {}".format(slow5_out))
+                logger.info("single2single: 1 pod5 file detected as input. Writing 1:1 pod5->s/blow5 to file: {}".format(slow5_out))
                 # pops out the 1 file - destructive
                 pfile = pod5_filepath_set.pop()
                 s2s_worker(args, pfile, slow5_out)
@@ -593,8 +593,516 @@ def slow52pod5(args):
     '''
     pipeline for converting slow5 files to ONT pod5 files
     '''
-    slow5_file = args.input
-    pod5_file = args.output
+
+
+     # set up mp stuff
+    mp.set_start_method('spawn')
+    input_queue = mp.JoinableQueue()
+    processes = []
+
+    # slo5 input logic
+    slow5_filepath_set = set()
+    slow5_filename_set = set()
+    retain_path_set = set()
+    retain_file_set = set()
+    for input_slow5 in args.input:
+        if os.path.isdir(input_slow5):
+            slow5_path = input_slow5
+            for dirpath, folders, files in os.walk(slow5_path):
+                folders.sort()
+                files.sort()
+                for sfile in files:
+                    if sfile.endswith((".slow5", ".blow5")):
+                        if sfile not in slow5_filename_set:
+                            slow5_filepath_set.add(os.path.join(dirpath, sfile))
+                            # retain folder structure. This SHOULD work, but damn path manipulation is hard
+                            if args.retain:
+                                if not args.out_dir:
+                                    logger.error("--retain can only be used with --out-dir, exiting")
+                                    kill_program()
+                                # this is the easiest way to get 99% of the cases without doing some batshit methods to get 100% correct
+                                # at least as i can see thinking about this for a day. Hopefully someone better at this stuff does a pull request lol
+                                mkdirpath = os.path.join(args.out_dir, dirpath.lstrip(input_slow5))
+                                # make sure we are only trying to create directories once
+                                if mkdirpath not in retain_path_set:
+                                    logger.info("Creating directory: {}".format(mkdirpath))
+                                    # take the path and subtract the input path
+                                    Path(mkdirpath).mkdir(parents=True, exist_ok=True)
+                                    retain_path_set.add(mkdirpath)
+                                retain_file_set.add((os.path.join(dirpath, sfile), mkdirpath))
+                            
+                            slow5_filename_set.add(sfile)
+                        else:
+                            logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
+                            kill_program()
+        else:
+            if args.retain:
+                 logger.error("--retain cannot be used with single files")
+                 kill_program()
+            if input_slow5 not in slow5_filepath_set:
+                # small logic hole here if 2 files with diff paths but same name
+                # TODO: I should break the input down to filename only then check....
+                slow5_filepath_set.add(input_slow5)
+            else:
+                logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
+                kill_program()
+
+    
+    # check that slow5 files are actually found, otherwise exit
+    if len(slow5_filepath_set) < 1:
+        logger.error("no .slow5 or .blow5 files detected... exiting")
+        kill_program()
+
+    # pod5 output logic
+    if args.out_dir:
+        if os.path.isdir(args.out_dir):
+            pod5_out = args.out_dir
+            if len(slow5_filepath_set) > 1:
+                logger.info("many2many: {} s/blow5 files detected as input. Writing 1:1 s/blow5->pod5 to dir: {}".format(len(slow5_filepath_set), pod5_out))
+                logger.info("writing pod5 to dir: {}".format(pod5_out))
+                # send all the slow5 files to input_queue to be consumed by workers
+                if args.retain:
+                    for slow5_file in retain_file_set:
+                        input_queue.put(slow5_file)
+                else:
+                    for slow5_file in slow5_filepath_set:
+                        input_queue.put(slow5_file)
+                # add kill switches for the procs at the end to consume
+                for _ in range(args.iop):
+                    input_queue.put(None)
+                
+                # start up many to many workers
+                for i in range(args.iop):
+                    m2m_worker_proc = mp.Process(target=m2m_s2p_worker, args=(args, input_queue, pod5_out), daemon=True, name='m2m_s2p_worker{}'.format(i))
+                    m2m_worker_proc.start()
+                    processes.append(m2m_worker_proc)
+                
+                for p in processes:
+                    p.join()
+            else:
+                logger.info("single2single: 1 s/blow5 file detected as input. Writing 1:1 s/blow5->pod5 to dir: {}".format(pod5_out))
+                # pops out the 1 file - destructive
+                sfile = slow5_filepath_set.pop()
+                s2s_s2p_worker(args, sfile, pod5_out)
+        else:
+             logger.error("--out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
+             kill_program()
+    
+    if args.output:
+        if args.output.endswith(".pod5"):
+            pod5_out = args.output
+            if len(slow5_filepath_set) > 1:
+                logger.info("many2single: {} s/blow5 files detected as input. Writing many s/blow5 to one pod5 file: {}".format(len(slow5_filepath_set), pod5_out))
+                m2s_s2p_worker(args, slow5_filepath_set, pod5_out)
+            else:
+                logger.info("single2single: 1 s/blow5 file detected as input. Writing 1:1 s/blow5->pod5 to file: {}".format(pod5_out))
+                # pops out the 1 file - destructive
+                sfile = slow5_filepath_set.pop()
+                s2s_s2p_worker(args, sfile, pod5_out)
+        else:
+             logger.error("--output is not a pod5 file. For directory output please use --out-dir. output: {}".format(args.output))
+             kill_program()
+    
+    logger.info("s/blow5 -> pod5 complete")
+
+
+def m2m_s2p_worker(args, input_queue, pod5_out):
+    '''
+    single s/blow5 file to single pod5
+    '''
+    while True:
+        q = input_queue.get()
+        if q is None:
+            break
+        # expect a tuple if --retain
+        if args.retain:
+            (sfile, retain_path) = q
+        else:
+            sfile = q
+
+        filepath, filename = os.path.split(sfile)
+        pod5_filename = ".".join(filename.split(".")[:-1]) + ".pod5"
+        if args.retain:
+            if retain_path is not None:
+                pod5_filepath = os.path.join(retain_path, pod5_filename)
+            else:
+                pod5_filepath = os.path.join(pod5_out, pod5_filename)
+        else:
+            # replace .s/blow5 filename extention with .pod5
+            pod5_filepath = os.path.join(pod5_out, pod5_filename)
+        
+        # create slow5 reads generator
+        run_info_cache = {}
+        with p5.Writer(pod5_filepath) as writer:
+            s5 = slow5.Open(sfile, 'r')
+            headers = {}
+            reads = s5.seq_reads(aux='all')
+            try:
+                slow5_end_reason_labels = s5.get_aux_enum_labels("end_reason")
+            except:
+                slow5_end_reason_labels = ['unknown']
+            # before ONT added DATA_SERVICE_UNBLOCK_MUX_CHANGE in the middle and removed partial...
+            # slow5_end_reason_labels = ['unknown', 'partial', 'mux_change', 'unblock_mux_change', 'signal_positive', 'signal_negative']
+            for read in reads:
+                # TODO: try/except around this and give meaninful error
+                # Populate container classes for read metadata
+                read_group = read["read_group"]
+                if read_group in headers:
+                    header = headers[read_group]
+                else:
+                    headers[read_group] = s5.get_all_headers(read_group=read_group)
+                    header = headers[read_group]
+                pore = p5.Pore(channel=read["channel_number"], well=read["start_mux"], pore_type=header.get("pore_type", "not_set"))
+                read_number = read["read_number"]
+                start_sample = read["start_time"]
+                # scale = range / digitisation
+                scale = read["range"] / read["digitisation"]
+                calibration = p5.Calibration(offset=read["offset"], scale=scale)
+                median_before = read["median_before"]
+                # sampling_frequency = read["sampling_rate"]
+                # map end_reason if present
+                # let's convert this to it's string equivalent
+                s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                reason, forced = s2p_end_reason_convert(s5_end_reason)
+                end_reason = p5.EndReason(reason=reason, forced=forced)
+        
+                #https://github.com/nanoporetech/pod5-file-format/blob/master/python/pod5/src/pod5/tools/pod5_convert_from_fast5.py#L401
+                
+                # cache the run_info and re-use based on acquisition_id
+                acq_id = header["run_id"]
+                
+                if acq_id not in run_info_cache:
+                    acquisition_id = header.get("run_id", "")
+                    protocol_name = header.get("exp_script_name", "")
+                    acquisition_start_time = header.get("exp_start_time", "")
+                    sequencer_position = header.get("device_id", "")
+                    system_name = header.get("host_product_serial_number", "")
+                    system_type = header.get("host_product_code", "")
+                    adc_min = 0
+                    adc_max = 2047
+                    sequencer_position_type = header.get("device_type", "promethion")
+                    if read["digitisation"] == 8192:
+                        adc_min = -4096
+                        adc_max = 4095
+                        sequencer_position_type = header.get("device_type", "minion")
+
+                    context_list = [
+                        "barcoding_enabled",
+                        "basecall_config_filename",
+                        "experiment_duration_set",
+                        "experiment_type",
+                        "local_basecalling",
+                        "package",
+                        "package_version",
+                        "sample_frequency",
+                        "sequencing_kit",
+                    ]
+                    context_tags = {}
+
+                    for key in context_list:
+                        a = header.get(key, "")
+                        if a is None:
+                            a = ""
+                        context_tags[key] = a
+
+                    tracking_list = [
+                        "asic_id",
+                        "asic_id_eeprom",
+                        "asic_temp",
+                        "asic_version",
+                        "auto_update",
+                        "auto_update_source",
+                        "bream_is_standard",
+                        "configuration_version",
+                        "device_id",
+                        "device_type",
+                        "distribution_status",
+                        "distribution_version",
+                        "exp_script_name",
+                        "exp_script_purpose",
+                        "exp_start_time",
+                        "flow_cell_id",
+                        "flow_cell_product_code",
+                        "guppy_version",
+                        "heatsink_temp",
+                        "hostname",
+                        "hublett_board_id",
+                        "hublett_firmware_version",
+                        "installation_type",
+                        "ip_address",
+                        "local_firmware_file",
+                        "mac_address",
+                        "operating_system",
+                        "protocol_group_id",
+                        "protocol_run_id",
+                        "protocols_version",
+                        "run_id",
+                        "sample_id",
+                        "satellite_board_id",
+                        "satellite_firmware_version",
+                        "usb_config",
+                        "version"
+                    ]
+                                    
+                    tracking_id = {}
+
+                    for key in tracking_list:
+                        a = header.get(key, "")
+                        if a is None:
+                            a = ""
+                        tracking_id[key] = a
+                    
+                    run_info = p5.RunInfo(
+                        acquisition_id = header.get("acquisition_id", acquisition_id),
+                        acquisition_start_time = timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))),
+                        adc_max = int(header.get("adc_max", adc_max)),
+                        adc_min = int(header.get("adc_min", adc_min)),
+                        context_tags = context_tags,
+                        experiment_name = str(header.get("experiment_name", "") or ""),
+                        flow_cell_id = str(header.get("flow_cell_id", "") or ""),
+                        flow_cell_product_code = str(header.get("flow_cell_product_code", "") or ""),
+                        protocol_name = str(header.get("protocol_name", protocol_name) or ""),
+                        protocol_run_id = str(header.get("protocol_run_id", "") or ""),
+                        protocol_start_time = int(timestamp_to_int(convert_datetime_as_epoch_ms(header.get("protocol_start_time", None))) or 0),
+                        sample_id = str(header.get("sample_id", "") or ""),
+                        sample_rate = int(read["sampling_rate"]),
+                        sequencing_kit = str(header.get("sequencing_kit", "") or ""),
+                        sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
+                        sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
+                        software = "blue-crab SLOW5<->POD5 converter",
+                        system_name = str(header.get("system_name", system_name) or ""),
+                        system_type = str(header.get("system_type", system_type) or ""),
+                        tracking_id = tracking_id
+                    )
+                    run_info_cache[acq_id] = run_info
+
+
+                # Signal conversion process
+                signal = read["signal"]
+                signal_chunks, signal_chunk_lengths = vbz_compress_signal_chunked(
+                    signal, DEFAULT_SIGNAL_CHUNK_SIZE
+                )
+                read = p5.CompressedRead(
+                    read_id=uuid.UUID(read["read_id"]),
+                    end_reason=end_reason,
+                    calibration=calibration,
+                    pore=pore,
+                    run_info=run_info_cache[acq_id],
+                    median_before=median_before,
+                    read_number=read_number,
+                    start_sample=start_sample,
+                    signal_chunks=signal_chunks,
+                    signal_chunk_lengths=signal_chunk_lengths,
+                    tracked_scaling=p5.pod5_types.ShiftScalePair(
+                        read.get("tracked_scaling_shift", float("nan")),
+                        read.get("tracked_scaling_scale", float("nan")),
+                    ),
+                    predicted_scaling=p5.pod5_types.ShiftScalePair(
+                        read.get("predicted_scaling_shift", float("nan")),
+                        read.get("predicted_scaling_scale", float("nan")),
+                    ),
+                    num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
+                    time_since_mux_change=read.get("time_since_mux_change", 0.0),
+                    num_minknow_events=read.get("num_minknow_events", 0),
+                )
+
+                
+                # Write the read object
+                writer.add_read(read)
+        input_queue.task_done()
+
+
+def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
+    '''
+    single s/blow5 file to single pod5
+    '''
+    pod5_file = pod5_out
+    # create slow5 reads generator
+    run_info_cache = {}
+    with p5.Writer(pod5_file) as writer:
+        for slow5_file in slow5_filepath_set:
+            s5 = slow5.Open(slow5_file, 'r')
+            headers = {}
+            reads = s5.seq_reads(aux='all')
+            try:
+                slow5_end_reason_labels = s5.get_aux_enum_labels("end_reason")
+            except:
+                slow5_end_reason_labels = ['unknown']
+            # before ONT added DATA_SERVICE_UNBLOCK_MUX_CHANGE in the middle and removed partial...
+            # slow5_end_reason_labels = ['unknown', 'partial', 'mux_change', 'unblock_mux_change', 'signal_positive', 'signal_negative']
+            for read in reads:
+                # TODO: try/except around this and give meaninful error
+                # Populate container classes for read metadata
+                read_group = read["read_group"]
+                if read_group in headers:
+                    header = headers[read_group]
+                else:
+                    headers[read_group] = s5.get_all_headers(read_group=read_group)
+                    header = headers[read_group]
+                pore = p5.Pore(channel=read["channel_number"], well=read["start_mux"], pore_type=header.get("pore_type", "not_set"))
+                read_number = read["read_number"]
+                start_sample = read["start_time"]
+                # scale = range / digitisation
+                scale = read["range"] / read["digitisation"]
+                calibration = p5.Calibration(offset=read["offset"], scale=scale)
+                median_before = read["median_before"]
+                # sampling_frequency = read["sampling_rate"]
+                # map end_reason if present
+                # let's convert this to it's string equivalent
+                s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                reason, forced = s2p_end_reason_convert(s5_end_reason)
+                end_reason = p5.EndReason(reason=reason, forced=forced)
+        
+                #https://github.com/nanoporetech/pod5-file-format/blob/master/python/pod5/src/pod5/tools/pod5_convert_from_fast5.py#L401
+                
+                # cache the run_info and re-use based on acquisition_id
+                acq_id = header["run_id"]
+                
+                if acq_id not in run_info_cache:
+                    acquisition_id = header.get("run_id", "")
+                    protocol_name = header.get("exp_script_name", "")
+                    acquisition_start_time = header.get("exp_start_time", "")
+                    sequencer_position = header.get("device_id", "")
+                    system_name = header.get("host_product_serial_number", "")
+                    system_type = header.get("host_product_code", "")
+                    adc_min = 0
+                    adc_max = 2047
+                    sequencer_position_type = header.get("device_type", "promethion")
+                    if read["digitisation"] == 8192:
+                        adc_min = -4096
+                        adc_max = 4095
+                        sequencer_position_type = header.get("device_type", "minion")
+
+                    context_list = [
+                        "barcoding_enabled",
+                        "basecall_config_filename",
+                        "experiment_duration_set",
+                        "experiment_type",
+                        "local_basecalling",
+                        "package",
+                        "package_version",
+                        "sample_frequency",
+                        "sequencing_kit",
+                    ]
+                    context_tags = {}
+
+                    for key in context_list:
+                        a = header.get(key, "")
+                        if a is None:
+                            a = ""
+                        context_tags[key] = a
+
+                    tracking_list = [
+                        "asic_id",
+                        "asic_id_eeprom",
+                        "asic_temp",
+                        "asic_version",
+                        "auto_update",
+                        "auto_update_source",
+                        "bream_is_standard",
+                        "configuration_version",
+                        "device_id",
+                        "device_type",
+                        "distribution_status",
+                        "distribution_version",
+                        "exp_script_name",
+                        "exp_script_purpose",
+                        "exp_start_time",
+                        "flow_cell_id",
+                        "flow_cell_product_code",
+                        "guppy_version",
+                        "heatsink_temp",
+                        "hostname",
+                        "hublett_board_id",
+                        "hublett_firmware_version",
+                        "installation_type",
+                        "ip_address",
+                        "local_firmware_file",
+                        "mac_address",
+                        "operating_system",
+                        "protocol_group_id",
+                        "protocol_run_id",
+                        "protocols_version",
+                        "run_id",
+                        "sample_id",
+                        "satellite_board_id",
+                        "satellite_firmware_version",
+                        "usb_config",
+                        "version"
+                    ]
+                                    
+                    tracking_id = {}
+
+                    for key in tracking_list:
+                        a = header.get(key, "")
+                        if a is None:
+                            a = ""
+                        tracking_id[key] = a
+                    
+                    run_info = p5.RunInfo(
+                        acquisition_id = header.get("acquisition_id", acquisition_id),
+                        acquisition_start_time = timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))),
+                        adc_max = int(header.get("adc_max", adc_max)),
+                        adc_min = int(header.get("adc_min", adc_min)),
+                        context_tags = context_tags,
+                        experiment_name = str(header.get("experiment_name", "") or ""),
+                        flow_cell_id = str(header.get("flow_cell_id", "") or ""),
+                        flow_cell_product_code = str(header.get("flow_cell_product_code", "") or ""),
+                        protocol_name = str(header.get("protocol_name", protocol_name) or ""),
+                        protocol_run_id = str(header.get("protocol_run_id", "") or ""),
+                        protocol_start_time = int(timestamp_to_int(convert_datetime_as_epoch_ms(header.get("protocol_start_time", None))) or 0),
+                        sample_id = str(header.get("sample_id", "") or ""),
+                        sample_rate = int(read["sampling_rate"]),
+                        sequencing_kit = str(header.get("sequencing_kit", "") or ""),
+                        sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
+                        sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
+                        software = "blue-crab SLOW5<->POD5 converter",
+                        system_name = str(header.get("system_name", system_name) or ""),
+                        system_type = str(header.get("system_type", system_type) or ""),
+                        tracking_id = tracking_id
+                    )
+                    run_info_cache[acq_id] = run_info
+
+
+                # Signal conversion process
+                signal = read["signal"]
+                signal_chunks, signal_chunk_lengths = vbz_compress_signal_chunked(
+                    signal, DEFAULT_SIGNAL_CHUNK_SIZE
+                )
+                read = p5.CompressedRead(
+                    read_id=uuid.UUID(read["read_id"]),
+                    end_reason=end_reason,
+                    calibration=calibration,
+                    pore=pore,
+                    run_info=run_info_cache[acq_id],
+                    median_before=median_before,
+                    read_number=read_number,
+                    start_sample=start_sample,
+                    signal_chunks=signal_chunks,
+                    signal_chunk_lengths=signal_chunk_lengths,
+                    tracked_scaling=p5.pod5_types.ShiftScalePair(
+                        read.get("tracked_scaling_shift", float("nan")),
+                        read.get("tracked_scaling_scale", float("nan")),
+                    ),
+                    predicted_scaling=p5.pod5_types.ShiftScalePair(
+                        read.get("predicted_scaling_shift", float("nan")),
+                        read.get("predicted_scaling_scale", float("nan")),
+                    ),
+                    num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
+                    time_since_mux_change=read.get("time_since_mux_change", 0.0),
+                    num_minknow_events=read.get("num_minknow_events", 0),
+                )
+
+                
+                # Write the read object
+                writer.add_read(read)
+
+def s2s_s2p_worker(args, sfile, pod5_out):
+    '''
+    single s/blow5 file to single pod5
+    '''
+    slow5_file = sfile
+    pod5_file = pod5_out
     logger.info("Opening s/blow5 file: {}".format(slow5_file))
     # open slow5 file for writing
     s5 = slow5.Open(slow5_file, 'r')
@@ -831,8 +1339,6 @@ def slow52pod5(args):
             
             # Write the read object
             writer.add_read(read)
-    
-    logger.info("s/blow5 -> pod5 complete")
 
 
 
@@ -858,12 +1364,12 @@ Citation:...
     p2s = subcommand.add_parser('p2s', help='POD5 -> SLOW5/BLOW5', description="Convert POD5 -> SLOW5/BLOW5",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # make -o and -d mutually exclusive groups
-    outputs = p2s.add_mutually_exclusive_group()
+    p2s_outputs = p2s.add_mutually_exclusive_group()
     p2s.add_argument("input", metavar="POD5", nargs='+',
                      help="pod5 file/s or directories to convert")
-    outputs.add_argument("-d", "--out-dir",
+    p2s_outputs.add_argument("-d", "--out-dir",
                      help="output to directory")
-    outputs.add_argument("-o", "--output", metavar="S/BLOW5",
+    p2s_outputs.add_argument("-o", "--output", metavar="S/BLOW5",
                      help="output to FILE")
     p2s.add_argument("-c", "--compress", default="zlib", choices=["zlib", "zstd", "none"],
                      help="record compression method (only for blow5 format)")
@@ -881,11 +1387,19 @@ Citation:...
     # SLOW5 to POD5
     s2p = subcommand.add_parser('s2p', help='SLOW5/BLOW5 -> POD5', description="Convert SLOW5/BLOW5 -> POD5",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    s2p.add_argument("input", metavar="SLOW5",
+    s2p_outputs = s2p.add_mutually_exclusive_group()
+    s2p.add_argument("input", metavar="SLOW5", nargs='+',
                      help="s/blow5 file to convert")
-    s2p.add_argument("-o", "--output", type=Path, metavar="POD5",
-                     help="pod5 file to save")
+    s2p_outputs.add_argument("-d", "--out-dir",
+                     help="output to directory")
+    s2p_outputs.add_argument("-o", "--output", metavar="POD5",
+                     help="output to FILE")
+    s2p.add_argument("-p", "--iop", type=int, default=4,
+                     help="number of I/O processes to use during conversion of multiple files")
+    s2p.add_argument("--retain", action="store_true",
+                     help="retain the same directory structure in the converted output as the input (experimental)")
 
+    # main program args
     parser.add_argument("--profile", action="store_true",
                         help="run cProfile - for profiling benchmarking")
     parser.add_argument("-V", "--version", action='version', version="SLOW5/BLOW5 <-> POD5 converter version: {}".format(VERSION),
@@ -920,7 +1434,7 @@ Citation:...
         for pfile in args.input:
             if not os.path.isdir(pfile):
                 if not pfile.endswith(".pod5"):
-                    logger.error("input argument not a dir or a .pod5 file. Given argument: {}".format(args.input))
+                    logger.error("input argument {} not a dir or a .pod5 file. Given argument: {}".format(pfile, args.input))
                     kill_program()
                 if not os.path.isfile(pfile):
                     logger.error("{} does not exist".format(pfile))
@@ -942,7 +1456,39 @@ Citation:...
                 Path(args.out_dir).mkdir(parents=True, exist_ok=False)
         
         pod52slow5(args)
+
+    
     elif args.command == "s2p":
+        # let's do some arg validation
+        if not args.output and not args.out_dir:
+            logger.error("--output or --out-dir must be provided. stdout writing not supported")
+            kill_program()
+        
+        for sfile in args.input:
+            if not os.path.isdir(sfile):
+                if not sfile.endswith((".slow5", ".blow5")):
+                    logger.error("input argument {} not a dir or a .slow5/.blow5 file. Given argument: {}".format(sfile, args.input))
+                    kill_program()
+                if not os.path.isfile(sfile):
+                    logger.error("{} does not exist".format(sfile))
+                    kill_program()
+
+        if args.output:
+            if not args.output.endswith(".pod5"):
+                logger.error("--output argument not a valid .pod5 file. Given argument: {}".format(args.output))
+                kill_program()
+        # if out-dir exist, must be empty. if not exist, make it.
+        if args.out_dir:
+            if os.path.isdir(args.out_dir):
+                if os.listdir(args.out_dir):
+                    # it's not empty
+                    logger.error("--out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
+                    kill_program()
+            else:
+                logger.info("Creating directory: {}".format(args.out_dir))
+                Path(args.out_dir).mkdir(parents=True, exist_ok=False)
+        
+
         slow52pod5(args)
     else:
         parser.print_help(sys.stderr)
