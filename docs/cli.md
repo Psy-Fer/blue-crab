@@ -52,7 +52,7 @@ blue-crab s2p [OPTIONS] blow5_dir1 blow5_dir2 ... -d pod5_dir
 
 Converts SLOW5/BLOW5 files to POD5 format.
 The input can be a list of SLOW5/BLOW5 files, a directory containing multiple SLOW5/BLOW5 files, or a list of directories. If a directory is provided, the tool recursively searches within for SLOW5/BLOW5 files (.slow5/blow5 extension) and converts them to POD5.
-Note: Before converting a SLOW5 file having multiple read groups, split the file into groups using `split`.
+Note: Before converting a SLOW5 file having multiple read groups, split the file into groups using slow5tools `split`.
 
 *   `-d, --out-dir STR`:<br/>
     Output directory where the POD5 files will be written. If a name is provided, a directory will be created under the current working directory. Alternatively, a valid relative or absolute path can be provided. To prevent data overwriting, the program will terminate with error if the directory name already exists and is non-empty.
