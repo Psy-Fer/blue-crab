@@ -842,8 +842,14 @@ def main():
     VERSION = __version__
 
     parser = MyParser(description="SLOW5/BLOW5 <-> POD5 converter",
-    epilog="Citation:...",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    epilog='''
+See https://slow5.page.link/blue-crab for detailed description of these command-line options.
+
+Citation:...
+           ''',
+    formatter_class=argparse.RawTextHelpFormatter)
+    # using raw text to allow for new lines on main help
+    # formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Create submodules
     subcommand = parser.add_subparsers(help='subcommand --help for help messages', dest="command")
@@ -864,11 +870,11 @@ def main():
     p2s.add_argument("-s", "--sig-compress", default="svb-zd", choices=["svb-zd", "none"],
                      help="signal compression method (only for blow5 format)")
     p2s.add_argument("-p", "--iop", type=int, default=4,
-                     help="number of I/O processes")
-    p2s.add_argument("--slow5-threads", type=int, default=8,
-                     help="number of threads to use to compress reads on slow5 write")
-    p2s.add_argument("--batchsize", type=int, default=1000,
-                     help="number of reads to write at a time on slow5 write")
+                     help="number of I/O processes to use during conversion of multiple files")
+    p2s.add_argument("-t", "--threads", type=int, default=8,
+                     help="number of threads used for encoding S/BLOW5 records in a single process")
+    p2s.add_argument("-K", "--batchsize", type=int, default=1000,
+                     help="batch size used for encoding S/BLOW5 records in a single process")
     p2s.add_argument("--retain", action="store_true",
                      help="retain the same directory structure in the converted output as the input (experimental)")
 
