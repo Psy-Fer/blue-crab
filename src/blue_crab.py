@@ -1372,9 +1372,9 @@ Citation:...
     p2s_outputs.add_argument("-o", "--output", metavar="S/BLOW5",
                      help="output to FILE")
     p2s.add_argument("-c", "--compress", default="zlib", choices=["zlib", "zstd", "none"],
-                     help="record compression method (only for blow5 format)")
+                     help="record compression method (only for .blow5 format)")
     p2s.add_argument("-s", "--sig-compress", default="svb-zd", choices=["svb-zd", "none"],
-                     help="signal compression method (only for blow5 format)")
+                     help="signal compression method (only for .blow5 format)")
     p2s.add_argument("-p", "--iop", type=int, default=4,
                      help="number of I/O processes to use during conversion of multiple files")
     p2s.add_argument("-t", "--threads", type=int, default=8,
