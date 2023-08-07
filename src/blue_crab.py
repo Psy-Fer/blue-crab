@@ -208,6 +208,9 @@ def pod52slow5(args):
                             pod5_filepath_set.add(os.path.join(dirpath, pfile))
                             pod5_filename_set.add(pfile)
                             # retain folder structure. This SHOULD work, but damn path manipulation is hard
+                        else:
+                            logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
+                            kill_program()
                         if args.retain:
                             if not args.out_dir:
                                 logger.error("--retain can only be used with --out-dir, exiting")
@@ -224,9 +227,6 @@ def pod52slow5(args):
                             retain_file_set.add((os.path.join(dirpath, pfile), mkdirpath))
 
                             
-                        else:
-                            logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
-                            kill_program()
         else:
             if args.retain:
                  logger.error("--retain cannot be used with single files")
@@ -618,26 +618,26 @@ def slow52pod5(args):
                     if sfile.endswith((".slow5", ".blow5")):
                         if sfile not in slow5_filename_set:
                             slow5_filepath_set.add(os.path.join(dirpath, sfile))
-                            # retain folder structure. This SHOULD work, but damn path manipulation is hard
-                            if args.retain:
-                                if not args.out_dir:
-                                    logger.error("--retain can only be used with --out-dir, exiting")
-                                    kill_program()
-                                # this is the easiest way to get 99% of the cases without doing some batshit methods to get 100% correct
-                                # at least as i can see thinking about this for a day. Hopefully someone better at this stuff does a pull request lol
-                                mkdirpath = os.path.join(args.out_dir, dirpath.lstrip(input_slow5))
-                                # make sure we are only trying to create directories once
-                                if mkdirpath not in retain_path_set:
-                                    logger.info("Creating directory: {}".format(mkdirpath))
-                                    # take the path and subtract the input path
-                                    Path(mkdirpath).mkdir(parents=True, exist_ok=True)
-                                    retain_path_set.add(mkdirpath)
-                                retain_file_set.add((os.path.join(dirpath, sfile), mkdirpath))
-                            
                             slow5_filename_set.add(sfile)
                         else:
                             logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
                             kill_program()
+                            # retain folder structure. This SHOULD work, but damn path manipulation is hard
+                        if args.retain:
+                            if not args.out_dir:
+                                logger.error("--retain can only be used with --out-dir, exiting")
+                                kill_program()
+                            # this is the easiest way to get 99% of the cases without doing some batshit methods to get 100% correct
+                            # at least as i can see thinking about this for a day. Hopefully someone better at this stuff does a pull request lol
+                            mkdirpath = os.path.join(args.out_dir, dirpath.lstrip(input_slow5))
+                            # make sure we are only trying to create directories once
+                            if mkdirpath not in retain_path_set:
+                                logger.info("Creating directory: {}".format(mkdirpath))
+                                # take the path and subtract the input path
+                                Path(mkdirpath).mkdir(parents=True, exist_ok=True)
+                                retain_path_set.add(mkdirpath)
+                            retain_file_set.add((os.path.join(dirpath, sfile), mkdirpath))
+                            
         else:
             if args.retain:
                  logger.error("--retain cannot be used with single files")
@@ -774,6 +774,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                 # cache the run_info and re-use based on acquisition_id
                 acq_id = header["run_id"]
                 
+                # TODO: Put this in a function to stop the repetition
                 if acq_id not in run_info_cache:
                     acquisition_id = header.get("run_id", "")
                     protocol_name = header.get("exp_script_name", "")
