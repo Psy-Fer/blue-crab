@@ -55,6 +55,8 @@ def run_info_to_flat_dic(run_info):
                 info_dic[key] = value[key]
         else:
             info_dic[name] = value
+        if name == "acquisition_id":
+            info_dic["run_id"] = value
     return info_dic
 
 def convert_datetime_as_epoch_ms(time_str):
@@ -204,23 +206,24 @@ def pod52slow5(args):
                     if pfile.endswith('.pod5'):
                         if pfile not in pod5_filename_set:
                             pod5_filepath_set.add(os.path.join(dirpath, pfile))
-                            # retain folder structure. This SHOULD work, but damn path manipulation is hard
-                            if args.retain:
-                                if not args.out_dir:
-                                    logger.error("--retain can only be used with --out-dir, exiting")
-                                    kill_program()
-                                # this is the easiest way to get 99% of the cases without doing some batshit methods to get 100% correct
-                                # at least as i can see thinking about this for a day. Hopefully someone better at this stuff does a pull request lol
-                                mkdirpath = os.path.join(args.out_dir, dirpath.lstrip(input_pod5))
-                                # make sure we are only trying to create directories once
-                                if mkdirpath not in retain_path_set:
-                                    logger.info("Creating directory: {}".format(mkdirpath))
-                                    # take the path and subtract the input path
-                                    Path(mkdirpath).mkdir(parents=True, exist_ok=True)
-                                    retain_path_set.add(mkdirpath)
-                                retain_file_set.add((os.path.join(dirpath, pfile), mkdirpath))
-                            
                             pod5_filename_set.add(pfile)
+                            # retain folder structure. This SHOULD work, but damn path manipulation is hard
+                        if args.retain:
+                            if not args.out_dir:
+                                logger.error("--retain can only be used with --out-dir, exiting")
+                                kill_program()
+                            # this is the easiest way to get 99% of the cases without doing some batshit methods to get 100% correct
+                            # at least as i can see thinking about this for a day. Hopefully someone better at this stuff does a pull request lol
+                            mkdirpath = os.path.join(args.out_dir, dirpath.lstrip(input_pod5))
+                            # make sure we are only trying to create directories once
+                            if mkdirpath not in retain_path_set:
+                                logger.info("Creating directory: {}".format(mkdirpath))
+                                # take the path and subtract the input path
+                                Path(mkdirpath).mkdir(parents=True, exist_ok=True)
+                                retain_path_set.add(mkdirpath)
+                            retain_file_set.add((os.path.join(dirpath, pfile), mkdirpath))
+
+                            
                         else:
                             logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
                             kill_program()
@@ -774,7 +777,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                 if acq_id not in run_info_cache:
                     acquisition_id = header.get("run_id", "")
                     protocol_name = header.get("exp_script_name", "")
-                    acquisition_start_time = header.get("exp_start_time", "")
+                    acquisition_start_time = header.get("exp_start_time", None)
                     sequencer_position = header.get("device_id", "")
                     system_name = header.get("host_product_serial_number", "")
                     system_type = header.get("host_product_code", "")
@@ -854,7 +857,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                     
                     run_info = p5.RunInfo(
                         acquisition_id = header.get("acquisition_id", acquisition_id),
-                        acquisition_start_time = timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))),
+                        acquisition_start_time = int(timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))), 0),
                         adc_max = int(header.get("adc_max", adc_max)),
                         adc_min = int(header.get("adc_min", adc_min)),
                         context_tags = context_tags,
@@ -1451,6 +1454,9 @@ Citation:...
                     # it's not empty
                     logger.error("--out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
                     kill_program()
+                if args.retain and len(args.input) > 1:
+                    logger.error("--retain can only work with 1 input dir. Many given: {}".format(args.input))
+                    kill_program()
             else:
                 logger.info("Creating directory: {}".format(args.out_dir))
                 Path(args.out_dir).mkdir(parents=True, exist_ok=False)
@@ -1483,6 +1489,9 @@ Citation:...
                 if os.listdir(args.out_dir):
                     # it's not empty
                     logger.error("--out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
+                    kill_program()
+                if args.retain and len(args.input) > 1:
+                    logger.error("--retain can only work with 1 input dir. Many given: {}".format(args.input))
                     kill_program()
             else:
                 logger.info("Creating directory: {}".format(args.out_dir))
