@@ -577,7 +577,7 @@ def process_pod52slow5(read, record, aux, sampling_rate):
     aux["read_number"] = int(read["read_number"])
     aux["start_mux"] = int(read["well"])
     aux["start_time"] = int(read["start_sample"])
-    aux["end_reason"] = int(read["end_reason"] or None)
+    aux["end_reason"] = int(read["end_reason"] or 0)
     aux["tracked_scaling_shift"] = read.get("tracked_scaling_shift", None)
     aux["tracked_scaling_scale"] = read.get("tracked_scaling_scale", None)
     aux["predicted_scaling_shift"] = read.get("predicted_scaling_shift", None)
