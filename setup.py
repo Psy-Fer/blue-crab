@@ -5,7 +5,7 @@ PKG_NAME = "blue-crab"
 MOD_NAME = "src"
 
 # add readme to long description as that's what pypi sees
-with open("README.md", "r") as f:
+with open(path.join(path.abspath(path.dirname(__file__)),"README.md"), "r") as f:
     long_description = f.read()
 
 
@@ -15,7 +15,7 @@ exec(open("{}/_version.py".format(MOD_NAME)).read())
 
 # create package install list
 # User can set version of ont-pyguppy-client-lib to match guppy version
-with open(path.join(path.abspath(path.dirname(__file__)),"requirements.txt")) as f:
+with open(path.join(path.abspath(path.dirname(__file__)),"requirements.txt"), "r") as f:
     install_requires = [p.strip() for p in f]
 
 
