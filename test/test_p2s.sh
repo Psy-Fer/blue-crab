@@ -104,12 +104,12 @@ echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file proc
 blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 -d $OUTPUT_DIR/pod5-output --iop 1 && die "testcase $TESTCASE_NO failed"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# echo
-# TESTCASE_NO=1.7
-# echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:single_process output:file-------------------"
-# blue-crab p2s $POD5_DIR/pod5/z --iop 1 -o $OUTPUT_DIR/out.blow5 || die "testcase $TESTCASE_NO failed"
-# diff -q $EXP_SLOW5_DIR/pod5-output/directory_z.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'p2s format:pod5 input:directory process:single_process output"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+echo
+TESTCASE_NO=1.7
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:single_process output:file-------------------"
+blue-crab p2s $POD5_DIR/pod5/z --iop 1 -o $OUTPUT_DIR/out.blow5 || die "testcase $TESTCASE_NO failed"
+diff -q $EXP_SLOW5_DIR/pod5-output/directory_z.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'p2s format:pod5 input:directory process:single_process output"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 echo
 rm -rf $OUTPUT_DIR/pod5
@@ -121,12 +121,12 @@ diff -q $EXP_SLOW5_DIR/pod5-output/z2.blow5 $OUTPUT_DIR/pod5/z2.blow5 || die "ER
 diff -q $EXP_SLOW5_DIR/pod5-output/b1.blow5 $OUTPUT_DIR/pod5/b1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# echo
-# TESTCASE_NO=1.9
-# echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:multiple files process:single_process output:file-------------------"
-# blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 $POD5_DIR/pod5/z/z2.pod5  --iop 1 -o $OUTPUT_DIR/out.blow5 || die "testcase $TESTCASE_NO failed"
-# diff -q $EXP_SLOW5_DIR/pod5-output/directory_z.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'p2s format:pod5 input:directory process:single_process output"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+echo
+TESTCASE_NO=1.9
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:multiple files process:single_process output:file-------------------"
+blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 $POD5_DIR/pod5/z/z2.pod5  --iop 1 -o $OUTPUT_DIR/out.blow5 || die "testcase $TESTCASE_NO failed"
+diff -q $EXP_SLOW5_DIR/pod5-output/directory_z.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'p2s format:pod5 input:directory process:single_process output"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 echo
 rm -rf $OUTPUT_DIR/pod5
@@ -245,28 +245,24 @@ blue-crab -vv p2s z/z1.pod5  --iop 1 -d $CD_BACK/$OUTPUT_DIR/$TESTCASE_NO || die
 cd -
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-
 echo
 TESTCASE_NO=4.6
 echo "------------------- p2s testcase $TESTCASE_NO >>> retain_dir_structure without --retain failure expected -------------------"
 blue-crab p2s $POD5_DIR/retain_dir_structure -d $OUTPUT_DIR/retain_dir_structure && die "testcase $TESTCASE_NO failed"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-#multiple inputs to retain
-
-# echo
-# TESTCASE_NO=4.7
-# echo "------------------- p2s testcase $TESTCASE_NO >>> retain_dir_structure-------------------"
-# blue-crab p2s $POD5_DIR/retain_dir_structure -d $OUTPUT_DIR/retain_dir_structure --retain || die "testcase $TESTCASE_NO failed"
-# diff $EXP_SLOW5_DIR/retain_dir_structure  $OUTPUT_DIR/retain_dir_structure > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+echo
+TESTCASE_NO=4.7
+echo "------------------- p2s testcase $TESTCASE_NO >>> retain_dir_structure-------------------"
+blue-crab p2s $POD5_DIR/retain_dir_structure -d $OUTPUT_DIR/retain_dir_structure --retain || die "testcase $TESTCASE_NO failed"
+diff -r $EXP_SLOW5_DIR/retain_dir_structure  $OUTPUT_DIR/retain_dir_structure > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 TESTCASE_NO=4.8
 echo "------------------- p2s testcase $TESTCASE_NO >>> duplicate file name -------------------"
 blue-crab p2s $POD5_DIR/pod5/b/ $POD5_DIR/pod5/b/ -d $OUTPUT_DIR/dupli 2> $OUTPUT_DIR/err.log && die "testcase $TESTCASE_NO failed"
 grep -q "ERROR.* File name duplicates present.*" $OUTPUT_DIR/err.log || die "ERROR: p2s_test testcase $TESTCASE_NO failed"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
 
 echo
 TESTCASE_NO=4.10
