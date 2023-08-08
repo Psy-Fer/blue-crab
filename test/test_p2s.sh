@@ -245,28 +245,24 @@ blue-crab -vv p2s z/z1.pod5  --iop 1 -d $CD_BACK/$OUTPUT_DIR/$TESTCASE_NO || die
 cd -
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-
 echo
 TESTCASE_NO=4.6
 echo "------------------- p2s testcase $TESTCASE_NO >>> retain_dir_structure without --retain failure expected -------------------"
 blue-crab p2s $POD5_DIR/retain_dir_structure -d $OUTPUT_DIR/retain_dir_structure && die "testcase $TESTCASE_NO failed"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-#multiple inputs to retain
-
-# echo
-# TESTCASE_NO=4.7
-# echo "------------------- p2s testcase $TESTCASE_NO >>> retain_dir_structure-------------------"
-# blue-crab p2s $POD5_DIR/retain_dir_structure -d $OUTPUT_DIR/retain_dir_structure --retain || die "testcase $TESTCASE_NO failed"
-# diff $EXP_SLOW5_DIR/retain_dir_structure  $OUTPUT_DIR/retain_dir_structure > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+echo
+TESTCASE_NO=4.7
+echo "------------------- p2s testcase $TESTCASE_NO >>> retain_dir_structure-------------------"
+blue-crab p2s $POD5_DIR/retain_dir_structure -d $OUTPUT_DIR/retain_dir_structure --retain || die "testcase $TESTCASE_NO failed"
+diff -r $EXP_SLOW5_DIR/retain_dir_structure  $OUTPUT_DIR/retain_dir_structure > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 TESTCASE_NO=4.8
 echo "------------------- p2s testcase $TESTCASE_NO >>> duplicate file name -------------------"
 blue-crab p2s $POD5_DIR/pod5/b/ $POD5_DIR/pod5/b/ -d $OUTPUT_DIR/dupli 2> $OUTPUT_DIR/err.log && die "testcase $TESTCASE_NO failed"
 grep -q "ERROR.* File name duplicates present.*" $OUTPUT_DIR/err.log || die "ERROR: p2s_test testcase $TESTCASE_NO failed"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
 
 echo
 TESTCASE_NO=4.10
