@@ -192,7 +192,7 @@ def pod52slow5(args):
     processes = []
 
     # pod5 logic
-    pod5_filepath_set = set()
+    pod5_filepath_list = list()
     pod5_filename_set = set()
     retain_path_set = set()
     retain_file_set = set()
@@ -202,9 +202,10 @@ def pod52slow5(args):
             for dirpath, folders, files in os.walk(pod5_path):
                 folders.sort()
                 files.sort()
+                logger.debug("dir: {}: folders: {}, files: {}".format(dirpath, folders, files))
                 for pfile in files:
                     if pfile.endswith('.pod5'):
-                        pod5_filepath_set.add(os.path.join(dirpath, pfile))
+                        pod5_filepath_list.append(os.path.join(dirpath, pfile))
                         if args.retain:
                             if not args.out_dir:
                                 logger.error("--retain can only be used with --out-dir, exiting")
@@ -233,17 +234,17 @@ def pod52slow5(args):
             if args.retain:
                  logger.error("--retain cannot be used with single files")
                  kill_program()
-            if input_pod5 not in pod5_filepath_set:
+            if input_pod5 not in pod5_filepath_list:
                 # small logic hole here if 2 files with diff paths but same name
                 # TODO: I should break the input down to filename only then check....
-                pod5_filepath_set.add(input_pod5)
+                pod5_filepath_list.append(input_pod5)
             else:
                 logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
                 kill_program()
 
     
     # check that pod5 files are actually found, otherwise exit
-    if len(pod5_filepath_set) < 1:
+    if len(pod5_filepath_list) < 1:
         logger.error("no .pod5 files detected... exiting")
         kill_program()
 
@@ -251,15 +252,15 @@ def pod52slow5(args):
     if args.out_dir:
         if os.path.isdir(args.out_dir):
             slow5_out = args.out_dir
-            if len(pod5_filepath_set) > 1:
-                logger.info("many2many: {} pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(len(pod5_filepath_set), slow5_out))
+            if len(pod5_filepath_list) > 1:
+                logger.info("many2many: {} pod5 files detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(len(pod5_filepath_list), slow5_out))
                 logger.info("writing s/blow5 to dir: {}".format(slow5_out))
                 # send all the pod5 files to input_queue to be consumed by workers
                 if args.retain:
                     for pod5_file in retain_file_set:
                         input_queue.put(pod5_file)
                 else:
-                    for pod5_file in pod5_filepath_set:
+                    for pod5_file in pod5_filepath_list:
                         input_queue.put(pod5_file)
                 # add kill switches for the procs at the end to consume
                 for _ in range(args.iop):
@@ -276,7 +277,7 @@ def pod52slow5(args):
             else:
                 logger.info("single2single: 1 pod5 file detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(slow5_out))
                 # pops out the 1 file - destructive
-                pfile = pod5_filepath_set.pop()
+                pfile = pod5_filepath_list.pop()
                 s2s_worker(args, pfile, slow5_out)
         else:
              logger.error("--out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
@@ -285,13 +286,13 @@ def pod52slow5(args):
     if args.output:
         if args.output.endswith(('.slow5', '.blow5')):
             slow5_out = args.output
-            if len(pod5_filepath_set) > 1:
-                logger.info("many2single: {} pod5 files detected as input. Writing many pod5 to one s/blow5 file: {}".format(len(pod5_filepath_set), slow5_out))
-                m2s_worker(args, pod5_filepath_set, slow5_out)
+            if len(pod5_filepath_list) > 1:
+                logger.info("many2single: {} pod5 files detected as input. Writing many pod5 to one s/blow5 file: {}".format(len(pod5_filepath_list), slow5_out))
+                m2s_worker(args, pod5_filepath_list, slow5_out)
             else:
                 logger.info("single2single: 1 pod5 file detected as input. Writing 1:1 pod5->s/blow5 to file: {}".format(slow5_out))
                 # pops out the 1 file - destructive
-                pfile = pod5_filepath_set.pop()
+                pfile = pod5_filepath_list.pop()
                 s2s_worker(args, pfile, slow5_out)
         else:
              logger.error("--output is not a slow5/blow5 file. For directory output please use --out-dir. output: {}".format(args.output))
@@ -420,7 +421,7 @@ def m2s_worker(args, pod5_filepath_set, slow5_out):
     # get header info in first read
     # Get pod5 reads
     count = 0
-    logger.info("m2s: Reading pod5 file/s: {}".format(args.input))
+    logger.info("m2s: Reading {} pod5 file/s".format(len(pod5_filepath_set)))
     records = {}
     auxs = {}
     for pfile in pod5_filepath_set:
@@ -606,7 +607,7 @@ def slow52pod5(args):
     processes = []
 
     # slo5 input logic
-    slow5_filepath_set = set()
+    slow5_filepath_list = list()
     slow5_filename_set = set()
     retain_path_set = set()
     retain_file_set = set()
@@ -618,7 +619,7 @@ def slow52pod5(args):
                 files.sort()
                 for sfile in files:
                     if sfile.endswith((".slow5", ".blow5")):
-                        slow5_filepath_set.add(os.path.join(dirpath, sfile))
+                        slow5_filepath_list.append(os.path.join(dirpath, sfile))
                         # retain folder structure. This SHOULD work, but damn path manipulation is hard
                         if args.retain:
                             if not args.out_dir:
@@ -644,17 +645,17 @@ def slow52pod5(args):
             if args.retain:
                  logger.error("--retain cannot be used with single files")
                  kill_program()
-            if input_slow5 not in slow5_filepath_set:
+            if input_slow5 not in slow5_filepath_list:
                 # small logic hole here if 2 files with diff paths but same name
                 # TODO: I should break the input down to filename only then check....
-                slow5_filepath_set.add(input_slow5)
+                slow5_filepath_list.append(input_slow5)
             else:
                 logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
                 kill_program()
 
     
     # check that slow5 files are actually found, otherwise exit
-    if len(slow5_filepath_set) < 1:
+    if len(slow5_filepath_list) < 1:
         logger.error("no .slow5 or .blow5 files detected... exiting")
         kill_program()
 
@@ -662,15 +663,15 @@ def slow52pod5(args):
     if args.out_dir:
         if os.path.isdir(args.out_dir):
             pod5_out = args.out_dir
-            if len(slow5_filepath_set) > 1:
-                logger.info("many2many: {} s/blow5 files detected as input. Writing 1:1 s/blow5->pod5 to dir: {}".format(len(slow5_filepath_set), pod5_out))
+            if len(slow5_filepath_list) > 1:
+                logger.info("many2many: {} s/blow5 files detected as input. Writing 1:1 s/blow5->pod5 to dir: {}".format(len(slow5_filepath_list), pod5_out))
                 logger.info("writing pod5 to dir: {}".format(pod5_out))
                 # send all the slow5 files to input_queue to be consumed by workers
                 if args.retain:
                     for slow5_file in retain_file_set:
                         input_queue.put(slow5_file)
                 else:
-                    for slow5_file in slow5_filepath_set:
+                    for slow5_file in slow5_filepath_list:
                         input_queue.put(slow5_file)
                 # add kill switches for the procs at the end to consume
                 for _ in range(args.iop):
@@ -687,7 +688,7 @@ def slow52pod5(args):
             else:
                 logger.info("single2single: 1 s/blow5 file detected as input. Writing 1:1 s/blow5->pod5 to dir: {}".format(pod5_out))
                 # pops out the 1 file - destructive
-                sfile = slow5_filepath_set.pop()
+                sfile = slow5_filepath_list.pop()
                 s2s_s2p_worker(args, sfile, pod5_out)
         else:
              logger.error("--out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
@@ -696,13 +697,13 @@ def slow52pod5(args):
     if args.output:
         if args.output.endswith(".pod5"):
             pod5_out = args.output
-            if len(slow5_filepath_set) > 1:
-                logger.info("many2single: {} s/blow5 files detected as input. Writing many s/blow5 to one pod5 file: {}".format(len(slow5_filepath_set), pod5_out))
-                m2s_s2p_worker(args, slow5_filepath_set, pod5_out)
+            if len(slow5_filepath_list) > 1:
+                logger.info("many2single: {} s/blow5 files detected as input. Writing many s/blow5 to one pod5 file: {}".format(len(slow5_filepath_list), pod5_out))
+                m2s_s2p_worker(args, slow5_filepath_list, pod5_out)
             else:
                 logger.info("single2single: 1 s/blow5 file detected as input. Writing 1:1 s/blow5->pod5 to file: {}".format(pod5_out))
                 # pops out the 1 file - destructive
-                sfile = slow5_filepath_set.pop()
+                sfile = slow5_filepath_list.pop()
                 s2s_s2p_worker(args, sfile, pod5_out)
         else:
              logger.error("--output is not a pod5 file. For directory output please use --out-dir. output: {}".format(args.output))
@@ -1429,8 +1430,10 @@ Citation:...
     # set up logging level
     if args.verbose > 0:
         logger.setLevel(logging.DEBUG)
+        loghandler.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
+        loghandler.setLevel(logging.INFO)
     
 
     if args.profile:
