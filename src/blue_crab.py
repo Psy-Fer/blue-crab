@@ -635,7 +635,7 @@ def slow52pod5(args):
                                 retain_path_set.add(mkdirpath)
                             retain_file_set.add((os.path.join(dirpath, sfile), mkdirpath))
                             continue
-                        if sfile not in slow5_filename_set:
+                        if sfile in slow5_filename_set:
                             logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
                             kill_program()
                         else:
