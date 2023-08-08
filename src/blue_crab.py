@@ -137,6 +137,9 @@ def get_data_from_pod5_record(read):
     predicted_scaling = read.predicted_scaling
     predicted_scaling_shift = predicted_scaling.shift
     predicted_scaling_scale = predicted_scaling.scale
+    if pore_data.pore_type not in ["not_set", ""]:
+        logger.error("pore_type is '{}' expected to be 'not_set'. Please contact developers with this message.".format(pore_data.pore_type))
+        kill_program()
 
     pod5_read = {
         "read_id": read.read_id,
@@ -879,7 +882,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         sequencing_kit = str(header.get("sequencing_kit", "") or ""),
                         sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
                         sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
-                        software = "blue-crab SLOW5<->POD5 converter",
+                        software = "blue-crab SLOW5<->POD5 converter v{}".format(__version__),
                         system_name = str(header.get("system_name", system_name) or ""),
                         system_type = str(header.get("system_type", system_type) or ""),
                         tracking_id = tracking_id
@@ -1066,7 +1069,7 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         sequencing_kit = str(header.get("sequencing_kit", "") or ""),
                         sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
                         sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
-                        software = "blue-crab SLOW5<->POD5 converter",
+                        software = "blue-crab SLOW5<->POD5 converter v{}".format(__version__),
                         system_name = str(header.get("system_name", system_name) or ""),
                         system_type = str(header.get("system_type", system_type) or ""),
                         tracking_id = tracking_id
@@ -1315,7 +1318,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                     sequencing_kit = str(header.get("sequencing_kit", "") or ""),
                     sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
                     sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
-                    software = "blue-crab SLOW5<->POD5 converter",
+                    software = "blue-crab SLOW5<->POD5 converter v{}".format(__version__),
                     system_name = str(header.get("system_name", system_name) or ""),
                     system_type = str(header.get("system_type", system_type) or ""),
                     tracking_id = tracking_id
