@@ -29,7 +29,7 @@ python3 -m pip install setuptools wheel
 # do this separately, after the libs above
 # for zstd build, run the following
 export PYSLOW5_ZSTD=1
-python3 setup.py install
+python3 -m pip install .
 
 blue-crab --help
 ```
