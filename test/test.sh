@@ -54,11 +54,11 @@ if ! ./test/test_p2s.sh; then
     fail "$TESTCASE_NAME"
 fi
 
-# TESTCASE_NAME="p2s_s2p integrity test"
-# echo_test $TESTCASE_NAME
-# if ! ./test/test_p2s_s2p_integrity.sh; then
-#     fail "$TESTCASE_NAME"
-# fi
+TESTCASE_NAME="p2s_s2p integrity test"
+echo_test $TESTCASE_NAME
+if ! ./test/test_p2s_s2p_integrity.sh; then
+    fail "$TESTCASE_NAME"
+fi
 
 TESTCASE_NAME="s2p test"
 echo_test $TESTCASE_NAME

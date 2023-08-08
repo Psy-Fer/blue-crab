@@ -89,7 +89,6 @@ blue-crab s2p $EXP_SLOW5_DIR/pod5-output/ -d $OUTPUT_DIR/a || die "testcase $TES
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 TESTCASE_NO=5
-rm -f $OUTPUT_DIR/a/*
 TESTNAME="directory to .pod5 (output directory given - overwrite)"
 echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
 blue-crab s2p $EXP_SLOW5_DIR/pod5-output/ -d $OUTPUT_DIR/a && die "testcase $TESTCASE_NO failed"

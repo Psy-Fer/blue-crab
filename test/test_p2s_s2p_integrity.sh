@@ -50,16 +50,26 @@ if [[ "$#" -ge 2 ]]; then
 fi
 
 p2s_atm1_OUTPUT="$TEMP_DIR/p2s_attempt1"
+p2s_atm1_OUTPUT_ASCII="$TEMP_DIR/p2s_attempt1_ascii.slow5"
 s2p_OUTPUT="$TEMP_DIR/s2p"
 p2s_atm2_OUTPUT="$TEMP_DIR/p2s_attempt2"
+p2s_atm2_OUTPUT_ASCII="$TEMP_DIR/p2s_attempt2_ascii.slow5"
+SLOW5TOOLS="$TEMP_DIR/slow5tools/slow5tools"
 
-
-test -d "$TEMP_DIR" && rm -r "$TEMP_DIR"
-mkdir "$TEMP_DIR" || die "Creating $TEMP_DIR failed"
+test -d "$TEMP_DIR" && rm -rf "$TEMP_DIR"
+mkdir "$TEMP_DIR" || die "Creating $TEMP_DIRq failed"
 mkdir "$p2s_atm1_OUTPUT" || die "Creating $p2s_atm1_OUTPUT failed"
 mkdir "$s2p_OUTPUT" || die "Creating $s2p_OUTPUT failed"
 mkdir "$p2s_atm2_OUTPUT" || die "Creating $p2s_atm2_OUTPUT failed"
 
+CURRENT=$(pwd)
+cd $TEMP_DIR || die "cd $TEMP_DIR failed"
+wget "https://github.com/hasindu2008/slow5tools/releases/download/v1.0.0/slow5tools-v1.0.0-release.tar.gz" || die "wget failed"
+tar -xzf slow5tools-v1.0.0-release.tar.gz || die "tar failed"
+mv slow5tools-v1.0.0 slow5tools || die "mv failed"
+cd slow5tools || die "cd slow5tools failed"
+make disable_hdf5=1 -j 4 || die "make failed"
+cd $CURRENT || die "cd $CURRENT failed"
 
 if [[ $* == *-f* ]];then
   clean_fscache
@@ -90,12 +100,16 @@ echo "ls $p2s_atm1_OUTPUT | wc"
 ls "$p2s_atm1_OUTPUT" | wc
 echo "ls $p2s_atm2_OUTPUT | wc"
 ls "$p2s_atm2_OUTPUT" | wc
+
+$SLOW5TOOLS merge ${p2s_atm1_OUTPUT} -o ${p2s_atm1_OUTPUT_ASCII} || die "slow5tools merge failed"
+$SLOW5TOOLS merge ${p2s_atm2_OUTPUT} -o ${p2s_atm2_OUTPUT_ASCII} || die "slow5tools merge failed"
+
 echo "p2s might not create the same exact header lines (starting with '@') from after s2p pod5s"
 echo "Running diff only on lines starting with '@'. If there are no differences the following line is blank"
-diff --ignore-matching-lines=?@ "$p2s_atm1_OUTPUT" "$p2s_atm2_OUTPUT"
+diff --ignore-matching-lines=?@ "$p2s_atm1_OUTPUT_ASCII" "$p2s_atm2_OUTPUT_ASCII"
 echo
 echo "Again running diff (ignoring header lines starting with '@'"
-diff --ignore-matching-lines=@ "$p2s_atm1_OUTPUT" "$p2s_atm2_OUTPUT" > /dev/null
+diff --ignore-matching-lines=@ "$p2s_atm1_OUTPUT_ASCII" "$p2s_atm2_OUTPUT_ASCII" > /dev/null
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}SUCCESS: p2s and s2p conversions are consistent!${NC}"
 elif [ $? -eq 1 ]; then

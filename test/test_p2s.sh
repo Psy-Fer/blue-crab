@@ -68,7 +68,7 @@ echo
 TESTCASE_NO=1.1
 echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file 4khz process:single_process output:file-------------------"
 blue-crab p2s $POD5_DIR/pod5/b/b1.pod5 --iop 1 -o $OUTPUT_DIR/out.slow5 || die "testcase $TESTCASE_NO failed"
-diff -q $EXP_SLOW5_DIR/pod5-output/b1.slow5 $OUTPUT_DIR/out.slow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+diff -q $EXP_SLOW5_DIR/pod5-output/b1_ascii.slow5 $OUTPUT_DIR/out.slow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 TESTCASE_NO=1.2
