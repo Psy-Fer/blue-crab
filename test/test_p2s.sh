@@ -138,7 +138,6 @@ diff -q $EXP_SLOW5_DIR/pod5-output/z2.blow5 $OUTPUT_DIR/pod5/z2.blow5 || die "ER
 diff -q $EXP_SLOW5_DIR/pod5-output/b1.blow5 $OUTPUT_DIR/pod5/b1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-
 echo
 rm -rf $OUTPUT_DIR/pod5
 TESTCASE_NO=1.11
@@ -168,7 +167,6 @@ echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file proc
 blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 -d $OUTPUT_DIR/pod5-output -p 4 || die "testcase $TESTCASE_NO failed"
 diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5-output/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:multi output"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
 
 echo
 rm -f $OUTPUT_DIR/pod5-output/*
@@ -292,14 +290,6 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 
-
-# TESTCASE_NO=5.4
-# echo "------------------- p2s testcase $TESTCASE_NO >>> end_reason datatype is string-------------------"
-# LOG=$OUTPUT_DIR/end_reason_pod5/err.log
-# blue-crab p2s $POD5_DIR/end_reason_pod5/end_reason_string.pod5 -o $OUTPUT_DIR/end_reason_pod5/end_reason_string.slow5 2> $LOG  && die "testcase $TESTCASE_NO failed"
-# grep -q -i "ERROR.*The datatype of the attribute Raw/end_reason.*H5T_STRING instead of H5T_ENUM.* " $LOG || die "Error in testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
 # TESTCASE_NO=5.5
 # echo "------------------- p2s testcase $TESTCASE_NO >>> end_reason datatype is int32_t-------------------"
 # LOG=$OUTPUT_DIR/end_reason_pod5/err.log
@@ -315,110 +305,26 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 # TESTCASE_NO=5.7
 # echo "------------------- p2s testcase $TESTCASE_NO >>> a different order of label-------------------"
+# mkdir -p $OUTPUT_DIR/end_reason_pod5 || die "creating $OUTPUT_DIR/end_reason_pod5 failed"
 # blue-crab p2s $POD5_DIR/end_reason_pod5/end_reason_differnt_key_order.pod5 -o $OUTPUT_DIR/end_reason_pod5/end_reason_differnt_key_order.slow5 || die "testcase $TESTCASE_NO failed"
 # diff -q $EXP_SLOW5_DIR/end_reason_pod5/end_reason_differnt_key_order.slow5 $OUTPUT_DIR/end_reason_pod5/end_reason_differnt_key_order.slow5 > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for end_reason pod5"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 # TESTCASE_NO=5.8
 # echo "------------------- p2s testcase $TESTCASE_NO >>> a new keylabel-------------------"
+# mkdir -p $OUTPUT_DIR/end_reason_pod5 || die "creating $OUTPUT_DIR/end_reason_pod5 failed"
 # blue-crab p2s $POD5_DIR/end_reason_pod5/end_reason_new_key.pod5 -o $OUTPUT_DIR/end_reason_pod5/end_reason_new_key.slow5 || die "testcase $TESTCASE_NO failed"
 # diff -q $EXP_SLOW5_DIR/end_reason_pod5/end_reason_new_key.slow5 $OUTPUT_DIR/end_reason_pod5/end_reason_new_key.slow5 > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for end_reason pod5"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# we assume that if the run_id are the same, enum_labels are the same - so we don't test this
-# also we assume that if the first read does not have the enum, the rest will not as well
-# TESTCASE_NO=35
-# echo "------------------- p2s testcase $TESTCASE_NO >>> end_reason found only in the second read group pod5 1-------------------"
-# mkdir -p $OUTPUT_DIR/end_reason_pod5 || die "creating $OUTPUT_DIR/end_reason_pod5 failed"
-# blue-crab p2s $POD5_DIR/end_reason_pod5/end_reason1.pod5 -o $OUTPUT_DIR/end_reason_pod5/end_reason1.slow5 || die "testcase $TESTCASE_NO failed"
-# diff -q $EXP_SLOW5_DIR/end_reason_pod5/end_reason1.slow5 $OUTPUT_DIR/end_reason_pod5/end_reason1.slow5 > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for end_reason pod5"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 
 #--------------------------------------Unsupported POD5------------------------------------
 
 #--------------------------------------Unusual POD5------------------------------------
 
-# echo
+
 # TESTCASE_NO=6.1
-# echo "------------------- p2s testcase $TESTCASE_NO >>> auxiliary field missing pod5-------------------"
-# mkdir -p $OUTPUT_DIR/unusual_pod5 || die "creating $OUTPUT_DIR/unusual_pod5 failed"
-# blue-crab p2s $POD5_DIR/unusual_pod5/median_before_missing.pod5 --iop 1 -o $OUTPUT_DIR/unusual_pod5/median_before_missing.slow5 --to slow5 || die "testcase $TESTCASE_NO failed"
-# diff -q $EXP_SLOW5_DIR/unusual_pod5/median_before_missing.slow5 $OUTPUT_DIR/unusual_pod5/median_before_missing.slow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for auxiliary field missing pod5"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# echo
-# TESTCASE_NO=6.2
-# echo "------------------- p2s testcase $TESTCASE_NO >>> primary field missing pod5-------------------"
-# mkdir -p $OUTPUT_DIR/unusual_pod5 || die "creating $OUTPUT_DIR/unusual_pod5 failed"
-# blue-crab p2s $POD5_DIR/unusual_pod5/offset_missing.pod5 --iop 1 -o $OUTPUT_DIR/unusual_pod5/offset_missing.slow5 --to slow5 && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# echo
-# TESTCASE_NO=6.3
-# echo "------------------- p2s testcase $TESTCASE_NO >>> run_id_missing_in_first_read_group_tracking_id pod5-------------------"
-# mkdir -p $OUTPUT_DIR/unusual_pod5 || die "creating $OUTPUT_DIR/unusual_pod5 failed"
-# blue-crab p2s $POD5_DIR/unusual_pod5/run_id_missing_in_first_read_group_tracking_id.pod5 --iop 1 -o $OUTPUT_DIR/unusual_pod5/run_id_missing.slow5 --to slow5 || die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=6.4
-# echo "------------------- p2s testcase $TESTCASE_NO >>> run_id_missing_in_first_read_group_read but is in the tracking_id group pod5-------------------"
-# mkdir -p $OUTPUT_DIR/unusual_pod5 || die "creating $OUTPUT_DIR/unusual_pod5 failed"
-# blue-crab p2s $POD5_DIR/unusual_pod5/run_id_missing_in_first_read_group_read.pod5 --iop 1 -o $OUTPUT_DIR/unusual_pod5/run_id_missing.slow5 --to slow5 || die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=6.5
-# echo "------------------- p2s testcase $TESTCASE_NO >>> run_id_missing_in_fifth_read_group_read but is in the tracking_id group pod5-------------------"
-# mkdir -p $OUTPUT_DIR/unusual_pod5 || die "creating $OUTPUT_DIR/unusual_pod5 failed"
-# blue-crab p2s $POD5_DIR/unusual_pod5/run_id_missing_in_fifth_read_group_read.pod5 --iop 1 -o $OUTPUT_DIR/unusual_pod5/run_id_missing.slow5 --to slow5 || die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=6.6
-# echo "------------------- p2s testcase $TESTCASE_NO >>> run_id_missing_in_first_read_group_in_both_read_and_tracking_id pod5-------------------"
-# mkdir -p $OUTPUT_DIR/unusual_pod5 || die "creating $OUTPUT_DIR/unusual_pod5 failed"
-# blue-crab p2s $POD5_DIR/unusual_pod5/run_id_missing_in_first_read_group_in_both_read_and_tracking_id.pod5 --iop 1 -o $OUTPUT_DIR/unusual_pod5/run_id_missing.slow5 --to slow5 && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=6.7
-# echo "------------------- p2s testcase $TESTCASE_NO >>> run_id_missing_in_fifth_read_group_in_both_read_and_tracking_id pod5-------------------"
-# mkdir -p $OUTPUT_DIR/unusual_pod5 || die "creating $OUTPUT_DIR/unusual_pod5 failed"
-# blue-crab p2s $POD5_DIR/unusual_pod5/run_id_missing_in_fifth_read_group_in_both_read_and_tracking_id.pod5 --iop 1 -o $OUTPUT_DIR/unusual_pod5/run_id_missing.slow5 --to slow5 && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=6.8
-# echo "------------------- p2s testcase $TESTCASE_NO >>> new non string attribute in context tags  -------------------"
-# # This is a header attribute, thus should be converted to string, but with a warning
-# mkdir -p $OUTPUT_DIR/unusual_pod5 || die "creating $OUTPUT_DIR/unusual_pod5 failed"
-# LOG=$OUTPUT_DIR/unusual_pod5/new_attrib_in_context.log
-# OUTPUT_FILE=$OUTPUT_DIR/unusual_pod5/new_attrib_in_context.slow5
-# blue-crab p2s $POD5_DIR/unusual_pod5/new_attrib_in_context.pod5 -o $OUTPUT_FILE 2> $LOG  || die "testcase $TESTCASE_NO failed"
-# grep -q -i "WARNING.*converting.*to string" $LOG || die "Warning in testcase $TESTCASE_NO failed"
-# diff $EXP_SLOW5_DIR/unusual_pod5/new_attrib_in_context.slow5 $OUTPUT_FILE  > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=6.9
-# echo "------------------- p2s testcase $TESTCASE_NO >>> new non string attribute in tracking id  -------------------"
-# # This is a header attribute, thus should be converted to string, but with a warning
-# LOG="$OUTPUT_DIR/unusual_pod5/new_attrib_in_tracking.log"
-# OUTPUT_FILE=$OUTPUT_DIR/unusual_pod5/new_attrib_in_tracking.slow5
-# blue-crab p2s $POD5_DIR/unusual_pod5/new_attrib_in_tracking.pod5 -o $OUTPUT_FILE 2> $LOG || die "testcase $TESTCASE_NO failed"
-# grep -q -i "WARNING.*converting.*to string" $LOG || die "Warning in testcase $TESTCASE_NO failed"
-# diff $EXP_SLOW5_DIR/unusual_pod5/new_attrib_in_tracking.slow5 $OUTPUT_FILE  > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=6.10
-# echo "------------------- p2s testcase $TESTCASE_NO >>> new string attribute in context tags  -------------------"
-# blue-crab p2s $POD5_DIR/unusual_pod5/new_str_attrib_in_context.pod5 -o $OUTPUT_DIR/unusual_pod5/new_str_attrib_in_context.slow5
-# diff $EXP_SLOW5_DIR/unusual_pod5/new_str_attrib_in_context.slow5 $OUTPUT_DIR/unusual_pod5/new_str_attrib_in_context.slow5  > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=6.11
-# echo "------------------- p2s testcase $TESTCASE_NO >>> new string attribute in tracking id  -------------------"
-# blue-crab p2s $POD5_DIR/unusual_pod5/new_str_attrib_in_tracking.pod5 -o $OUTPUT_DIR/unusual_pod5/new_str_attrib_in_tracking.slow5
-# diff $EXP_SLOW5_DIR/unusual_pod5/new_str_attrib_in_tracking.slow5 $OUTPUT_DIR/unusual_pod5/new_str_attrib_in_tracking.slow5  > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=6.12
 # echo "------------------- p2s testcase $TESTCASE_NO >>> new attribute in raw  -------------------"
 # #This is likely to be a per-read attribute that we need to inspect manually. So must Error out unless -a is specified.
 # blue-crab p2s $POD5_DIR/unusual_pod5/new_attrib_in_raw.pod5 -o $OUTPUT_DIR/err.slow5  2> $OUTPUT_DIR/err.log  && die "testcase $TESTCASE_NO failed"
@@ -426,14 +332,14 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 # grep -q "ERROR.*Attribute .* in .* is unexpected" $OUTPUT_DIR/err.log || die "Error in testcase $TESTCASE_NO failed"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=6.13
+# TESTCASE_NO=6.2
 # echo "------------------- p2s testcase $TESTCASE_NO >>> new attribute in read -------------------"
 # # #This is likely to be a per-read attribute that we need to inspect manually. So must Error out unless -a is specified.
 # blue-crab p2s $POD5_DIR/unusual_pod5/new_attrib_in_read.pod5 -o $OUTPUT_DIR/err.slow5 2> $OUTPUT_DIR/err.log && die "testcase $TESTCASE_NO failed"
 # grep -q "ERROR.*unexpected" $OUTPUT_DIR/err.log || die "Error in testcase $TESTCASE_NO failed"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=6.14
+# TESTCASE_NO=6.3
 # echo "------------------- p2s testcase $TESTCASE_NO >>> new attribute in channel -------------------"
 # # #This is likely to be a per-read attribute that we need to inspect manually. So must Error out unless -a is specified.
 # blue-crab p2s $POD5_DIR/unusual_pod5/new_attrib_in_channel.pod5 -o $OUTPUT_DIR/err.slow5 2> $OUTPUT_DIR/err.log && die "testcase $TESTCASE_NO failed"
@@ -441,14 +347,14 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 
-# TESTCASE_NO=6.15
+# TESTCASE_NO=6.4
 # echo "------------------- p2s testcase $TESTCASE_NO >>> new group   -------------------"
 # # Unless the group is /Analyses which we ignore anyway, we will need to manually inspect what the newly added group is
 # blue-crab p2s $POD5_DIR/unusual_pod5/new_group.pod5 -o $OUTPUT_DIR/err.slow5  2> $OUTPUT_DIR/err.log && die "testcase $TESTCASE_NO failed"
 # grep -q "ERROR.*Attribute .* in .* is unexpected" $OUTPUT_DIR/err.log || die "Error in testcase $TESTCASE_NO failed"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=6.16
+# TESTCASE_NO=6.5
 # echo "------------------- p2s testcase $TESTCASE_NO >>> pore type set   -------------------"
 # # if pore type is something othe rthan being empty or "no_set", we need to manually investigate what the heck thi sis
 # blue-crab p2s $POD5_DIR/unusual_pod5/pore_set.pod5 -o $OUTPUT_DIR/err.slow5 2> $OUTPUT_DIR/err.log  && die "testcase $TESTCASE_NO failed"
@@ -480,64 +386,31 @@ blue-crab p2s $POD5_DIR/err_pod5/empty_pod5.pod5 -o $OUTPUT_DIR/err.slow5 &&  di
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 # TESTCASE_NO=7.5
-# echo "------------------- p2s testcase $TESTCASE_NO >>> # in read id at the beginning -------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/malformed_readid1.pod5 -o $OUTPUT_DIR/err.slow5 && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=7.6
-# echo "------------------- p2s testcase $TESTCASE_NO >>> @ in read id at the beginning -------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/malformed_readid1.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=7.7
-# echo "------------------- p2s testcase $TESTCASE_NO >>> Duplicated attribute -------------------"
-# If there is a duplicate header attribute coming from two separate groups, need some manual investigation
-# blue-crab p2s $POD5_DIR/err_pod5/dupli_attrib.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=7.8
 # echo "------------------- p2s testcase $TESTCASE_NO >>> tab in attribute name 'operating system'-------------------"
 # blue-crab p2s $POD5_DIR/err_pod5/tab_in_attrib.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=7.9
+# TESTCASE_NO=7.6
 # echo "------------------- p2s testcase $TESTCASE_NO >>> new line in attribute 'exp_script_name' value-------------------"
 # blue-crab p2s $POD5_DIR/err_pod5/newline_in_attrib.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=7.10
-# echo "------------------- p2s testcase $TESTCASE_NO >>> new line in field name 'channel number'-------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/newline_in_field.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+TESTCASE_NO=7.7
+echo "------------------- p2s testcase $TESTCASE_NO >>> new line in field name 'channel number'-------------------"
+blue-crab p2s $POD5_DIR/err_pod5/newline_in_field.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=7.11
-# echo "------------------- p2s testcase $TESTCASE_NO >>> tab in field value 'channel number'-------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/tab_in_field.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+TESTCASE_NO=7.8
+echo "------------------- p2s testcase $TESTCASE_NO >>> tab in field value 'channel number'-------------------"
+blue-crab p2s $POD5_DIR/err_pod5/tab_in_field.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=7.12
-# echo "------------------- p2s testcase $TESTCASE_NO >>> primary field 'range' missing -------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/missing_primary_field.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+TESTCASE_NO=7.9
+echo "------------------- p2s testcase $TESTCASE_NO >>> primary field 'range' missing -------------------"
+blue-crab p2s $POD5_DIR/err_pod5/missing_primary_field.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=7.13
-# echo "------------------- p2s testcase $TESTCASE_NO >>> primary field 'range' wrong type -------------------"
-# any primary field should match to what we expect
-# blue-crab p2s $POD5_DIR/err_pod5/primary_field_wrong_type.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=7.14
-# any auxilliary field should match to what we expect (note: multiple datatypes can be expected, if we know about this)
-# echo "------------------- p2s testcase $TESTCASE_NO >>> aux field 'channel number' wrong type -------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/aux_field_wrong_type.pod5 -o $OUTPUT_DIR/err.slow5  && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=7.15
-# echo "------------------- p2s testcase $TESTCASE_NO >>> R7 file   -------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/R7_1.pod5 -o $OUTPUT_DIR/err.slow5 && die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-TESTCASE_NO=7.16
+TESTCASE_NO=7.10
 echo "------------------- p2s testcase $TESTCASE_NO >>> all pod5 files were skipped   -------------------"
 blue-crab p2s $POD5_DIR/err_pod5/ -o $OUTPUT_DIR/err.slow5 -p1 && die "testcase $TESTCASE_NO failed"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
