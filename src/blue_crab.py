@@ -204,13 +204,7 @@ def pod52slow5(args):
                 files.sort()
                 for pfile in files:
                     if pfile.endswith('.pod5'):
-                        if pfile not in pod5_filename_set:
-                            pod5_filepath_set.add(os.path.join(dirpath, pfile))
-                            pod5_filename_set.add(pfile)
-                            # retain folder structure. This SHOULD work, but damn path manipulation is hard
-                        else:
-                            logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
-                            kill_program()
+                        pod5_filepath_set.add(os.path.join(dirpath, pfile))
                         if args.retain:
                             if not args.out_dir:
                                 logger.error("--retain can only be used with --out-dir, exiting")
@@ -225,6 +219,14 @@ def pod52slow5(args):
                                 Path(mkdirpath).mkdir(parents=True, exist_ok=True)
                                 retain_path_set.add(mkdirpath)
                             retain_file_set.add((os.path.join(dirpath, pfile), mkdirpath))
+                            continue
+                        # do duplicate testing
+                        if pfile in pod5_filename_set:
+                            logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
+                            kill_program()
+                            # retain folder structure. This SHOULD work, but damn path manipulation is hard
+                        else:
+                            pod5_filename_set.add(pfile)
 
                             
         else:
@@ -616,13 +618,8 @@ def slow52pod5(args):
                 files.sort()
                 for sfile in files:
                     if sfile.endswith((".slow5", ".blow5")):
-                        if sfile not in slow5_filename_set:
-                            slow5_filepath_set.add(os.path.join(dirpath, sfile))
-                            slow5_filename_set.add(sfile)
-                        else:
-                            logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
-                            kill_program()
-                            # retain folder structure. This SHOULD work, but damn path manipulation is hard
+                        slow5_filepath_set.add(os.path.join(dirpath, sfile))
+                        # retain folder structure. This SHOULD work, but damn path manipulation is hard
                         if args.retain:
                             if not args.out_dir:
                                 logger.error("--retain can only be used with --out-dir, exiting")
@@ -637,7 +634,12 @@ def slow52pod5(args):
                                 Path(mkdirpath).mkdir(parents=True, exist_ok=True)
                                 retain_path_set.add(mkdirpath)
                             retain_file_set.add((os.path.join(dirpath, sfile), mkdirpath))
-                            
+                            continue
+                        if sfile not in slow5_filename_set:
+                            logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
+                            kill_program()
+                        else:
+                            slow5_filename_set.add(sfile)
         else:
             if args.retain:
                  logger.error("--retain cannot be used with single files")
@@ -858,7 +860,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                     
                     run_info = p5.RunInfo(
                         acquisition_id = header.get("acquisition_id", acquisition_id),
-                        acquisition_start_time = int(timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))), 0),
+                        acquisition_start_time = int(timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))) or 0),
                         adc_max = int(header.get("adc_max", adc_max)),
                         adc_min = int(header.get("adc_min", adc_min)),
                         context_tags = context_tags,
@@ -1045,7 +1047,7 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                     
                     run_info = p5.RunInfo(
                         acquisition_id = header.get("acquisition_id", acquisition_id),
-                        acquisition_start_time = timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))),
+                        acquisition_start_time = int(timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))) or 0),
                         adc_max = int(header.get("adc_max", adc_max)),
                         adc_min = int(header.get("adc_min", adc_min)),
                         context_tags = context_tags,
@@ -1288,7 +1290,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                 '''
                 run_info = p5.RunInfo(
                     acquisition_id = header.get("acquisition_id", acquisition_id),
-                    acquisition_start_time = timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))),
+                    acquisition_start_time = int(timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))) or 0),
                     adc_max = int(header.get("adc_max", adc_max)),
                     adc_min = int(header.get("adc_min", adc_min)),
                     context_tags = context_tags,
