@@ -111,22 +111,46 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 # diff -q $EXP_SLOW5_DIR/pod5-output/directory_z.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'p2s format:pod5 input:directory process:single_process output"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
+echo
+rm -rf $OUTPUT_DIR/pod5
+TESTCASE_NO=1.8
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:single_process output:directory-------------------"
+blue-crab p2s $POD5_DIR/pod5 --iop 1 -d $OUTPUT_DIR/pod5 || die "testcase $TESTCASE_NO failed"
+diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+diff -q $EXP_SLOW5_DIR/pod5-output/z2.blow5 $OUTPUT_DIR/pod5/z2.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+diff -q $EXP_SLOW5_DIR/pod5-output/b1.blow5 $OUTPUT_DIR/pod5/b1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+
 # echo
-# rm -rf $OUTPUT_DIR/pod5
-# TESTCASE_NO=1.8
-# echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:single_process output:directory-------------------"
-# blue-crab p2s $POD5_DIR/pod5 --iop 1 -d $OUTPUT_DIR/pod5 || die "testcase $TESTCASE_NO failed"
-# diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
-# diff -q $EXP_SLOW5_DIR/pod5-output/z2.blow5 $OUTPUT_DIR/pod5/z2.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
-# diff -q $EXP_SLOW5_DIR/pod5-output/b1.blow5 $OUTPUT_DIR/pod5/b1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+# TESTCASE_NO=1.9
+# echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:multiple files process:single_process output:file-------------------"
+# blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 $POD5_DIR/pod5/z/z2.pod5  --iop 1 -o $OUTPUT_DIR/out.blow5 || die "testcase $TESTCASE_NO failed"
+# diff -q $EXP_SLOW5_DIR/pod5-output/directory_z.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'p2s format:pod5 input:directory process:single_process output"
 # echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
+echo
+rm -rf $OUTPUT_DIR/pod5
+TESTCASE_NO=1.10
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:multiple directory process:single_process output:file-------------------"
+blue-crab p2s $POD5_DIR/pod5/z/ $POD5_DIR/pod5/b/ --iop 1 -d $OUTPUT_DIR/pod5/ || die "testcase $TESTCASE_NO failed"
+diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+diff -q $EXP_SLOW5_DIR/pod5-output/z2.blow5 $OUTPUT_DIR/pod5/z2.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+diff -q $EXP_SLOW5_DIR/pod5-output/b1.blow5 $OUTPUT_DIR/pod5/b1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-
-# COMBINATIONS LIKE MULTIPLE INPUT FILES AND MIX OF DIR AND FILES?
 
 echo
-TESTCASE_NO=1.9
+rm -rf $OUTPUT_DIR/pod5
+TESTCASE_NO=1.11
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory and file process:single_process output:file-------------------"
+blue-crab p2s $POD5_DIR/pod5/z/ $POD5_DIR/pod5/b/b1.pod5 --iop 1 -d $OUTPUT_DIR/pod5/ || die "testcase $TESTCASE_NO failed"
+diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+diff -q $EXP_SLOW5_DIR/pod5-output/z2.blow5 $OUTPUT_DIR/pod5/z2.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+diff -q $EXP_SLOW5_DIR/pod5-output/b1.blow5 $OUTPUT_DIR/pod5/b1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+
+echo
+TESTCASE_NO=1.12
 echo "------------------- p2s testcase $TESTCASE_NO >>> current directory:pod5 file directory output: out-------------------"
 cd $POD5_DIR/pod5
 CD_BACK=../../../../..
@@ -154,15 +178,15 @@ blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 -d $OUTPUT_DIR/pod5-output -t 4 || die "t
 diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5-output/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:multi output"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# echo
-# rm $OUTPUT_DIR/pod5-output/*
-# TESTCASE_NO=2.3
-# echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:multi output:directory-------------------"
-# blue-crab p2s $POD5_DIR/pod5 -d $OUTPUT_DIR/pod5-output --iop 4  || die "testcase $TESTCASE_NO failed"
-# diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
-# diff -q $EXP_SLOW5_DIR/pod5-output/z2.blow5 $OUTPUT_DIR/pod5/z2.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
-# diff -q $EXP_SLOW5_DIR/pod5-output/b1.blow5 $OUTPUT_DIR/pod5/b1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+echo
+rm $OUTPUT_DIR/pod5-output/*
+TESTCASE_NO=2.3
+echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:directory process:multi output:directory-------------------"
+blue-crab p2s $POD5_DIR/pod5 -d $OUTPUT_DIR/pod5-output --iop 4  || die "testcase $TESTCASE_NO failed"
+diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/pod5/z1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+diff -q $EXP_SLOW5_DIR/pod5-output/z2.blow5 $OUTPUT_DIR/pod5/z2.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+diff -q $EXP_SLOW5_DIR/pod5-output/b1.blow5 $OUTPUT_DIR/pod5/b1.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 
 
@@ -243,6 +267,12 @@ blue-crab p2s $POD5_DIR/pod5/b/ $POD5_DIR/pod5/b/ -d $OUTPUT_DIR/dupli 2> $OUTPU
 grep -q "ERROR.* File name duplicates present.*" $OUTPUT_DIR/err.log || die "ERROR: p2s_test testcase $TESTCASE_NO failed"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
+
+echo
+TESTCASE_NO=4.10
+echo "------------------- p2s testcase $TESTCASE_NO >>> Multiple dircetories to --retain failure expected -------------------"
+blue-crab p2s $POD5_DIR/retain_dir_structure $POD5_DIR/pod5/b/  -d $OUTPUT_DIR/retain_dir_structure --retain  && die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 ########################## Stupid end reason ####################
 
@@ -433,26 +463,25 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 # ####################### Erroeneous POD5 ########################
 
-# TESTCASE_NO=7.1
-# echo "------------------- p2s testcase $TESTCASE_NO >>> not a pod5 -------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/not_a_pod5.pod5 -o $OUTPUT_DIR/err.slow5 &&  die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+TESTCASE_NO=7.1
+echo "------------------- p2s testcase $TESTCASE_NO >>> not a pod5 -------------------"
+blue-crab p2s $POD5_DIR/err_pod5/not_a_pod5.pod5 -o $OUTPUT_DIR/err.slow5 &&  die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=7.2
-# echo "------------------- p2s testcase $TESTCASE_NO >>> non existent file -------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/there_is_no_such_pod5.pod5 -o $OUTPUT_DIR/err.slow5 &&  die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+TESTCASE_NO=7.2
+echo "------------------- p2s testcase $TESTCASE_NO >>> non existent file -------------------"
+blue-crab p2s $POD5_DIR/err_pod5/there_is_no_such_pod5.pod5 -o $OUTPUT_DIR/err.slow5 &&  die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=7.3
-# echo "------------------- p2s testcase $TESTCASE_NO >>> empty directory -------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/empty_dir -o $OUTPUT_DIR/err.slow5 &&  die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+TESTCASE_NO=7.3
+echo "------------------- p2s testcase $TESTCASE_NO >>> empty directory -------------------"
+blue-crab p2s $POD5_DIR/err_pod5/empty_dir -o $OUTPUT_DIR/err.slow5 &&  die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=7.4
-# echo "------------------- p2s testcase $TESTCASE_NO >>> empty pod5 file -------------------"
-# blue-crab p2s $POD5_DIR/err_pod5/empty_pod5.pod5 -o $OUTPUT_DIR/err.slow5 &&  die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
+TESTCASE_NO=7.4
+echo "------------------- p2s testcase $TESTCASE_NO >>> empty pod5 file -------------------"
+blue-crab p2s $POD5_DIR/err_pod5/empty_pod5.pod5 -o $OUTPUT_DIR/err.slow5 &&  die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 # TESTCASE_NO=7.5
 # echo "------------------- p2s testcase $TESTCASE_NO >>> # in read id at the beginning -------------------"
