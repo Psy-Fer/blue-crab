@@ -39,7 +39,7 @@ die() {
     exit 1
 }
 #redirect
-verbose=0
+verbose=1
 exec 3>&1
 exec 4>&2
 if ((verbose)); then
@@ -52,7 +52,7 @@ fi
 #echo "this should be seen if verbose"
 #echo "this should always be seen" 1>&3 2>&4
 RAW_DIR=$REL_PATH/data/raw/s2p
-EXP_SLOW5_DIR=$REL_PATH/tdata/exp/p2s/
+EXP_SLOW5_DIR=$REL_PATH/data/exp/p2s/
 
 OUTPUT_DIR="$REL_PATH/data/out/s2p"
 test -d  $OUTPUT_DIR && rm -r "$OUTPUT_DIR"
@@ -75,19 +75,27 @@ echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
 blue-crab s2p $RAW_DIR/z2.blow5 -o $OUTPUT_DIR/b.pod5 || die "testcase $TESTCASE_NO failed"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
-# TESTCASE_NO=3
-# TESTNAME=".slow5 to .pod5 (output directory given)"
-# echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
-# blue-crab s2p $RAW_DIR/a.slow5 -d $OUTPUT_DIR/a || die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
-
-# TESTCASE_NO=4
-# TESTNAME="directory to .pod5 (output directory given)"
-# echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
-# blue-crab s2p $EXP_SLOW5_DIR/pod5-output/ -d $OUTPUT_DIR/a || die "testcase $TESTCASE_NO failed"
-# echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+TESTCASE_NO=3
+TESTNAME=".slow5 to .pod5 (output directory given)"
+echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
+blue-crab s2p $RAW_DIR/a.slow5 -d $OUTPUT_DIR/a || die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 TESTCASE_NO=4
+rm -rf $OUTPUT_DIR/a/*
+TESTNAME="directory to .pod5 (output directory given - existent empty)"
+echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
+blue-crab s2p $EXP_SLOW5_DIR/pod5-output/ -d $OUTPUT_DIR/a || die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+
+TESTCASE_NO=5
+rm -f $OUTPUT_DIR/a/*
+TESTNAME="directory to .pod5 (output directory given - overwrite)"
+echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
+blue-crab s2p $EXP_SLOW5_DIR/pod5-output/ -d $OUTPUT_DIR/a && die "testcase $TESTCASE_NO failed"
+echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+
+TESTCASE_NO=6
 TESTNAME=".slow5 (in current directory) to .pod5"
 echo "-------------------testcase:$TESTCASE_NO: $TESTNAME-------------------"
 cd $RAW_DIR
