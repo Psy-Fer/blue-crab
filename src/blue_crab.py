@@ -636,11 +636,13 @@ def slow52pod5(args):
                                 retain_path_set.add(mkdirpath)
                             retain_file_set.add((os.path.join(dirpath, sfile), mkdirpath))
                             continue
-                        if sfile in slow5_filename_set:
+                        spath, sname = os.path.split(sfile)
+                        sname_no_ext = os.path.join(spath, ".".join(sname.split(".")[:-1]))
+                        if sname_no_ext in slow5_filename_set:
                             logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
                             kill_program()
                         else:
-                            slow5_filename_set.add(sfile)
+                            slow5_filename_set.add(sname_no_ext)
         else:
             if args.retain:
                  logger.error("--retain cannot be used with single files")
@@ -653,6 +655,7 @@ def slow52pod5(args):
                 logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
                 kill_program()
 
+    logger.debug("slow5_filename_set: {}".format(slow5_filename_set))
     
     # check that slow5 files are actually found, otherwise exit
     if len(slow5_filepath_list) < 1:
