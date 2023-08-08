@@ -635,7 +635,7 @@ def slow52pod5(args):
                                 retain_path_set.add(mkdirpath)
                             retain_file_set.add((os.path.join(dirpath, sfile), mkdirpath))
                             continue
-                        if sfile not in slow5_filename_set:
+                        if sfile in slow5_filename_set:
                             logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, sfile)))
                             kill_program()
                         else:
@@ -1108,7 +1108,13 @@ def s2s_s2p_worker(args, sfile, pod5_out):
     single s/blow5 file to single pod5
     '''
     slow5_file = sfile
-    pod5_file = pod5_out
+    if os.path.isdir(pod5_out):
+        filepath, filename = os.path.split(sfile)
+        # replace pod5 filename extention with .blow5
+        pod5_filename = ".".join(filename.split(".")[:-1]) + ".pod5"
+        pod5_filepath = os.path.join(pod5_out, pod5_filename)
+    else:
+        pod5_filepath = pod5_out
     logger.info("Opening s/blow5 file: {}".format(slow5_file))
     # open slow5 file for writing
     s5 = slow5.Open(slow5_file, 'r')
@@ -1125,7 +1131,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
     run_info_cache = {}
     # before ONT added DATA_SERVICE_UNBLOCK_MUX_CHANGE in the middle and removed partial...
     # slow5_end_reason_labels = ['unknown', 'partial', 'mux_change', 'unblock_mux_change', 'signal_positive', 'signal_negative']
-    with p5.Writer(pod5_file) as writer:
+    with p5.Writer(pod5_filepath) as writer:
         for read in reads:
             # TODO: try/except around this and give meaninful error
             # Populate container classes for read metadata
