@@ -66,6 +66,10 @@ blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). 
     python3 -m venv ./blue-crab-venv
     source ./blue-crab-venv/bin/activate
     python3 -m pip install --upgrade pip
+
+    # only if you want zstd support and have installed zstd development libraries for zstd build
+    export PYSLOW5_ZSTD=1
+    
     pip install blue-crab
 
     blue-crab --help
