@@ -17,7 +17,7 @@ pyslow5: https://hasindu2008.github.io/slow5lib/pyslow5_api/pyslow5.html<br/>
 
 # WARNING
 
-Currently under testing. Please wait for a release. Use at your own risk.
+Currently under testing. Please wait for a release. Use at your own risk. You may use commands like [slow5tools](https://github.com/hasindu2008/slow5tools) quickcheck and index to verify the integrity of the created S/BLOW5 files.
 
 ## Setup
 
@@ -25,45 +25,52 @@ blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). 
 
 1. Install zlib development libraries (and optionally zstd development libraries).
 
-The commands to zlib __development libraries__ on some popular distributions :
-```sh
-On Debian/Ubuntu : sudo apt-get install zlib1g-dev
-On Fedora/CentOS : sudo dnf/yum install zlib-devel
-On OS X : brew install zlib
-```
+    The commands to zlib __development libraries__ on some popular distributions :
+    ```sh
+    On Debian/Ubuntu : sudo apt-get install zlib1g-dev
+    On Fedora/CentOS : sudo dnf/yum install zlib-devel
+    On OS X : brew install zlib
+    ```
 
-SLOW5 files compressed with *zstd* offer smaller file size and better performance compared to the default *zlib*. However, *zlib* runtime library is available by default on almost all distributions unlike *zstd* and thus files compressed with *zlib* will be more 'portable'. Enabling optional *zstd* support, requires __zstd 1.3 or higher development libraries__ installed on your system:
+    SLOW5 files compressed with *zstd* offer smaller file size and better performance compared to the default *zlib*. However, *zlib* runtime library is available by default on almost all distributions unlike *zstd* and thus files compressed with *zlib* will be more 'portable'. Enabling optional *zstd* support, requires __zstd 1.3 or higher development libraries__ installed on your system:
 
-```sh
-On Debian/Ubuntu : sudo apt-get install libzstd1-dev # libzstd-dev on newer distributions if libzstd1-dev is unavailable
-On Fedora/CentOS : sudo yum libzstd-devel
-On OS X : brew install zstd
-```
+    ```sh
+    On Debian/Ubuntu : sudo apt-get install libzstd1-dev # libzstd-dev on newer distributions if libzstd1-dev is unavailable
+    On Fedora/CentOS : sudo yum libzstd-devel
+    On OS X : brew install zstd
+    ```
 
-2. Create a virtual environment using Python 3.8 and install blue-crab
+2. Create a virtual environment using Python 3.8+ and install blue-crab
 
-```
-# clone the repo
-git clone  https://github.com/Psy-Fer/blue-crab && cd blue-crab
+    ```
+    # clone the repo
+    git clone  https://github.com/Psy-Fer/blue-crab && cd blue-crab
 
-# create venv
-python3 -m venv ./blue-crab-venv
-source ./blue-crab-venv/bin/activate
-python3 -m pip install --upgrade pip
+    # create venv
+    python3 -m venv ./blue-crab-venv
+    source ./blue-crab-venv/bin/activate
+    python3 -m pip install --upgrade pip
 
-# only if you want zstd support and have installed zstd development libraries for zstd build
-export PYSLOW5_ZSTD=1
+    # only if you want zstd support and have installed zstd development libraries for zstd build
+    export PYSLOW5_ZSTD=1
 
-# install blue-crab
-python3 -m pip install .
-blue-crab --help
-```
+    # install blue-crab
+    python3 -m pip install .
+    blue-crab --help
+    ```
 
-You can check your Python version by invoking `python3 --version`. You can install a different version of Python as:
+    You can check your Python version by invoking `python3 --version`. If your native python3 meets this requirement of >=3.8, you can use that, or use a
+specific version installed with deadsnakes below. If you install with deadsnakes, you will need to call that specific python, such as python3.8 or python3.9, in all the following commands until you create a virtual environment with venv. Then once activated, you can just use python3. To install a specific version of python, the deadsnakes ppa is a good place to start:
 
-```
-Todo: provide instructions for installing python versions using apt
-```
+    ```
+    # This is an example for installing python3.8
+    # you can then call that specific python version
+    # > python3.8 -m pip --version
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt-get update
+    sudo apt install python3.8 python3.8-dev python3.8-venv
+    ```
+
 
 <!---
 ## Other setup options
