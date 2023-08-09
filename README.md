@@ -103,6 +103,24 @@ blue-crab p2s -c zstd pod5_dir -d blow5_dir
 POD5 has had a number of backward compatibility-breaking changes so far. This version of blue-crab is only tested on most recent pod5 files. blue-crab simply relies on ONT's POD5 API for reading and writing POD5 files, thus, leaving the burden of managing a library that can handle all the variants of POD5 and cleaning up the mess they create. We will not invest time to handle all these various idiosyncrasies in POD5, unlike we did for hundreds of different FAST5 formats when developing slow5tools. If your POD5 files are v0.1.5 or lower, you may check [this old readme](archived/old_readme.md) out.
 
 
+# Example comparison
+
+The following table compares an original 5khz pod5 file from the public zymo dataset (link below), containing 10k reads. Pod5 is using its default VBZ compression which is a mix of zstd and svb-zd for the signal. 
+
+The blow5 files are conversions made using blue-crab and timed with `/usr/bin/time -v <cmd>`. They were carried out on an XPS 15 laptop with a modern SSD hard drive. They all have signal compression set to use svb-zd.
+
+The table shows `pod5-vbz` is slightly smaller than both `blow5-zstd` and `blow5-zlib`. We prefer to default to `blow5-zlib` as it is more portable as zlib comes with most systems (as discussed above). If you want the best compression and faster conversion times however, `blow5-zstd` is the clear winner for blow5.
+
+| method     | size (mb) | time (s)|
+| :---:      | :---:     | :---:   |
+| pod5-vbz   | **679**   | -       |
+| blow5-zstd | 681       | **3.91**|
+| blow5-zlib | 689       | 7.86    |
+| -          | -         | -       |
+| blow5-xxx  | 666       | -       |
+
+I have included an example `blow5-xxx` to show that we can make the files even smaller than pod5, and this work is under active development. However those compression techniques are currently not available in blue-crab.
+
 
 # Acknowledgement
 
