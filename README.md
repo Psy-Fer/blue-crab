@@ -50,7 +50,6 @@ git clone  https://github.com/Psy-Fer/blue-crab && cd blue-crab
 python3 -m venv ./blue-crab-venv
 source ./blue-crab-venv/bin/activate
 python3 -m pip install --upgrade pip
-python3 -m pip install setuptools wheel
 
 # only if you want zstd support and have installed zstd development libraries for zstd build
 export PYSLOW5_ZSTD=1
