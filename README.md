@@ -58,7 +58,6 @@ export PYSLOW5_ZSTD=1
 # install blue-crab
 python3 -m pip install .
 blue-crab --help
-
 ```
 
 You can check your Python version by invoking `python3 --version`. You can install a different version of Python as:
@@ -91,9 +90,9 @@ blue-crab p2s pod5_dir -d blow5_dir
 
 # slow5/blow5 -> pod5
 blue-crab s2p example.blow5 -o example.pod5
+```
 
 Note that default compression is *zlib* for maximise compatibility. SLOW5 files compressed with *zstd* offer smaller file size and better performance compared to the default *zlib*. If you installed blue-crab with *zstd* support, you can create zstd compressed BLOW5 as:
-
 ```
 # pod5 -> zstd compressed slow5/blow5
 blue-crab p2s -c zstd pod5_dir -d blow5_dir
@@ -102,7 +101,7 @@ blue-crab p2s -c zstd pod5_dir -d blow5_dir
 
 # Notes
 
-POD5 has had a number of backward compatibility breaking changes so far. This version of blue-crab is only tested on most recent pod5 files. blue-crab simply relies on ONT's POD5 API for reading and writing POD5 files, thus, leaving the burden of managing a library that can handle all the variants of POD5 and cleaning up the mess they create. We will not invest time to handle all these various idiosyncrasies in POD5, unlike we did for hundreds of different FAST5 formats when developing slow5tools. If your POD5 files are v0.1.5 or lower, you may check [this old readme](archived/old_readme.md) out.
+POD5 has had a number of backward compatibility-breaking changes so far. This version of blue-crab is only tested on most recent pod5 files. blue-crab simply relies on ONT's POD5 API for reading and writing POD5 files, thus, leaving the burden of managing a library that can handle all the variants of POD5 and cleaning up the mess they create. We will not invest time to handle all these various idiosyncrasies in POD5, unlike we did for hundreds of different FAST5 formats when developing slow5tools. If your POD5 files are v0.1.5 or lower, you may check [this old readme](archived/old_readme.md) out.
 
 
 
