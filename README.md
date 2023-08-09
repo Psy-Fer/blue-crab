@@ -107,3 +107,19 @@ POD5 has had a number of backward compatibility-breaking changes so far. This ve
 # Acknowledgement
 
 [George Bouras](https://github.com/gbouras13) for providing some example becterial pod5 files. [Rasmus Kirkegaard](https://github.com/Kirk3gaard) for this [public zymo pod5 dataset](https://github.com/Kirk3gaard/2023-basecalling-benchmarks).
+
+
+# Citation
+
+> Gamaarachchi, H., Samarakoon, H., Jenner, S.P. et al. Fast nanopore sequencing data analysis with SLOW5. Nat Biotechnol 40, 1026-1029 (2022). https://doi.org/10.1038/s41587-021-01147-4
+
+```
+@article{gamaarachchi2022fast,
+  title={Fast nanopore sequencing data analysis with SLOW5},
+  author={Gamaarachchi, Hasindu and Samarakoon, Hiruna and Jenner, Sasha P and Ferguson, James M and Amos, Timothy G and Hammond, Jillian M and Saadat, Hassaan and Smith, Martin A and Parameswaran, Sri and Deveson, Ira W},
+  journal={Nature biotechnology},
+  pages={1--4},
+  year={2022},
+  publisher={Nature Publishing Group}
+}
+```
