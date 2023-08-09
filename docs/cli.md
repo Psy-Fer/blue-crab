@@ -20,11 +20,12 @@ blue-crab p2s [OPTIONS] file.pod5 -o output.slow5
 Converts POD5 files to SLOW5/BLOW5 format.
 The input can be a single POD5 file, a list of POD5 files, a directory containing multiple POD5 files, or a list of directories. If a directory is provided, the tool recursively searches within for POD5 files (.pod5 extension) and converts them to SLOW5/BLOW5.
 For each POD5 file in the input directories, a SLOW5/BLOW5 file with the same file name will be created inside the output directory (specified with `-d`).
+Note: Before converting a POD5 file having multiple run IDs (aka acquisition IDs), split the file into groups using ONT's pod5 tool.
 
 *  `-d, --out-dir STR`:<br/>
    Specifies name/location of the output directory. Incompatible with `-o`. If a name is provided, a directory will be created under the current working directory. Alternatively, a valid relative or absolute path can be provided. To prevent data overwriting, the program will terminate with error if the directory name already exists and is non-empty.
 *  `-o, --output FILE`:<br/>
-   When only one POD5 file is being converted, `-o` specifies a single FILE to which output data is written. Incompatible with `-d` and can automatically detect the output format from the file extension.
+   When only one POD5 file is being converted, `-o` specifies a single FILE to which output data is written. Incompatible with `-d` and will automatically detect the output format from the file extension.
 *  `-c, --compress compression_type`:<br/>
    Specifies the compression method used for BLOW5 output. `compression_type` can be `none` for uncompressed binary; `zlib` for zlib-based (also known as gzip or DEFLATE) compression; or `zstd` for Z-standard-based compression [default value: zlib]. This option is only valid for BLOW5. `zstd` will only function if blue-crab has been built with zstd support which is turned off by default.
 *  `-s, --sig-compress compression_type`:<br/>
@@ -34,11 +35,11 @@ For each POD5 file in the input directories, a SLOW5/BLOW5 file with the same fi
 * `-t, --threads INT`:<br/>
     Number of threads used for encoding S/BLOW5 records [default value: 8].
 * `-K, --batchsize`:<br/>
-    The batch size used for encoding S/BLOW5 records. This is the number of S/BLWO5 records on the memory at once [default value: 1000]. An increased batch size improves multi-threaded performance at cost of higher RAM.
+    The batch size used for encoding S/BLOW5 records. This is the number of S/BLOW5 records on the memory at once [default value: 1000]. An increased batch size improves multi-threaded performance at cost of higher RAM.
 *  `--retain`:<br/>
 	Retain the same directory structure in the converted output as the input.
 *  `-h, --help`:<br/>
-   Prints the help menu.
+    Prints the help menu.
 
 
 ### s2p

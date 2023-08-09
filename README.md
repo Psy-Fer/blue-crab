@@ -4,6 +4,8 @@ blue-crab is a conversion tool to convert from ONT's POD5 format to the communit
 Happy converting!
 
 SLOW5 specification: https://hasindu2008.github.io/slow5specs<br/>
+slow5tools: https://github.com/hasindu2008/slow5tools<br/>
+pyslow5: https://hasindu2008.github.io/slow5lib/pyslow5_api/pyslow5.html<br/>
 
 <!---
 [![BioConda Install](https://img.shields.io/conda/dn/bioconda/blue-crab.svg?style=flag&label=BioConda%20install)](https://anaconda.org/bioconda/blue-crab)
@@ -19,24 +21,54 @@ Currently under testing. Please wait for a release. Use at your own risk.
 
 ## Setup
 
-blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). Using a virtual environment is recommended:
+blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). Using a virtual environment is recommended.
+
+1. Install zlib development libraries (and optionally zstd development libraries).
+
+The commands to zlib __development libraries__ on some popular distributions :
+```sh
+On Debian/Ubuntu : sudo apt-get install zlib1g-dev
+On Fedora/CentOS : sudo dnf/yum install zlib-devel
+On OS X : brew install zlib
+```
+
+SLOW5 files compressed with *zstd* offer smaller file size and better performance compared to the default *zlib*. However, *zlib* runtime library is available by default on almost all distributions unlike *zstd* and thus files compressed with *zlib* will be more 'portable'. Enabling optional *zstd* support, requires __zstd 1.3 or higher development libraries__ installed on your system:
+
+```sh
+On Debian/Ubuntu : sudo apt-get install libzstd1-dev # libzstd-dev on newer distributions if libzstd1-dev is unavailable
+On Fedora/CentOS : sudo yum libzstd-devel
+On OS X : brew install zstd
+```
+
+2. Create a virtual environment using Python 3.8 and install blue-crab
 
 ```
+# clone the repo
+git clone  https://github.com/Psy-Fer/blue-crab && cd blue-crab
+
+# create venv
 python3 -m venv ./blue-crab-venv
 source ./blue-crab-venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install setuptools wheel
-# do this separately, after the libs above
-# for zstd build, run the following
-export PYSLOW5_ZSTD=1
-python3 -m pip install .
 
+# only if you want zstd support and have installed zstd development libraries for zstd build
+export PYSLOW5_ZSTD=1
+
+# install blue-crab
+python3 -m pip install .
 blue-crab --help
+
 ```
 
-## Other setup options
+You can check your Python version by invoking `python3 --version`. You can install a different version of Python as:
 
-Todo: provide instructions for instalating python versions and also installing zlib/zstd development libraries.
+```
+Todo: provide instructions for installing python versions using apt
+```
+
+<!---
+## Other setup options
 
 You may also use conda (todo: complete):
 ```
@@ -44,6 +76,7 @@ conda create -n blue-crab-env python=3.10 -y
 conda activate blue-crab-env
 pip install -r requirements.txt
 ```
+--->
 
 ## Usage
 
@@ -58,6 +91,12 @@ blue-crab p2s pod5_dir -d blow5_dir
 
 # slow5/blow5 -> pod5
 blue-crab s2p example.blow5 -o example.pod5
+
+Note that default compression is *zlib* for maximise compatibility. SLOW5 files compressed with *zstd* offer smaller file size and better performance compared to the default *zlib*. If you installed blue-crab with *zstd* support, you can create zstd compressed BLOW5 as:
+
+```
+# pod5 -> zstd compressed slow5/blow5
+blue-crab p2s -c zstd pod5_dir -d blow5_dir
 ```
 
 
