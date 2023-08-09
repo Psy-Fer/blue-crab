@@ -30,6 +30,10 @@ You may use commands like [slow5tools](https://hasindu2008.github.io/slow5tools/
 python3 -m venv ./blue-crab-venv
 source ./blue-crab-venv/bin/activate
 python3 -m pip install --upgrade pip
+
+pip install blue-crab
+
+blue-crab --help
 ```
 
 
@@ -54,7 +58,20 @@ blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). 
     On OS X : brew install zstd
     ```
 
-2. Create a virtual environment using Python 3.8+ and install blue-crab
+### pick option 2 or 3
+
+2. Create a virtual environment using Python 3.8+ and install blue-crab from pip
+
+    ```
+    python3 -m venv ./blue-crab-venv
+    source ./blue-crab-venv/bin/activate
+    python3 -m pip install --upgrade pip
+    pip install blue-crab
+
+    blue-crab --help
+    ```
+
+3. Create a virtual environment using Python 3.8+ and install blue-crab from source
 
     ```
     # clone the repo
