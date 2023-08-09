@@ -17,7 +17,21 @@ pyslow5: https://hasindu2008.github.io/slow5lib/pyslow5_api/pyslow5.html<br/>
 
 # WARNING
 
-Currently under testing. Please wait for a release. Use at your own risk. You may use commands like [slow5tools](https://github.com/hasindu2008/slow5tools) quickcheck and index to verify the integrity of the created S/BLOW5 files.
+While we test as much as we can and do our very best to ensure 100% data parity, we have no control over what ONT will do to pod5.
+
+Given their history of ad-hoc changes, there is bound to be cases in the future where this breaks the conversion.
+
+You may use commands like [slow5tools](https://hasindu2008.github.io/slow5tools/) quickcheck and index to verify the integrity of the created S/BLOW5 files.
+
+
+## Quickstart
+
+```
+python3 -m venv ./blue-crab-venv
+source ./blue-crab-venv/bin/activate
+python3 -m pip install --upgrade pip
+```
+
 
 ## Setup
 
