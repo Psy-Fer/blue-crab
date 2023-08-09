@@ -17,7 +17,7 @@ jobs:
     - name: install packages
       run: sudo apt-get update && sudo apt-get install -y zlib1g-dev gcc python3 python3-pip && pip3 install setuptools cython numpy
     - name: slow5lib-dev
-      run: git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install --user && cd ..
+      run: git clone -b dev https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install --user && cd ..
     - name: install
       run:  python3 setup.py install --user && blue-crab --help
     - name: test
@@ -32,7 +32,7 @@ jobs:
     - name: install packages
       run: sudo apt-get update && sudo apt-get install -y zlib1g-dev gcc python3 python3-pip && pip3 install setuptools cython numpy
     - name: slow5lib-dev
-      run: git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install --user && cd ..
+      run: git clone -b dev https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install --user && cd ..
     - name: install
       run:  python3 setup.py install --user && blue-crab --help
     - name: test
@@ -53,7 +53,7 @@ jobs:
           apt-get install -y zlib1g-dev gcc make python3 python3-pip git wget &&
           pip3 install setuptools cython numpy &&
           ldd --version && gcc --version && python3 --version &&
-          git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install && cd .. &&
+          git clone -b dev https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install && cd .. &&
           python3 setup.py install && blue-crab --help && test/test.sh"
   os_x_11:
     name: macos-11
@@ -65,7 +65,7 @@ jobs:
     - name: install packages
       run: pip3 install numpy
     - name: slow5lib-dev
-      run: git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib && pip3 install . && cd ..
+      run: git clone -b dev https://github.com/hasindu2008/slow5lib && cd slow5lib && pip3 install . && cd ..
     - name: install
       run:  pip3 install . && blue-crab --help
     - name: test
@@ -80,7 +80,7 @@ jobs:
     - name: install packages
       run: pip3 install numpy
     - name: slow5lib-dev
-      run: git clone -b pyslow5-aux-update https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install . && cd ..
+      run: git clone -b dev https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install . && cd ..
     - name: install
       run:  pip3 install . && blue-crab --help
     - name: test
