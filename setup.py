@@ -23,9 +23,13 @@ setuptools.setup(
     name=PKG_NAME,
     version=__version__,
     url="https://github.com/Psy-Fer/blue-crab",
-    author="James Ferguson",
+    author="James Ferguson, Hasindu Gamaarachchi",
     author_email="j.ferguson@garvan.org.au",
-    description="Slow5/Blow5 <-> Pod5 converter",
+    maintainer='James Ferguson',
+    maintainer_email='j.ferguson@garvan.org.au',
+    description="blue-crab: A Slow5/Blow5 <-> Pod5 converter",
+    license = 'MIT',
+    keywords = ['nanopore','slow5', 'pod5'],
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
@@ -34,7 +38,10 @@ setuptools.setup(
     setup_requires=["numpy"],
     entry_points={"console_scripts":["blue-crab=src.blue_crab:main"],},
     classifiers=[
+        'Development Status :: 5 - Production/Stable',
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
 )
