@@ -1,4 +1,7 @@
 graft src
 graft scripts
 graft archived
+graft docs
 include requirements.txt
+include README.md
+include LICENSE

@@ -9,9 +9,10 @@ pyslow5: https://hasindu2008.github.io/slow5lib/pyslow5_api/pyslow5.html<br/>
 
 <!---
 [![BioConda Install](https://img.shields.io/conda/dn/bioconda/blue-crab.svg?style=flag&label=BioConda%20install)](https://anaconda.org/bioconda/blue-crab)
-[![PyPI](https://img.shields.io/pypi/v/blue-crab.svg?style=flat)](https://pypi.python.org/pypi/blue-crab)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/blue-crab?label=blue-crab%20PyPi)
+![PyPI - Downloads](https://img.shields.io/pypi/:period/blue-crab)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/blue-crab?label=blue-crab)
 --->
+[![PyPI](https://img.shields.io/pypi/v/blue-crab.svg?style=flat)](https://pypi.python.org/pypi/blue-crab)
 [![Snake CI](https://github.com/Psy-Fer/blue-crab/actions/workflows/snake.yml/badge.svg)](https://github.com/Psy-Fer/blue-crab/actions/workflows/snake.yml)
 
 
@@ -69,7 +70,7 @@ blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). 
 
     # only if you want zstd support and have installed zstd development libraries for zstd build
     export PYSLOW5_ZSTD=1
-    
+
     pip install blue-crab
 
     blue-crab --help
