@@ -124,7 +124,7 @@ I have included an example `blow5-xxx` to show that we can make the files even s
 
 # Acknowledgement
 
-[George Bouras](https://github.com/gbouras13) for providing some example becterial pod5 files. [Rasmus Kirkegaard](https://github.com/Kirk3gaard) for this [public zymo pod5 dataset](https://github.com/Kirk3gaard/2023-basecalling-benchmarks).
+[George Bouras](https://github.com/gbouras13) for providing some example becterial pod5 files. [Rasmus Kirkegaard](https://github.com/Kirk3gaard) for this [public zymo pod5 dataset](https://github.com/Kirk3gaard/2023-basecalling-benchmarks). [George](https://github.com/jorj1988) from ONT for help in understanding pod5 stuff.
 
 
 # Citation
