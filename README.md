@@ -9,9 +9,9 @@ pyslow5: https://hasindu2008.github.io/slow5lib/pyslow5_api/pyslow5.html<br/>
 
 <!---
 [![BioConda Install](https://img.shields.io/conda/dn/bioconda/blue-crab.svg?style=flag&label=BioConda%20install)](https://anaconda.org/bioconda/blue-crab)
-![PyPI - Downloads](https://img.shields.io/pypi/:period/blue-crab)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/blue-crab?label=blue-crab)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/blue-crab)
 --->
+![PyPI Downloads](https://img.shields.io/pypi/dm/blue-crab?label=pypi%20downloads)
 [![PyPI](https://img.shields.io/pypi/v/blue-crab.svg?style=flat)](https://pypi.python.org/pypi/blue-crab)
 [![Snake CI](https://github.com/Psy-Fer/blue-crab/actions/workflows/snake.yml/badge.svg)](https://github.com/Psy-Fer/blue-crab/actions/workflows/snake.yml)
 
