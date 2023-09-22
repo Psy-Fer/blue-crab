@@ -77,3 +77,26 @@ Note: Before converting a SLOW5 file having multiple read groups, split the file
     Verbose output [v/vv/vvv] (default: 0)
 *  `--profile`:<br/>
     Run cProfile on all processes - for profiling benchmarks [default value: False].
+
+
+## Handling of processing/threading
+
+Both `p2s` and `s2p` have 3 workflows depending on the file input/output
+
+1. s2s - single to single
+2. m2s - multi to single
+3. m2m - multi to multi
+
+For `p2s`
+
+1. Single pod5 to single slow5/blow5 - Using 1 process in blue-crab, it will use the default threading model from the pod5/arrow library to read the pod5 file. When writing the slow5 file, records will accumulate into a batch of `-K, --batchsize` size and will use `-t, --threads` number of threads to compress and write that batch to the slow5/blow5 file.
+2. Mutliple pod5 files to a single slow5/blow5 - Using 1 single process in blue-carb, it will use the default threading model from the pod5/arrow library to read each pod5 file, 1 at a time. When writing the slow5 file, records will accumulate into a batch of `-K, --batchsize` size and will use `-t, --threads` number of threads to compress and write that batch to the slow5/blow5 file. (use `m2m` with a `slow5tools merge` for better performance)
+3. Multiple pod5 to multiple slow5/blow5 - Using multiple processes in blue-crab `-p, --iop`, it will open 1 pod5 file per process, and read that file with the default threading model from the pod5/arrow library. It will then open a slow5/blow5 file. When writing the slow5 file, records will accumulate into a batch of `-K, --batchsize` size and will use `-t, --threads` number of threads to compress and write that batch to the slow5/blow5 file. This means each process will take 1 pod5 file and convert it to a slow5/blow5. If a single monolithic slow5/blow5 file is required after this step, a `slow5tools merge` can be used to combine the multiple files.
+
+For `s2p`
+
+1. Single slow5/blow5 to single pod5 - Using 1 process in blue-crab, it will read the slow5/blow5 using 1 thread, and write to a pod5 file using the default threading model from the pod5/arrow library.
+2. Multiple slow5/blow5 files to a single pod5 - Using 1 process in blue-crab, it will read each slow5/blow5 using 1 thread, and write to a pod5 file using the default threading model from the pod5/arrow library.
+3. Multiple slow5/blow5 files to multiple pod5 - Using multiple processes in blue-crab `-p, --iop`, it will open 1 slow5/blow5 file per process, and read that file with a single thread. It will then write to a pod5 file using the default threading model from the pod5/arrow library. In effect, converting 1 slow5/blow5 file to 1 pod5 within each process.
+
+Better read/write performance can be attained using `zstd` compression in the slow5/blow5 files.
