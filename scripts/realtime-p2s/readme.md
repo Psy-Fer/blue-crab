@@ -48,7 +48,7 @@ The following optional environment variables will be honoured by the real-time c
 
 - REALP2S_AUTO: make the script terminate as soon as the sequencing run in MinKNOW stops as explained above.
 - SLOW5TOOLS: path to the slow5tools binary
-- BLUECRAB: path to the blue-crab [launcher script](../README.md#optional-wrapper-script-and-adding-to-path)
+- BLUECRAB: path to the blue-crab [launcher script](../../README.md#optional-wrapper-script-and-adding-to-path)
 
 ## Simulation
 
