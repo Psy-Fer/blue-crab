@@ -108,6 +108,14 @@ specific version installed with deadsnakes below. If you install with deadsnakes
     ```
 
 
+### Optional: wrapper script and adding to PATH
+
+Suppose the name of the virtual environment you created is blue-crab-venv and resides directly in the root of the cloned blue-crab git repository. In that case, you can use the wrapper script available under /path/to/repository/scripts/blue-crab for conveniently executing blue-crab. This script will automatically source the virtual environment, execute the blue-crab with the parameters you specified and finally deactivate the virtual environment. If you add the path of /path/to/repository/scripts/ to your PATH environment variable, you can simply use blue-crab from anywhere.
+
+### Optional: real-time POD5 to BLOW5 conversion
+
+A script for performing real-time POD5 to BLOW5 conversion during sequencing is provided [here](scripts/realtime-p2s/) along with instructions.
+
 <!---
 ## Other setup options
 
@@ -148,7 +156,7 @@ POD5 has had a number of backward compatibility-breaking changes so far. This ve
 
 # Example comparison
 
-The following table compares an original 5khz pod5 file from the public zymo dataset (link below), containing 10k reads. Pod5 is using its default VBZ compression which is a mix of zstd and svb-zd for the signal. 
+The following table compares an original 5khz pod5 file from the public zymo dataset (link below), containing 10k reads. Pod5 is using its default VBZ compression which is a mix of zstd and svb-zd for the signal.
 
 The blow5 files are conversions made using blue-crab and timed with `/usr/bin/time -v <cmd>`. They were carried out on an XPS 15 laptop with a modern SSD hard drive. They all have signal compression set to use svb-zd. Using `python3.11.3`.
 
