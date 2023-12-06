@@ -774,7 +774,12 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                 # sampling_frequency = read["sampling_rate"]
                 # map end_reason if present
                 # let's convert this to it's string equivalent
-                s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                try:
+                    s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                except Exception as error:
+                    print("An exception occurred while getting slow5 end_reason:", type(error).__name__, "-", error)
+                    print("slow5_end_reason_labels: {}".format(slow5_end_reason_labels))
+                    sys.exit(1)
                 reason, forced = s2p_end_reason_convert(s5_end_reason)
                 end_reason = p5.EndReason(reason=reason, forced=forced)
         
@@ -962,7 +967,12 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                 # sampling_frequency = read["sampling_rate"]
                 # map end_reason if present
                 # let's convert this to it's string equivalent
-                s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                try:
+                    s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                except Exception as error:
+                    print("An exception occurred while getting slow5 end_reason:", type(error).__name__, "-", error)
+                    print("slow5_end_reason_labels: {}".format(slow5_end_reason_labels))
+                    sys.exit(1)
                 reason, forced = s2p_end_reason_convert(s5_end_reason)
                 end_reason = p5.EndReason(reason=reason, forced=forced)
         
@@ -1158,7 +1168,12 @@ def s2s_s2p_worker(args, sfile, pod5_out):
             # sampling_frequency = read["sampling_rate"]
             # map end_reason if present
             # let's convert this to it's string equivalent
-            s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+            try:
+                s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+            except Exception as error:
+                print("An exception occurred while getting slow5 end_reason:", type(error).__name__, "-", error)
+                print("slow5_end_reason_labels: {}".format(slow5_end_reason_labels))
+                sys.exit(1)
             reason, forced = s2p_end_reason_convert(s5_end_reason)
             end_reason = p5.EndReason(reason=reason, forced=forced)
     
