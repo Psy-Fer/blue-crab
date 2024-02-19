@@ -51,7 +51,7 @@ slow5tools --version > /dev/null || die "slow5tools not in path"
 
 echo "********************************zymo****************************************"
 DATA_ZYMO=/data/jamfer/zymo/
-test -d $DATA_ZYMO || die "ERROR: $DATA_ZYMO not found. Download from https://slow5.page.link/na12878_prom_sub and extract"
+test -d $DATA_ZYMO || die "ERROR: $DATA_ZYMO not found. Download from https://slow5.bioinf.science/na12878_prom_sub and extract"
 mkdir $TMP_DIR || die "Creating $TMP_DIR failed"
 test/test_with_guppy.sh $DATA_ZYMO/pod5 $TMP_DIR slow5tools /install/ont-guppy-6.5.7/bin/guppy_basecaller blue-crab &> test_s2p_with_guppy_sub.log || die "test_s2p_with_guppy failed"
 rm -r $TMP_DIR
