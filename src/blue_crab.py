@@ -753,6 +753,11 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                 slow5_end_reason_labels = s5.get_aux_enum_labels("end_reason")
             except:
                 slow5_end_reason_labels = ['unknown']
+
+            # if the above fails, it goes to unknown, but if it doesn't exist, it returns and empty list
+            # so let's set it to unknown
+            if len(slow5_end_reason_labels) < 1:
+                slow5_end_reason_labels = ['unknown']
             # before ONT added DATA_SERVICE_UNBLOCK_MUX_CHANGE in the middle and removed partial...
             # slow5_end_reason_labels = ['unknown', 'partial', 'mux_change', 'unblock_mux_change', 'signal_positive', 'signal_negative']
             for read in reads:
@@ -945,6 +950,11 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
             try:
                 slow5_end_reason_labels = s5.get_aux_enum_labels("end_reason")
             except:
+                slow5_end_reason_labels = ['unknown']
+
+            # if the above fails, it goes to unknown, but if it doesn't exist, it returns and empty list
+            # so let's set it to unknown
+            if len(slow5_end_reason_labels) < 1:
                 slow5_end_reason_labels = ['unknown']
             # before ONT added DATA_SERVICE_UNBLOCK_MUX_CHANGE in the middle and removed partial...
             # slow5_end_reason_labels = ['unknown', 'partial', 'mux_change', 'unblock_mux_change', 'signal_positive', 'signal_negative']
@@ -1144,6 +1154,10 @@ def s2s_s2p_worker(args, sfile, pod5_out):
     try:
         slow5_end_reason_labels = s5.get_aux_enum_labels("end_reason")
     except:
+        slow5_end_reason_labels = ['unknown']
+    # if the above fails, it goes to unknown, but if it doesn't exist, it returns and empty list
+    # so let's set it to unknown
+    if len(slow5_end_reason_labels) < 1:
         slow5_end_reason_labels = ['unknown']
     run_info_cache = {}
     # before ONT added DATA_SERVICE_UNBLOCK_MUX_CHANGE in the middle and removed partial...
