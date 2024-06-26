@@ -37,6 +37,21 @@ jobs:
       run:  python3 setup.py install --user && blue-crab --help
     - name: test
       run: test/test.sh
+  ubuntu_24:
+    name: ubuntu-24.04
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: install packages
+      run: sudo apt-get update && sudo apt-get install -y zlib1g-dev gcc python3 python3-pip && pip3 install setuptools cython numpy
+    - name: slow5lib-dev
+      run: git clone -b dev https://github.com/hasindu2008/slow5lib && cd slow5lib && python3 setup.py install --user && cd ..
+    - name: install
+      run:  python3 setup.py install --user && blue-crab --help
+    - name: test
+      run: test/test.sh      
   arm64:
     name: pyslow5 ubuntu arm
     runs-on: ubuntu-latest
@@ -85,3 +100,33 @@ jobs:
       run:  pip3 install . && blue-crab --help
     - name: test
       run: test/test.sh
+  os_x_13:
+    name: macos-13
+    runs-on: macos-13
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: install packages
+      run: pip3 install numpy
+    - name: slow5lib-dev
+      run: git clone https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install . && cd ..
+    - name: install
+      run:  pip3 install . && blue-crab --help
+    - name: test
+      run: test/test.sh      
+  os_x_14:
+    name: macos-14
+    runs-on: macos-14
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: install packages
+      run: pip3 install numpy
+    - name: slow5lib-dev
+      run: git clone https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install . && cd ..
+    - name: install
+      run:  pip3 install . && blue-crab --help
+    - name: test
+      run: test/test.sh      
