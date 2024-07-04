@@ -1397,7 +1397,7 @@ def main():
 
     parser = MyParser(description="SLOW5/BLOW5 <-> POD5 converter",
     epilog='''
-See https://slow5.page.link/blue-crab for detailed description of these command-line options.
+See https://slow5.bioinf.science/blue-crab for detailed description of these command-line options.
 
 Citation:
 Gamaarachchi, H., Samarakoon, H., Jenner, S.P. et al. Fast nanopore sequencing data analysis with SLOW5. Nat Biotechnol 40, 1026-1029 (2022). https://doi.org/10.1038/s41587-021-01147-4
