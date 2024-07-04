@@ -137,7 +137,7 @@ def get_data_from_pod5_record(read):
     predicted_scaling = read.predicted_scaling
     predicted_scaling_shift = predicted_scaling.shift
     predicted_scaling_scale = predicted_scaling.scale
-    if pore_data.pore_type not in ["not_set", ""]:
+    if pore_data.pore_type not in ["not_set", "R10.4.1", ""]:
         logger.error("pore_type is '{}' expected to be 'not_set'. Please contact developers with this message.".format(pore_data.pore_type))
         kill_program()
 
@@ -753,6 +753,11 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                 slow5_end_reason_labels = s5.get_aux_enum_labels("end_reason")
             except:
                 slow5_end_reason_labels = ['unknown']
+
+            # if the above fails, it goes to unknown, but if it doesn't exist, it returns and empty list
+            # so let's set it to unknown
+            if len(slow5_end_reason_labels) < 1:
+                slow5_end_reason_labels = ['unknown']
             # before ONT added DATA_SERVICE_UNBLOCK_MUX_CHANGE in the middle and removed partial...
             # slow5_end_reason_labels = ['unknown', 'partial', 'mux_change', 'unblock_mux_change', 'signal_positive', 'signal_negative']
             for read in reads:
@@ -774,7 +779,12 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                 # sampling_frequency = read["sampling_rate"]
                 # map end_reason if present
                 # let's convert this to it's string equivalent
-                s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                try:
+                    s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                except Exception as error:
+                    print("An exception occurred while getting slow5 end_reason:", type(error).__name__, "-", error)
+                    print("slow5_end_reason_labels: {}".format(slow5_end_reason_labels))
+                    sys.exit(1)
                 reason, forced = s2p_end_reason_convert(s5_end_reason)
                 end_reason = p5.EndReason(reason=reason, forced=forced)
         
@@ -941,6 +951,11 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                 slow5_end_reason_labels = s5.get_aux_enum_labels("end_reason")
             except:
                 slow5_end_reason_labels = ['unknown']
+
+            # if the above fails, it goes to unknown, but if it doesn't exist, it returns and empty list
+            # so let's set it to unknown
+            if len(slow5_end_reason_labels) < 1:
+                slow5_end_reason_labels = ['unknown']
             # before ONT added DATA_SERVICE_UNBLOCK_MUX_CHANGE in the middle and removed partial...
             # slow5_end_reason_labels = ['unknown', 'partial', 'mux_change', 'unblock_mux_change', 'signal_positive', 'signal_negative']
             for read in reads:
@@ -962,7 +977,12 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                 # sampling_frequency = read["sampling_rate"]
                 # map end_reason if present
                 # let's convert this to it's string equivalent
-                s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                try:
+                    s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+                except Exception as error:
+                    print("An exception occurred while getting slow5 end_reason:", type(error).__name__, "-", error)
+                    print("slow5_end_reason_labels: {}".format(slow5_end_reason_labels))
+                    sys.exit(1)
                 reason, forced = s2p_end_reason_convert(s5_end_reason)
                 end_reason = p5.EndReason(reason=reason, forced=forced)
         
@@ -1135,6 +1155,10 @@ def s2s_s2p_worker(args, sfile, pod5_out):
         slow5_end_reason_labels = s5.get_aux_enum_labels("end_reason")
     except:
         slow5_end_reason_labels = ['unknown']
+    # if the above fails, it goes to unknown, but if it doesn't exist, it returns and empty list
+    # so let's set it to unknown
+    if len(slow5_end_reason_labels) < 1:
+        slow5_end_reason_labels = ['unknown']
     run_info_cache = {}
     # before ONT added DATA_SERVICE_UNBLOCK_MUX_CHANGE in the middle and removed partial...
     # slow5_end_reason_labels = ['unknown', 'partial', 'mux_change', 'unblock_mux_change', 'signal_positive', 'signal_negative']
@@ -1158,7 +1182,12 @@ def s2s_s2p_worker(args, sfile, pod5_out):
             # sampling_frequency = read["sampling_rate"]
             # map end_reason if present
             # let's convert this to it's string equivalent
-            s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+            try:
+                s5_end_reason = slow5_end_reason_labels[read.get("end_reason", 0)]
+            except Exception as error:
+                print("An exception occurred while getting slow5 end_reason:", type(error).__name__, "-", error)
+                print("slow5_end_reason_labels: {}".format(slow5_end_reason_labels))
+                sys.exit(1)
             reason, forced = s2p_end_reason_convert(s5_end_reason)
             end_reason = p5.EndReason(reason=reason, forced=forced)
     
@@ -1368,7 +1397,7 @@ def main():
 
     parser = MyParser(description="SLOW5/BLOW5 <-> POD5 converter",
     epilog='''
-See https://slow5.page.link/blue-crab for detailed description of these command-line options.
+See https://slow5.bioinf.science/blue-crab for detailed description of these command-line options.
 
 Citation:
 Gamaarachchi, H., Samarakoon, H., Jenner, S.P. et al. Fast nanopore sequencing data analysis with SLOW5. Nat Biotechnol 40, 1026-1029 (2022). https://doi.org/10.1038/s41587-021-01147-4
