@@ -137,7 +137,7 @@ def get_data_from_pod5_record(read):
     predicted_scaling = read.predicted_scaling
     predicted_scaling_shift = predicted_scaling.shift
     predicted_scaling_scale = predicted_scaling.scale
-    if pore_data.pore_type not in ["not_set", ""]:
+    if pore_data.pore_type not in ["not_set", "R10.4.1", ""]:
         logger.error("pore_type is '{}' expected to be 'not_set'. Please contact developers with this message.".format(pore_data.pore_type))
         kill_program()
 
