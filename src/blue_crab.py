@@ -91,6 +91,8 @@ def s2p_end_reason_convert(end_reason):
         "data_service_unblock_mux_change": (p5.EndReasonEnum.DATA_SERVICE_UNBLOCK_MUX_CHANGE, True),
         "signal_positive": (p5.EndReasonEnum.SIGNAL_POSITIVE, False),
         "signal_negative": (p5.EndReasonEnum.SIGNAL_NEGATIVE, False),
+        "api_request": (p5.EndReasonEnum.API_REQUEST, False),
+        "device_data_error": (p5.EndReasonEnum.DEVICE_DATA_ERROR, False),
     }
 
     try:
@@ -112,6 +114,8 @@ def p2s_end_reason_convert(end_reason):
             "data_service_unblock_mux_change": 3,
             "signal_positive": 4,
             "signal_negative": 5,
+            "api_request": 6,
+            "device_data_error": 7,
         }
 
     try:
@@ -336,7 +340,7 @@ def m2m_worker(args, input_queue, slow5_out):
         s5 = slow5.Open(slow5_filepath, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
         header = {}
         sampling_rate = 0
-        end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
+        end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative", "api_request", "device_data_error"]
         # get header info in first read
         # Get pod5 reads
         count = 0
@@ -420,7 +424,7 @@ def m2s_worker(args, pod5_filepath_set, slow5_out):
     s5 = slow5.Open(slow5_out, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
     header = {}
     sampling_rate = 0
-    end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
+    end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative", "api_request", "device_data_error"]
     # get header info in first read
     # Get pod5 reads
     count = 0
@@ -504,7 +508,7 @@ def s2s_worker(args, pfile, slow5_out):
     s5 = slow5.Open(slow5_filepath, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
     header = {}
     sampling_rate = 0
-    end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative"]
+    end_reason_labels = ["unknown", "mux_change", "unblock_mux_change", "data_service_unblock_mux_change", "signal_positive", "signal_negative", "api_request", "device_data_error"]
     # get header info in first read
     # Get pod5 reads
     count = 0
