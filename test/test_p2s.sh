@@ -77,6 +77,12 @@ blue-crab p2s $POD5_DIR/pod5/z/z1.pod5 --iop 1 -o $OUTPUT_DIR/out.blow5 || die "
 diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for 'format:pod5 input:file process:single_process output"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
+#if fail due to binary diff in floats, patch the tests like
+#file=z2 or z1
+#slow5tools view test//data/exp/p2s/pod5-output/${file}.blow5 -o ${file}.slow5 &&  slow5tools view test//data/out/p2s/out.blow5 -o out.slow5 && diff ${file}.slow5 out.slow5 && mv test//data/out/p2s/out.blow5 test//data/exp/p2s/pod5-output/${file}.blow5
+#file=b1
+#slow5tools view test//data/exp/p2s/pod5-output/${file}.blow5 -o ${file}.slow5 &&  slow5tools view test//data/out/p2s/pod5/b1.blow5 -o out.slow5 && diff ${file}.slow5 out.slow5 && mv test//data/out/p2s/pod5/b1.blow5 test//data/exp/p2s/pod5-output/${file}.blow5
+
 TESTCASE_NO=1.3
 echo "------------------- p2s testcase $TESTCASE_NO: format:pod5 input:file 5khz process:single_process output:file-------------------"
 blue-crab p2s $POD5_DIR/pod5/z/z2.pod5 --iop 1 -o $OUTPUT_DIR/out.blow5 || die "testcase $TESTCASE_NO failed"
@@ -212,6 +218,8 @@ echo "------------------- p2s testcase $TESTCASE_NO >>> blow5 zlib output using 
 blue-crab p2s $POD5_DIR/pod5/z/z2.pod5  -o $OUTPUT_DIR/pod5-output/z2.blow5  -c zlib -s none
 diff $EXP_SLOW5_DIR/pod5-output/z2_zlib.blow5 $OUTPUT_DIR/pod5-output/z2.blow5 > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for blow zlib out"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+#if binary diff fails, patch the test like
+# slow5tools view z2.blow5 -o z2_zlib.blow5 -c zlib -s none
 
 TESTCASE_NO=4.2
 echo "------------------- p2s testcase $TESTCASE_NO >>> blow5 zlib-svb output using -o -------------------"
@@ -255,6 +263,11 @@ echo "------------------- p2s testcase $TESTCASE_NO >>> retain_dir_structure----
 blue-crab p2s $POD5_DIR/retain_dir_structure -d $OUTPUT_DIR/retain_dir_structure --retain || die "testcase $TESTCASE_NO failed"
 diff -r $EXP_SLOW5_DIR/retain_dir_structure  $OUTPUT_DIR/retain_dir_structure > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
+# if diff fails, patch the test like
+# cp test/data/exp/p2s/pod5-output/b1.blow5 /mnt/d/hasindu2008.git/blue-crab/test/data/exp/p2s/retain_dir_structure/b/b1.blow5
+# cp test/data/exp/p2s/pod5-output/b1.blow5 /mnt/d/hasindu2008.git/blue-crab/test/data/exp/p2s/retain_dir_structure/b/b2/b1.blow5
+# cp test/data/exp/p2s/pod5-output/b1.blow5 /mnt/d/hasindu2008.git/blue-crab/test/data/exp/p2s/retain_dir_structure/b2/b1.blow5
+
 
 TESTCASE_NO=4.8
 echo "------------------- p2s testcase $TESTCASE_NO >>> duplicate file name -------------------"
