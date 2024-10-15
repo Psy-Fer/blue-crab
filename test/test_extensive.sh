@@ -50,14 +50,14 @@ scripts/blue-crab --version > /dev/null || die "bluecrab not in path"
 slow5tools --version > /dev/null || die "slow5tools not in path"
 
 echo "********************************HG2_subsubsample****************************************"
-DATA_ZYMO=/data/slow5-testdata/hg2_prom_lsk114_5khz_subsubsample
-test -d $DATA_ZYMO || die "ERROR: $DATA_ZYMO not found. Download from https://slow5.bioinf.science/hg2_prom_5khz_subsubsample and extract, split the blow5 and convert them and put then under pod5/"
+DATA_HG2=/data/slow5-testdata/hg2_prom_lsk114_5khz_subsubsample
+test -d $DATA_HG2 || die "ERROR: $DATA_HG2 not found. Download from https://slow5.bioinf.science/hg2_prom_5khz_subsubsample and extract, split the blow5 and convert them and put then under pod5/"
 mkdir $TMP_DIR || die "Creating $TMP_DIR failed"
-test/test_with_guppy.sh $DATA_ZYMO/pod5 $TMP_DIR slow5tools /install/ont-guppy-6.5.7/bin/guppy_basecaller blue-crab &> test_s2p_with_guppy_sub.log || die "test_s2p_with_guppy failed"
+test/test_with_guppy.sh $DATA_HG2/pod5 $TMP_DIR slow5tools /install/ont-guppy-6.5.7/bin/guppy_basecaller blue-crab &> test_s2p_with_guppy_sub.log || die "test_s2p_with_guppy failed"
 rm -r $TMP_DIR
 echo "Guppy test passed yey!"
 mkdir $TMP_DIR || die "Creating $TMP_DIR failed"
-test/test_p2s_s2p_integrity.sh $DATA_ZYMO/pod5 $TMP_DIR &> p2s_s2p_integrity_test.txt || die "p2s_s2p_integrity_test failed"
+test/test_p2s_s2p_integrity.sh $DATA_HG2/pod5 $TMP_DIR &> p2s_s2p_integrity_test.txt || die "p2s_s2p_integrity_test failed"
 rm -r $TMP_DIR
 echo "test_p2s_s2p_integrity passed!"
 echo ""
