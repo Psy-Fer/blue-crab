@@ -108,7 +108,7 @@ jobs:
       with:
         submodules: recursive
     - name: install packages
-      run: pip3 install --upgrade pip && pip3 install --break-system-packages numpy
+      run: pip3 install --break-system-packages --upgrade pip && pip3 install --break-system-packages numpy
     - name: slow5lib
       run: git clone https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install --break-system-packages . && cd ..
     - name: install
