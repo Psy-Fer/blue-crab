@@ -92,6 +92,14 @@ do
     then
         END_TIME=$(date)
         echo "[pipeline.sh::${END_TIME}]  Finished converting $FILE to $SLOW5_FILEPATH"
+        if [ "$POD5_DELETE" = "1" ]; then
+            if  $SLOW5TOOLS quickcheck $SLOW5_FILEPATH 2>> $LOG_FILEPATH; then
+                rm -f $FILE
+            else
+                echo -e $RED"quickcheck failed for $SLOW5_FILEPATH. Not deleting $FILE. Please check log at $LOG_FILEPATH"$NORMAL
+                echo $FILE >> $TMP_FAILED;
+            fi
+        fi
     else
         echo -e $RED"Converting $FILE to $SLOW5_FILEPATH failed. Please check log at $LOG_FILEPATH"$NORMAL
         echo $FILE >> $TMP_FAILED;
