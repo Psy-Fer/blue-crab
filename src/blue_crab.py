@@ -11,6 +11,7 @@ import pytz
 import uuid
 import numpy as np
 import multiprocessing as mp
+import time
 
 import pyslow5 as slow5
 import pod5 as p5
@@ -279,7 +280,25 @@ def pod52slow5(args):
                     m2m_worker_proc.start()
                     processes.append(m2m_worker_proc)
                 
+                # monitor the procs and exit with error if one breaks
+                while True:
+                    p_sum = 0
+                    for p in processes:
+                        if p.exitcode is not None:
+                            if p.exitcode != 0:
+                                for child in mp.active_children():
+                                    child.terminate()
+                                kill_program()
+                        else:
+                            p_sum += 1
+                    if p_sum == 0:
+                        break
+                    time.sleep(5)
+                
                 for p in processes:
+                    if p.exitcode != 0:
+                        logger.error("An error was encountered in a worker process. Exitcode: {}".format(p.exitcode))
+                        kill_program()
                     p.join()
             else:
                 logger.info("single2single: 1 pod5 file detected as input. Writing 1:1 pod5->s/blow5 to dir: {}".format(slow5_out))
@@ -692,8 +711,26 @@ def slow52pod5(args):
                     m2m_worker_proc = mp.Process(target=m2m_s2p_worker, args=(args, input_queue, pod5_out), daemon=True, name='m2m_s2p_worker{}'.format(i))
                     m2m_worker_proc.start()
                     processes.append(m2m_worker_proc)
-                
+
+                # monitor the procs and exit with error if one breaks
+                while True:
+                    p_sum = 0
+                    for p in processes:
+                        if p.exitcode is not None:
+                            if p.exitcode != 0:
+                                for child in mp.active_children():
+                                    child.terminate()
+                                kill_program()
+                        else:
+                            p_sum += 1
+                    if p_sum == 0:
+                        break
+                    time.sleep(5)
+                    
                 for p in processes:
+                    if p.exitcode != 0:
+                        logger.error("An error was encountered in a worker process. Exitcode: {}".format(p.exitcode))
+                        kill_program()
                     p.join()
             else:
                 logger.info("single2single: 1 s/blow5 file detected as input. Writing 1:1 s/blow5->pod5 to dir: {}".format(pod5_out))
@@ -1397,183 +1434,187 @@ def s2s_s2p_worker(args, sfile, pod5_out):
 
 def main():
 
-    VERSION = __version__
+    try:
 
-    parser = MyParser(description="SLOW5/BLOW5 <-> POD5 converter",
-    epilog='''
-See https://slow5.bioinf.science/blue-crab for detailed description of these command-line options.
+        VERSION = __version__
 
-Citation:
-Gamaarachchi, H., Samarakoon, H., Jenner, S.P. et al. Fast nanopore sequencing data analysis with SLOW5. Nat Biotechnol 40, 1026-1029 (2022). https://doi.org/10.1038/s41587-021-01147-4
+        parser = MyParser(description="SLOW5/BLOW5 <-> POD5 converter",
+        epilog='''
+    See https://slow5.bioinf.science/blue-crab for detailed description of these command-line options.
 
-@article{gamaarachchi2022fast,
-  title={Fast nanopore sequencing data analysis with SLOW5},
-  author={Gamaarachchi, Hasindu and Samarakoon, Hiruna and Jenner, Sasha P and Ferguson, James M and Amos, Timothy G and Hammond, Jillian M and Saadat, Hassaan and Smith, Martin A and Parameswaran, Sri and Deveson, Ira W},
-  journal={Nature biotechnology},
-  pages={1--4},
-  year={2022},
-  publisher={Nature Publishing Group}
-}
-           ''',
-    formatter_class=argparse.RawTextHelpFormatter)
-    # using raw text to allow for new lines on main help
-    # formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    Citation:
+    Gamaarachchi, H., Samarakoon, H., Jenner, S.P. et al. Fast nanopore sequencing data analysis with SLOW5. Nat Biotechnol 40, 1026-1029 (2022). https://doi.org/10.1038/s41587-021-01147-4
 
-    # Create submodules
-    subcommand = parser.add_subparsers(help='subcommand --help for help messages', dest="command")
+    @article{gamaarachchi2022fast,
+    title={Fast nanopore sequencing data analysis with SLOW5},
+    author={Gamaarachchi, Hasindu and Samarakoon, Hiruna and Jenner, Sasha P and Ferguson, James M and Amos, Timothy G and Hammond, Jillian M and Saadat, Hassaan and Smith, Martin A and Parameswaran, Sri and Deveson, Ira W},
+    journal={Nature biotechnology},
+    pages={1--4},
+    year={2022},
+    publisher={Nature Publishing Group}
+    }
+            ''',
+        formatter_class=argparse.RawTextHelpFormatter)
+        # using raw text to allow for new lines on main help
+        # formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    # POD5 to SLOW5
-    p2s = subcommand.add_parser('p2s', help='POD5 -> SLOW5/BLOW5', description="Convert POD5 -> SLOW5/BLOW5",
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # make -o and -d mutually exclusive groups
-    p2s_outputs = p2s.add_mutually_exclusive_group()
-    p2s.add_argument("input", metavar="POD5", nargs='+',
-                     help="pod5 file/s or directories to convert")
-    p2s_outputs.add_argument("-d", "--out-dir",
-                     help="output to directory")
-    p2s_outputs.add_argument("-o", "--output", metavar="S/BLOW5",
-                     help="output to FILE")
-    p2s.add_argument("-c", "--compress", default="zlib", choices=["zlib", "zstd", "none"],
-                     help="record compression method (only for .blow5 format)")
-    p2s.add_argument("-s", "--sig-compress", default="svb-zd", choices=["svb-zd", "ex-zd", "none"],
-                     help="signal compression method (only for .blow5 format)")
-    p2s.add_argument("-p", "--iop", type=int, default=4,
-                     help="number of I/O processes to use during conversion of multiple files")
-    p2s.add_argument("-t", "--threads", type=int, default=8,
-                     help="number of threads used for encoding S/BLOW5 records in a single process")
-    p2s.add_argument("-K", "--batchsize", type=int, default=1000,
-                     help="batch size used for encoding S/BLOW5 records in a single process")
-    p2s.add_argument("--retain", action="store_true",
-                     help="retain the same directory structure in the converted output as the input (experimental)")
+        # Create submodules
+        subcommand = parser.add_subparsers(help='subcommand --help for help messages', dest="command")
 
-    # SLOW5 to POD5
-    s2p = subcommand.add_parser('s2p', help='SLOW5/BLOW5 -> POD5', description="Convert SLOW5/BLOW5 -> POD5",
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    s2p_outputs = s2p.add_mutually_exclusive_group()
-    s2p.add_argument("input", metavar="SLOW5", nargs='+',
-                     help="s/blow5 file to convert")
-    s2p_outputs.add_argument("-d", "--out-dir",
-                     help="output to directory")
-    s2p_outputs.add_argument("-o", "--output", metavar="POD5",
-                     help="output to FILE")
-    s2p.add_argument("-p", "--iop", type=int, default=4,
-                     help="number of I/O processes to use during conversion of multiple files")
-    s2p.add_argument("--retain", action="store_true",
-                     help="retain the same directory structure in the converted output as the input (experimental)")
+        # POD5 to SLOW5
+        p2s = subcommand.add_parser('p2s', help='POD5 -> SLOW5/BLOW5', description="Convert POD5 -> SLOW5/BLOW5",
+                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        # make -o and -d mutually exclusive groups
+        p2s_outputs = p2s.add_mutually_exclusive_group()
+        p2s.add_argument("input", metavar="POD5", nargs='+',
+                        help="pod5 file/s or directories to convert")
+        p2s_outputs.add_argument("-d", "--out-dir",
+                        help="output to directory")
+        p2s_outputs.add_argument("-o", "--output", metavar="S/BLOW5",
+                        help="output to FILE")
+        p2s.add_argument("-c", "--compress", default="zlib", choices=["zlib", "zstd", "none"],
+                        help="record compression method (only for .blow5 format)")
+        p2s.add_argument("-s", "--sig-compress", default="svb-zd", choices=["svb-zd", "ex-zd", "none"],
+                        help="signal compression method (only for .blow5 format)")
+        p2s.add_argument("-p", "--iop", type=int, default=4,
+                        help="number of I/O processes to use during conversion of multiple files")
+        p2s.add_argument("-t", "--threads", type=int, default=8,
+                        help="number of threads used for encoding S/BLOW5 records in a single process")
+        p2s.add_argument("-K", "--batchsize", type=int, default=1000,
+                        help="batch size used for encoding S/BLOW5 records in a single process")
+        p2s.add_argument("--retain", action="store_true",
+                        help="retain the same directory structure in the converted output as the input (experimental)")
 
-    # main program args
-    parser.add_argument("--profile", action="store_true",
-                        help="run cProfile - for profiling benchmarking")
-    parser.add_argument("-V", "--version", action='version', version="SLOW5/BLOW5 <-> POD5 converter version: {}".format(VERSION),
-                        help="Prints version")
-    parser.add_argument('-v', '--verbose', action='count', default=0,
-                        help="Verbose output [v/vv/vvv]")
+        # SLOW5 to POD5
+        s2p = subcommand.add_parser('s2p', help='SLOW5/BLOW5 -> POD5', description="Convert SLOW5/BLOW5 -> POD5",
+                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        s2p_outputs = s2p.add_mutually_exclusive_group()
+        s2p.add_argument("input", metavar="SLOW5", nargs='+',
+                        help="s/blow5 file to convert")
+        s2p_outputs.add_argument("-d", "--out-dir",
+                        help="output to directory")
+        s2p_outputs.add_argument("-o", "--output", metavar="POD5",
+                        help="output to FILE")
+        s2p.add_argument("-p", "--iop", type=int, default=4,
+                        help="number of I/O processes to use during conversion of multiple files")
+        s2p.add_argument("--retain", action="store_true",
+                        help="retain the same directory structure in the converted output as the input (experimental)")
 
-    args = parser.parse_args()
+        # main program args
+        parser.add_argument("--profile", action="store_true",
+                            help="run cProfile - for profiling benchmarking")
+        parser.add_argument("-V", "--version", action='version', version="SLOW5/BLOW5 <-> POD5 converter version: {}".format(VERSION),
+                            help="Prints version")
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Verbose output [v/vv/vvv]")
 
-    # print help if no args given
-    if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-    
-    # set up logging level
-    if args.verbose > 0:
-        logger.setLevel(logging.DEBUG)
-        loghandler.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
-        loghandler.setLevel(logging.INFO)
-    
+        args = parser.parse_args()
 
-    if args.profile:
-        pr = cProfile.Profile()
-        pr.enable()
+        # print help if no args given
+        if len(sys.argv) == 1:
+            parser.print_help(sys.stderr)
+            sys.exit(1)
+        
+        # set up logging level
+        if args.verbose > 0:
+            logger.setLevel(logging.DEBUG)
+            loghandler.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.INFO)
+            loghandler.setLevel(logging.INFO)
+        
 
-    if args.command == "p2s":
-        # let's do some arg validation
-        if not args.output and not args.out_dir:
-            logger.error("--output or --out-dir must be provided. stdout writing not supported")
-            kill_program()
+        if args.profile:
+            pr = cProfile.Profile()
+            pr.enable()
 
-        for pfile in args.input:
-            if not os.path.isdir(pfile):
-                if not pfile.endswith(".pod5"):
-                    logger.error("input argument {} not a dir or a .pod5 file. Given argument: {}".format(pfile, args.input))
-                    kill_program()
-                if not os.path.isfile(pfile):
-                    logger.error("{} does not exist".format(pfile))
-                    kill_program()
-
-        if args.output:
-            if not args.output.endswith(('.slow5', '.blow5')):
-                logger.error("--output argument not a valid .slow5 or .blow5 file. Given argument: {}".format(args.output))
+        if args.command == "p2s":
+            # let's do some arg validation
+            if not args.output and not args.out_dir:
+                logger.error("--output or --out-dir must be provided. stdout writing not supported")
                 kill_program()
-        # if out-dir exist, must be empty. if not exist, make it.
-        if args.out_dir:
-            if os.path.isdir(args.out_dir):
-                if os.listdir(args.out_dir):
-                    # it's not empty
-                    logger.error("--out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
-                    kill_program()
-                if args.retain and len(args.input) > 1:
-                    logger.error("--retain can only work with 1 input dir. Many given: {}".format(args.input))
-                    kill_program()
-            else:
-                logger.info("Creating directory: {}".format(args.out_dir))
-                Path(args.out_dir).mkdir(parents=True, exist_ok=False)
-        
-        pod52slow5(args)
 
-    
-    elif args.command == "s2p":
-        # let's do some arg validation
-        if not args.output and not args.out_dir:
-            logger.error("--output or --out-dir must be provided. stdout writing not supported")
-            kill_program()
-        
-        for sfile in args.input:
-            if not os.path.isdir(sfile):
-                if not sfile.endswith((".slow5", ".blow5")):
-                    logger.error("input argument {} not a dir or a .slow5/.blow5 file. Given argument: {}".format(sfile, args.input))
-                    kill_program()
-                if not os.path.isfile(sfile):
-                    logger.error("{} does not exist".format(sfile))
-                    kill_program()
+            for pfile in args.input:
+                if not os.path.isdir(pfile):
+                    if not pfile.endswith(".pod5"):
+                        logger.error("input argument {} not a dir or a .pod5 file. Given argument: {}".format(pfile, args.input))
+                        kill_program()
+                    if not os.path.isfile(pfile):
+                        logger.error("{} does not exist".format(pfile))
+                        kill_program()
 
-        if args.output:
-            if not args.output.endswith(".pod5"):
-                logger.error("--output argument not a valid .pod5 file. Given argument: {}".format(args.output))
+            if args.output:
+                if not args.output.endswith(('.slow5', '.blow5')):
+                    logger.error("--output argument not a valid .slow5 or .blow5 file. Given argument: {}".format(args.output))
+                    kill_program()
+            # if out-dir exist, must be empty. if not exist, make it.
+            if args.out_dir:
+                if os.path.isdir(args.out_dir):
+                    if os.listdir(args.out_dir):
+                        # it's not empty
+                        logger.error("--out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
+                        kill_program()
+                    if args.retain and len(args.input) > 1:
+                        logger.error("--retain can only work with 1 input dir. Many given: {}".format(args.input))
+                        kill_program()
+                else:
+                    logger.info("Creating directory: {}".format(args.out_dir))
+                    Path(args.out_dir).mkdir(parents=True, exist_ok=False)
+            
+            pod52slow5(args)
+
+        
+        elif args.command == "s2p":
+            # let's do some arg validation
+            if not args.output and not args.out_dir:
+                logger.error("--output or --out-dir must be provided. stdout writing not supported")
                 kill_program()
-        # if out-dir exist, must be empty. if not exist, make it.
-        if args.out_dir:
-            if os.path.isdir(args.out_dir):
-                if os.listdir(args.out_dir):
-                    # it's not empty
-                    logger.error("--out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
+            
+            for sfile in args.input:
+                if not os.path.isdir(sfile):
+                    if not sfile.endswith((".slow5", ".blow5")):
+                        logger.error("input argument {} not a dir or a .slow5/.blow5 file. Given argument: {}".format(sfile, args.input))
+                        kill_program()
+                    if not os.path.isfile(sfile):
+                        logger.error("{} does not exist".format(sfile))
+                        kill_program()
+
+            if args.output:
+                if not args.output.endswith(".pod5"):
+                    logger.error("--output argument not a valid .pod5 file. Given argument: {}".format(args.output))
                     kill_program()
-                if args.retain and len(args.input) > 1:
-                    logger.error("--retain can only work with 1 input dir. Many given: {}".format(args.input))
-                    kill_program()
-            else:
-                logger.info("Creating directory: {}".format(args.out_dir))
-                Path(args.out_dir).mkdir(parents=True, exist_ok=False)
+            # if out-dir exist, must be empty. if not exist, make it.
+            if args.out_dir:
+                if os.path.isdir(args.out_dir):
+                    if os.listdir(args.out_dir):
+                        # it's not empty
+                        logger.error("--out-dir: Output directory {} is not empty. Please remove it or specify another directory.".format(args.out_dir))
+                        kill_program()
+                    if args.retain and len(args.input) > 1:
+                        logger.error("--retain can only work with 1 input dir. Many given: {}".format(args.input))
+                        kill_program()
+                else:
+                    logger.info("Creating directory: {}".format(args.out_dir))
+                    Path(args.out_dir).mkdir(parents=True, exist_ok=False)
+            
+
+            slow52pod5(args)
+        else:
+            parser.print_help(sys.stderr)
+            sys.exit(1)
         
-
-        slow52pod5(args)
-    else:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-    
-    # if profiling, dump info into log files in current dir
-    if args.profile:
-        pr.disable()
-        s = io.StringIO()
-        sortby = 'cumulative'
-        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        with open("blue_crab_profile.log", 'w') as f:
-            print(s.getvalue(), file=f)
-
+        # if profiling, dump info into log files in current dir
+        if args.profile:
+            pr.disable()
+            s = io.StringIO()
+            sortby = 'cumulative'
+            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            ps.print_stats()
+            with open("blue_crab_profile.log", 'w') as f:
+                print(s.getvalue(), file=f)
+    except Exception as error:
+        print("ERROR: An error has occured:", type(error).__name__, "-", error)
+        kill_program()
 
 
 if __name__ == '__main__':
