@@ -78,7 +78,7 @@ diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR:
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 #if fail due to binary diff in floats, patch the tests like
-#file=z2 or z1
+#file=z2 or z1 or directory_z.blow5
 #slow5tools view test//data/exp/p2s/pod5-output/${file}.blow5 -o ${file}.slow5 &&  slow5tools view test//data/out/p2s/out.blow5 -o out.slow5 && diff ${file}.slow5 out.slow5 && mv test//data/out/p2s/out.blow5 test//data/exp/p2s/pod5-output/${file}.blow5
 #file=b1
 #slow5tools view test//data/exp/p2s/pod5-output/${file}.blow5 -o ${file}.slow5 &&  slow5tools view test//data/out/p2s/pod5/b1.blow5 -o out.slow5 && diff ${file}.slow5 out.slow5 && mv test//data/out/p2s/pod5/b1.blow5 test//data/exp/p2s/pod5-output/${file}.blow5
@@ -219,7 +219,7 @@ blue-crab p2s $POD5_DIR/pod5/z/z2.pod5  -o $OUTPUT_DIR/pod5-output/z2.blow5  -c 
 diff $EXP_SLOW5_DIR/pod5-output/z2_zlib.blow5 $OUTPUT_DIR/pod5-output/z2.blow5 > /dev/null || die "ERROR: diff failed p2s_test testcase $TESTCASE_NO for blow zlib out"
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 #if binary diff fails, patch the test like
-# slow5tools view z2.blow5 -o z2_zlib.blow5 -c zlib -s none
+# slow5tools view test/data/exp/p2s/pod5-output/z2.blow5 -o test/data/exp/p2s/pod5-output/z2_zlib.blow5 -c zlib -s none
 
 TESTCASE_NO=4.2
 echo "------------------- p2s testcase $TESTCASE_NO >>> blow5 zlib-svb output using -o -------------------"
