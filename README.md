@@ -173,7 +173,7 @@ I have included an example `blow5-xxx` to show that we can make the files even s
 
 - POD5 has had a number of backward compatibility-breaking changes so far. This version of blue-crab is only tested on most recent pod5 files. blue-crab simply relies on ONT's POD5 API for reading and writing POD5 files, thus, leaving the burden of managing a library that can handle all the variants of POD5 and cleaning up the mess they create. We will not invest time to handle all these various idiosyncrasies in POD5, unlike we did for hundreds of different FAST5 formats when developing slow5tools. If your POD5 files are v0.1.5 or lower, you may check [this old readme](archived/old_readme.md) out.
 
-- While this repository is under the MIT license, data files under `test/data` of this repository are under the CC0 public waiver.
+- While this repository is under the [MIT license](LICENSE), data files under `test/data` of this repository are under the CC0 public waiver.
 
 
 # Acknowledgement
