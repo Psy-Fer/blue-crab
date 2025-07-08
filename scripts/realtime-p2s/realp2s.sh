@@ -251,20 +251,29 @@ else # Else assume realtime analysis is desired
 fi
 
 test -e $FAILED_LIST && echo -e $RED"[realp2s.sh] $(wc -l $FAILED_LIST) pod5 files failed to convert. See $FAILED_LIST for the list"$NORMAL | tee -a $LOG
-NUMPOD5=$(find $MONITOR_PARENT_DIR/ -name '*.pod5' | wc -l)
-NUMBLOW5=$(find $MONITOR_PARENT_DIR/ -name '*.blow5' | wc -l)
-if [ ${NUMPOD5} -ne ${NUMBLOW5} ] ; then
-    echo -e $RED"[realp2s.sh] In $MONITOR_PARENT_DIR, $NUMPOD5 pod5 files, but only $NUMBLOW5 blow5 files. Check the logs for any failures."$NORMAL | tee -a $LOG
+
+if [ "$POD5_DELETE" = "1" ]; then
+    NUMBLOW5=$(find $MONITOR_PARENT_DIR/ -name '*.blow5' | wc -l)
+    BLOW5_SIZE=$(find $MONITOR_PARENT_DIR/ -name '*.blow5' -printf "%s\t%p\n" | awk 'BEGIN{sum=0}{sum=sum+$1}END{print sum/(1024*1024*1024)}')
+    echo "[realp2s.sh] In $MONITOR_PARENT_DIR, $NUMBLOW5 blow5 files." | tee -a $LOG
+    BLOW5_SIZE=$(find $MONITOR_PARENT_DIR/ -name '*.blow5' -printf "%s\t%p\n" | awk 'BEGIN{sum=0}{sum=sum+$1}END{print sum/(1024*1024*1024)}')
+    echo "BLOW5 size: $BLOW5_SIZE GB" | tee -a $LOG
 else
-    echo "[realp2s.sh] In $MONITOR_PARENT_DIR, $NUMPOD5 pod5 files, $NUMBLOW5 blow5 files." | tee -a $LOG
+    NUMPOD5=$(find $MONITOR_PARENT_DIR/ -name '*.pod5' | wc -l)
+    NUMBLOW5=$(find $MONITOR_PARENT_DIR/ -name '*.blow5' | wc -l)
+    if [ ${NUMPOD5} -ne ${NUMBLOW5} ] ; then
+        echo -e $RED"[realp2s.sh] In $MONITOR_PARENT_DIR, $NUMPOD5 pod5 files, but $NUMBLOW5 blow5 files. Check the logs for any failures."$NORMAL | tee -a $LOG
+    else
+        echo "[realp2s.sh] In $MONITOR_PARENT_DIR, $NUMPOD5 pod5 files, $NUMBLOW5 blow5 files." | tee -a $LOG
+    fi
+    POD5_SIZE=$(find $MONITOR_PARENT_DIR/ -name '*.pod5' -printf "%s\t%p\n" | awk 'BEGIN{sum=0}{sum=sum+$1}END{print sum/(1024*1024*1024)}')
+    BLOW5_SIZE=$(find $MONITOR_PARENT_DIR/ -name '*.blow5' -printf "%s\t%p\n" | awk 'BEGIN{sum=0}{sum=sum+$1}END{print sum/(1024*1024*1024)}')
+    SAVINGS=$(echo $POD5_SIZE - $BLOW5_SIZE | bc)
+    SAVINGS_PERCENT=$(echo "scale=2; $SAVINGS/$POD5_SIZE*100" | bc)
+    echo "POD5 size: $POD5_SIZE GB" | tee -a $LOG
+    echo "BLOW5 size: $BLOW5_SIZE GB" | tee -a $LOG
+    echo "Savings: $SAVINGS GB ($SAVINGS_PERCENT%)" | tee -a $LOG
 fi
-POD5_SIZE=$(find $MONITOR_PARENT_DIR/ -name '*.pod5' -printf "%s\t%p\n" | awk 'BEGIN{sum=0}{sum=sum+$1}END{print sum/(1024*1024*1024)}')
-BLOW5_SIZE=$(find $MONITOR_PARENT_DIR/ -name '*.blow5' -printf "%s\t%p\n" | awk 'BEGIN{sum=0}{sum=sum+$1}END{print sum/(1024*1024*1024)}')
-SAVINGS=$(echo $POD5_SIZE - $BLOW5_SIZE | bc)
-SAVINGS_PERCENT=$(echo "scale=2; $SAVINGS/$POD5_SIZE*100" | bc)
-echo "POD5 size: $POD5_SIZE GB" | tee -a $LOG
-echo "BLOW5 size: $BLOW5_SIZE GB" | tee -a $LOG
-echo "Savings: $SAVINGS GB ($SAVINGS_PERCENT%)" | tee -a $LOG
 
 echo "Scanning for errors in log files" | tee -a $LOG
 find $MONITOR_PARENT_DIR/ -name '*.log' -exec cat {} \; | grep -i "ERROR" | tee -a $LOG
