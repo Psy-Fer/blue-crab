@@ -69,6 +69,7 @@ def get_data_from_pod5_record(read):
     '''
     yield slow5 reads using input path
     '''
+    # print("raw_read", dir(read))
     # return with pod5 format names, do conversion in pipeline
     pore_data = read.pore
     end_reason_data = read.end_reason
@@ -142,9 +143,19 @@ def main():
     header = {}
     head = True
     count = 0
+    chunkdic = {}
+    chunks = []
+    # print(dir(p5))
+    # help(p5)
     with p5.Reader(args.input) as reader:
         print("batch count:", reader.batch_count)
-        # dir(reader.read_table)
+        # print(dir(reader.signal_table))
+        # help(reader.signal_table.stats)
+        # for a in reader.signal_table.read_all():
+        #     print(a)
+        #     count += 1
+        #     if count > 3:
+        #         sys.exit()
         # help(reader.read_table)
         for pod_read_record in reader.reads():
             # convert pod5 read into slow5 read structure
@@ -155,15 +166,18 @@ def main():
                 if head:
                     for k in list(info.keys()):
                         header[k] = info[k]
-                        print(k, ":", info[k])
-                        if k == "sample_frequency":
-                            sampling_rate = float(info[k])
+                        # print(k, ":", info[k])
                     head = False
-                print(pod_read_record.signal_rows)
-                print(read)
-                count += 1
-                if count > 3:
-                    sys.exit()
+                print(read['read_id'])
+                # print(pod_read_record.signal_rows)
+                for row in pod_read_record.signal_rows:
+                    print(row)
+                    # print(row[0], row[1])
+                    # print(row[0])
+                # print(read)
+                # count += 1
+                # if count > 3:
+                #     sys.exit()
 
 
 
