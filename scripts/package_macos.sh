@@ -21,10 +21,10 @@ pip install blue-crab --no-cache || die "pip install blue-crab failed"
 
 
 find ./ -name __pycache__ -type d | xargs rm -r || die "removing pycache failed"
-mv blue-crab-venv/bin/squigualiser python/bin/ || die "moving squigualiser to bin failed"
+mv blue-crab-venv/bin/blue-crab python/bin/ || die "moving blue-crab to bin failed"
 cp -r blue-crab-venv/lib/python3.8/site-packages/* python/lib/python3.8/site-packages/ || die "copying site-packages failed"
-sed -i '' "1s/.*/#\!\/usr\/bin\/env python3.8/" python/bin/squigualiser
-git clone --depth 1 --branch main https://github.com/Psy-Fer/blue-crab.git  || die "Failed to clone blue-crab"
+sed -i '' "1s/.*/#\!\/usr\/bin\/env python3.8/" python/bin/blue-crab
+git clone --depth 1 --branch package https://github.com/Psy-Fer/blue-crab.git  || die "Failed to clone blue-crab"
 
 cp -r blue-crab/docs python || die "docs copy failed"
 cp blue-crab/scripts/exe_file python/blue-crab || die "script copy failed" 

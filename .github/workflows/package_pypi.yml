@@ -84,72 +84,68 @@ jobs:
       #     name: squigualiser-binary
       #     path: docker-build/squigualiser-*-linux-x86-64-binaries.tar.gz
   
-  # build-package-macos-x86-64:
-  #   runs-on: macos-13
+  build-package-macos-x86-64:
+    runs-on: macos-13
 
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         submodules: recursive
-  #     - name: make macos-build dir
-  #       run: |
-  #         mkdir -p macos-build && \
-  #         cp scripts/package_macos.sh macos-build/ && \
-  #         chmod +x macos-build/package_macos.sh
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: make macos-build dir
+        run: |
+          mkdir -p macos-build && \
+          cp scripts/package_macos.sh macos-build/ && \
+          chmod +x macos-build/package_macos.sh
 
-  #     - name: run without docker
-  #       run: |
-  #         cd macos-build && \
-  #         ./package_macos.sh test_pypi && \
-  #         LATEST_TAG=$(git ls-remote --tags https://github.com/hiruna72/squigualiser.git | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
-  #         echo Latest tag: $LATEST_TAG && \
-  #         if [ -f squigualiser.tar.gz ]; then \
-  #           mv squigualiser.tar.gz squigualiser-$LATEST_TAG-macos-x86-64-binaries.tar.gz; \
-  #         else \
-  #           echo 'squigualiser.tar.gz not found!'; \
-  #           exit 1; \
-  #         fi && \
-  #         cd ..
+      - name: run without docker
+        run: |
+          cd macos-build && \
+          ./package_macos.sh test_pypi && \
+          LATEST_TAG=$(git ls-remote --tags https://github.com/Psy-Fer/blue-crab.git | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
+          echo Latest tag: $LATEST_TAG && \
+          if [ -f blue-crab.tar.gz ]; then \
+            mv blue-crab.tar.gz blue-crab-$LATEST_TAG-macos-x86-64-binaries.tar.gz; \
+          else \
+            echo 'blue-crab.tar.gz not found!'; \
+            exit 1; \
+          fi && \
+          cd ..
 
-  #     - name: decompress squigualiser tar.gz
-  #       run: |
-  #         if [ -f macos-build/squigualiser-*-macos-x86-64-binaries.tar.gz ]; then
-  #           cp macos-build/squigualiser-*-macos-x86-64-binaries.tar.gz .
-  #           echo "Decompressing squigualiser tar.gz"
-  #           tar -xzf squigualiser-*-macos-x86-64-binaries.tar.gz
-  #         else
-  #           echo "No squigualiser tar.gz found!"
-  #           exit 1
-  #         fi
-  #     - name: quick run
-  #       run: |
-  #         ./squigualiser/squigualiser --help || exit 1
-  #     - name: Add squigualiser to PATH
-  #       run: echo "${{ github.workspace }}/squigualiser" >> $GITHUB_PATH
-  #     - name: test_reform
-  #       run: test/test_reform.sh
-  #     - name: test_realign
-  #       run: test/test_realign.sh
-  #     - name: test_signal_to_read_plot
-  #       run: test/test_plot_signal_to_read.sh --save_svg
-  #     - name: test_calculate_offsets
-  #       run: test/test_calculate_offsets.sh
+      - name: decompress blue-crab tar.gz
+        run: |
+          if [ -f macos-build/blue-crab-*-macos-x86-64-binaries.tar.gz ]; then
+            cp macos-build/blue-crab-*-macos-x86-64-binaries.tar.gz .
+            echo "Decompressing blue-crab tar.gz"
+            tar -xzf blue-crab-*-macos-x86-64-binaries.tar.gz
+          else
+            echo "No blue-crab tar.gz found!"
+            exit 1
+          fi
+      - name: quick run
+        run: |
+          ./blue-crab/blue-crab --help || exit 1
+      # - name: Add squigualiser to PATH
+      #   run: echo "${{ github.workspace }}/squigualiser" >> $GITHUB_PATH
+      # - name: test_reform
+      #   run: test/test_reform.sh
+      # - name: test_realign
+      #   run: test/test_realign.sh
+      # - name: test_signal_to_read_plot
+      #   run: test/test_plot_signal_to_read.sh --save_svg
+      # - name: test_calculate_offsets
+      #   run: test/test_calculate_offsets.sh
 
-  #     - name: Get artifact filename
-  #       id: artifact_name
-  #       run: |
-  #         FILE=$(ls macos-build/squigualiser-*-macos-x86-64-binaries.tar.gz)
-  #         BASENAME=$(basename "$FILE" .tar.gz)
-  #         echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
+      - name: Get artifact filename
+        id: artifact_name
+        run: |
+          FILE=$(ls macos-build/blue-crab-*-macos-x86-64-binaries.tar.gz)
+          BASENAME=$(basename "$FILE" .tar.gz)
+          echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
 
-  #     - name: Upload squigualiser tar.gz
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: ${{ env.ARTIFACT_NAME }}
-  #         path: macos-build/squigualiser-*-macos-x86-64-binaries.tar.gz
-      # - name: Upload squigualiser tar.gz
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: squigualiser-binary
-      #     path: macos-build/squigualiser-*-macos-x86-64-binaries.tar.gz
+      - name: Upload blue-crab tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: macos-build/blue-crab-*-macos-x86-64-binaries.tar.gz
+
 
