@@ -10,18 +10,15 @@ on:
 jobs:
   build-package-linux:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-
       - name: make docker-build dir
         run: |
           mkdir -p docker-build && \
           cp scripts/package.sh docker-build/ && \
           chmod +x docker-build/package.sh
-
       - name: Run package.sh inside Ubuntu 14.04 Docker
         run: |
           docker run --rm -v ${{ github.workspace }}/docker-build:/host/ ubuntu:14.04 /bin/bash -c "
@@ -37,7 +34,6 @@ jobs:
               exit 1; \
             fi
           "
-      
       - name: decompress blue-crab tar.gz
         run: |
           if [ -f docker-build/blue-crab-*-linux-x86-64-binaries.tar.gz ]; then
@@ -48,45 +44,27 @@ jobs:
             echo "No blue-crab tar.gz found!"
             exit 1
           fi
-
       - name: quick run
         run: |
           ./blue-crab/blue-crab --help || exit 1
-      
-      # - name: Add squigualiser to PATH
-      #   run: echo "${{ github.workspace }}/squigualiser" >> $GITHUB_PATH
-
-      # - name: test_reform
-      #   run: test/test_reform.sh
-      # - name: test_realign
-      #   run: test/test_realign.sh
-      # - name: test_signal_to_read_plot
-      #   run: test/test_plot_signal_to_read.sh --save_svg
-      # - name: test_calculate_offsets
-      #   run: test/test_calculate_offsets.sh
-
+      - name: Add blue-crab to PATH
+        run: echo "${{ github.workspace }}/blue-crab" >> $GITHUB_PATH
+      - name: test
+        run: test/test.sh
       - name: Get artifact filename
         id: artifact_name
         run: |
           FILE=$(ls docker-build/blue-crab-*-linux-x86-64-binaries.tar.gz)
           BASENAME=$(basename "$FILE" .tar.gz)
           echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
-
       - name: Upload blue-crab tar.gz
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: docker-build/blue-crab-*-linux-x86-64-binaries.tar.gz
       
-      # - name: Upload squigualiser tar.gz
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: squigualiser-binary
-      #     path: docker-build/squigualiser-*-linux-x86-64-binaries.tar.gz
-  
   build-package-macos-x86-64:
     runs-on: macos-13
-
     steps:
       - uses: actions/checkout@v2
         with:
@@ -96,7 +74,6 @@ jobs:
           mkdir -p macos-build && \
           cp scripts/package_macos.sh macos-build/ && \
           chmod +x macos-build/package_macos.sh
-
       - name: run without docker
         run: |
           cd macos-build && \
@@ -110,7 +87,6 @@ jobs:
             exit 1; \
           fi && \
           cd ..
-
       - name: decompress blue-crab tar.gz
         run: |
           if [ -f macos-build/blue-crab-*-macos-x86-64-binaries.tar.gz ]; then
@@ -124,24 +100,16 @@ jobs:
       - name: quick run
         run: |
           ./blue-crab/blue-crab --help || exit 1
-      # - name: Add squigualiser to PATH
-      #   run: echo "${{ github.workspace }}/squigualiser" >> $GITHUB_PATH
-      # - name: test_reform
-      #   run: test/test_reform.sh
-      # - name: test_realign
-      #   run: test/test_realign.sh
-      # - name: test_signal_to_read_plot
-      #   run: test/test_plot_signal_to_read.sh --save_svg
-      # - name: test_calculate_offsets
-      #   run: test/test_calculate_offsets.sh
-
+      - name: Add blue-crab to PATH
+        run: echo "${{ github.workspace }}/blue-crab" >> $GITHUB_PATH
+      - name: test
+        run: test/test.sh
       - name: Get artifact filename
         id: artifact_name
         run: |
           FILE=$(ls macos-build/blue-crab-*-macos-x86-64-binaries.tar.gz)
           BASENAME=$(basename "$FILE" .tar.gz)
           echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
-
       - name: Upload blue-crab tar.gz
         uses: actions/upload-artifact@v4
         with:
