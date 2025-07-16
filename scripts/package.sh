@@ -29,7 +29,6 @@ git clone --depth 1 --branch package https://github.com/Psy-Fer/blue-crab.git  |
 
 cp -r blue-crab/docs python || die "docs copy failed"
 cp blue-crab/scripts/exe_file python/blue-crab || die "script copy failed" 
-# cp /host/exe_file python/blue-crab || die "script copy failed" 
 cp blue-crab/LICENSE python || die "license copy failed"
 cp blue-crab/README.md python || die "readme copy failed"
 

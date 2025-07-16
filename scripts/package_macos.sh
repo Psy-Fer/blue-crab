@@ -22,7 +22,6 @@ export CC=gcc
 export HTSLIB_CONFIGURE_OPTIONS="--enable-bz2=no --enable-lzma=no --with-libdeflate=no --enable-libcurl=no  --enable-gcs=no --enable-s3=no"
 pip install blue-crab --no-cache || die "pip install blue-crab failed"
 
-
 find ./ -name __pycache__ -type d | xargs rm -r || die "removing pycache failed"
 mv blue-crab-venv/bin/blue-crab python/bin/ || die "moving blue-crab to bin failed"
 cp -r blue-crab-venv/lib/python3.9/site-packages/* python/lib/python3.9/site-packages/ || die "copying site-packages failed"
