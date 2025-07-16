@@ -9,6 +9,8 @@ PYTHON_VERSION="python3.9"
 ARCH=$(uname -m)
 OS=$(uname -s)
 
+echo "O/S:${OS} architecture:${ARCH} python:${PYTHON_VERSION}"
+
 if [ "${OS}" == "Linux"  ] && [ "${ARCH}" == "x86_64" ];
 then
     apt-get update || die "apt-get update failed"
@@ -38,17 +40,15 @@ find ./ -name __pycache__ -type d | xargs rm -r || die "removing pycache failed"
 mv blue-crab-venv/bin/blue-crab python/bin/ || die "moving blue-crab to bin failed"
 cp -r blue-crab-venv/lib/${PYTHON_VERSION}/site-packages/* python/lib/${PYTHON_VERSION}/site-packages/ || die "copying site-packages failed"
 
-if [ "${OS}" == "Linux"  ];
-then
+if [ "${OS}" == "Linux"  ]; then
     sed -i "s/blue-crab-venv\/bin\/${PYTHON_VERSION}/\/usr\/bin\/env ${PYTHON_VERSION}/g" python/bin/blue-crab  || die "changing headerline failed"
-elif [ "${OS}" == "Darwin"  ];
-then
+elif [ "${OS}" == "Darwin"  ]; then
     sed -i '' "1s/.*/#\!\/usr\/bin\/env ${PYTHON_VERSION}/" python/bin/blue-crab || die "changing headerline failed"
 fi
 
 git clone --depth 1 --branch package https://github.com/Psy-Fer/blue-crab.git  || die "Failed to clone blue-crab"
 cp -r blue-crab/docs python || die "docs copy failed"
-cp blue-crab/scripts/exe_file python/blue-crab || die "script copy failed" 
+cp blue-crab/test/package/exe_file python/blue-crab || die "script copy failed" 
 cp blue-crab/LICENSE python || die "license copy failed"
 cp blue-crab/README.md python || die "readme copy failed"
 
