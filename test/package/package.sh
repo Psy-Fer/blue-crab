@@ -75,16 +75,16 @@ if [ "${ARCH}" == "arm64"  ] || [ "${ARCH}" == "aarch64" ]; then
     ARCH_NAME="arm64"
 fi
 TOOL_NAME=${TOOL}-${LATEST_TAG}
-TAR_NAME=${TOOL}-${LATEST_TAG}-${ARCH_NAME}-${OS_NAME}-binaries
+TAR_NAME=${TOOL}-${LATEST_TAG}-${ARCH_NAME}-${OS_NAME}-binaries.tar.gz
 echo "TOOL_NAME: ${TOOL_NAME}"
 echo "TAR_NAME: ${TAR_NAME}"
 
 mv python/ ${TOOL_NAME} || die "renaming python to ${TOOL_NAME} failed"
 
-tar zcvf ${TAR_NAME}.tar.gz ${TOOL_NAME}/ || die "tar balling ${TOOL_NAME} failed"
+tar zcvf ${TAR_NAME} ${TOOL_NAME}/ || die "tar balling ${TOOL_NAME} failed"
 
 # if user arg "docker" is provided, copy tarball to host directory
-if [[ "$2" == "docker" ]]; then
+if [[ "$1" == "docker" ]]; then
     echo "copying tar file to host directory"
-    cp ${TAR_NAME}.tar.gz /host/ || die "copying tar file to host"
+    cp ${TAR_NAME} /host/ || die "copying tar file to host"
 fi
