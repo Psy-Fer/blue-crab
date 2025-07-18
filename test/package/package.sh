@@ -6,8 +6,12 @@ die (){
 }
 
 PYTHON_VERSION="python3.9"
+PY_VENV="blue-crab-venv"
 ARCH=$(uname -m)
 OS=$(uname -s)
+REPO_LINK="https://github.com/Psy-Fer/blue-crab.git"
+BRANCH="package"
+TOOL="blue-crab"
 
 echo "O/S:${OS} architecture:${ARCH} python:${PYTHON_VERSION}"
 
@@ -29,37 +33,58 @@ else
     die "Unsupported O/S ${OS} or architecture ${ARCH} for packaging."
 fi
 
-python/bin/${PYTHON_VERSION} -m venv blue-crab-venv || die "create venv failed"
-source blue-crab-venv/bin/activate || die "sourcing venc failed"
+python/bin/${PYTHON_VERSION} -m venv ${PY_VENV} || die "create venv failed"
+source ${PY_VENV}/bin/activate || die "sourcing venv failed"
 pip install --upgrade pip || die "upgrade pip failed"
 export CC=gcc
 export HTSLIB_CONFIGURE_OPTIONS="--enable-bz2=no --enable-lzma=no --with-libdeflate=no --enable-libcurl=no  --enable-gcs=no --enable-s3=no"
-pip install blue-crab --no-cache || die "pip install blue-crab failed"
 
-find ./ -name __pycache__ -type d | xargs rm -r || die "removing pycache failed"
-mv blue-crab-venv/bin/blue-crab python/bin/ || die "moving blue-crab to bin failed"
-cp -r blue-crab-venv/lib/${PYTHON_VERSION}/site-packages/* python/lib/${PYTHON_VERSION}/site-packages/ || die "copying site-packages failed"
-
-if [ "${OS}" == "Linux"  ]; then
-    sed -i "s/blue-crab-venv\/bin\/${PYTHON_VERSION}/\/usr\/bin\/env ${PYTHON_VERSION}/g" python/bin/blue-crab  || die "changing headerline failed"
-elif [ "${OS}" == "Darwin"  ]; then
-    sed -i '' "1s/.*/#\!\/usr\/bin\/env ${PYTHON_VERSION}/" python/bin/blue-crab || die "changing headerline failed"
+if [[ "$1" == "test_pypi" ]]; then
+    echo "Installing from Test PyPI"
+    pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple ${TOOL} --pre || die "test.pip install ${TOOL} failed"
+else
+    echo "Installing from PyPI"
+    pip install ${TOOL} --no-cache || die "pip install ${TOOL} failed"
 fi
 
-git clone --depth 1 --branch package https://github.com/Psy-Fer/blue-crab.git  || die "Failed to clone blue-crab"
-cp -r blue-crab/docs python || die "docs copy failed"
-cp blue-crab/test/package/exe_file python/blue-crab || die "script copy failed" 
-cp blue-crab/LICENSE python || die "license copy failed"
-cp blue-crab/README.md python || die "readme copy failed"
+find ./ -name __pycache__ -type d | xargs rm -r || die "removing pycache failed"
+mv ${PY_VENV}/bin/${TOOL} python/bin/ || die "moving ${TOOL} to bin failed"
+cp -r ${PY_VENV}/lib/${PYTHON_VERSION}/site-packages/* python/lib/${PYTHON_VERSION}/site-packages/ || die "copying site-packages failed"
 
-rm -rf blue-crab || die "remove cloned dir failed"
+if [ "${OS}" == "Linux"  ]; then
+    sed -i "s/${PY_VENV}\/bin\/${PYTHON_VERSION}/\/usr\/bin\/env ${PYTHON_VERSION}/g" python/bin/${TOOL}  || die "changing headerline failed"
+elif [ "${OS}" == "Darwin"  ]; then
+    sed -i '' "1s/.*/#\!\/usr\/bin\/env ${PYTHON_VERSION}/" python/bin/${TOOL} || die "changing headerline failed"
+fi
 
-mv python/ blue-crab || die "renaming python to blue-crab failed"
+git clone --depth 1 --branch ${BRANCH} ${REPO_LINK} || die "Failed to clone ${TOOL}"
+cp -r ${TOOL}/docs python || die "docs copy failed"
+cp ${TOOL}/test/package/${TOOL} python || die "script copy failed" 
+cp ${TOOL}/LICENSE python || die "license copy failed"
+cp ${TOOL}/README.md python || die "readme copy failed"
 
-tar zcvf blue-crab.tar.gz blue-crab/ || die "tar balling blue-crab failed"
+rm -rf ${TOOL} || die "remove cloned dir failed"
+
+LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
+OS_NAME="linux"
+if [ "${OS}" == "Darwin"  ]; then
+    OS_NAME="macos"
+fi
+ARCH_NAME="x86_64"
+if [ "${ARCH}" == "arm64"  ] || [ "${ARCH}" == "aarch64" ]; then
+    ARCH_NAME="arm64"
+fi
+TOOL_NAME=${TOOL}-${LATEST_TAG}
+TAR_NAME=${TOOL}-${LATEST_TAG}-${ARCH_NAME}-${OS_NAME}-binaries
+echo "TOOL_NAME: ${TOOL_NAME}"
+echo "TAR_NAME: ${TAR_NAME}"
+
+mv python/ ${TOOL_NAME} || die "renaming python to ${TOOL_NAME} failed"
+
+tar zcvf ${TAR_NAME}.tar.gz ${TOOL_NAME}/ || die "tar balling ${TOOL_NAME} failed"
 
 # if user arg "docker" is provided, copy tarball to host directory
-if [[ "$1" == "docker" ]]; then
+if [[ "$2" == "docker" ]]; then
     echo "copying tar file to host directory"
-    cp blue-crab.tar.gz /host/ || die "copying tar file to host"
+    cp ${TAR_NAME}.tar.gz /host/ || die "copying tar file to host"
 fi
