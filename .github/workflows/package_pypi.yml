@@ -8,7 +8,7 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
-  build-package-linux:
+  build-package-linux-x86_64:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -36,9 +36,6 @@ jobs:
             echo "No blue-crab tar.gz found!"
             exit 1
           fi
-      - name: quick run
-        run: |
-          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
       - name: Get artifact filename
         id: artifact_name
         run: |
@@ -47,6 +44,9 @@ jobs:
           echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
           LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+      - name: quick run
+        run: |
+          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
       - name: Add blue-crab to PATH
         run: echo "${{ github.workspace }}/blue-crab-${{ env.LATEST_TAG }}" >> $GITHUB_PATH
       - name: test
@@ -56,7 +56,7 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: build_dir/blue-crab-*.tar.gz
-  build-package-macos-x86-64:
+  build-package-macos-x86_64:
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v2
@@ -82,9 +82,6 @@ jobs:
             echo "No blue-crab tar.gz found!"
             exit 1
           fi
-      - name: quick run
-        run: |
-          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
       - name: Get artifact filename
         id: artifact_name
         run: |
@@ -93,6 +90,9 @@ jobs:
           echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
           LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+      - name: quick run
+        run: |
+          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
       - name: Add blue-crab to PATH
         run: echo "${{ github.workspace }}/blue-crab-${{ env.LATEST_TAG }}" >> $GITHUB_PATH
       - name: test
@@ -128,9 +128,6 @@ jobs:
             echo "No blue-crab tar.gz found!"
             exit 1
           fi
-      - name: quick run
-        run: |
-          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
       - name: Get artifact filename
         id: artifact_name
         run: |
@@ -139,6 +136,9 @@ jobs:
           echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
           LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+      - name: quick run
+        run: |
+          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
       - name: Add blue-crab to PATH
         run: echo "${{ github.workspace }}/blue-crab-${{ env.LATEST_TAG }}" >> $GITHUB_PATH
       - name: test
