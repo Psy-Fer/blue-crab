@@ -1,0 +1,40 @@
+#!/bin/bash
+
+export PYTHONNOUSERSITE=1
+unset PYTHONHOME
+unset PYTHONPATH
+
+REALPATH=""
+
+ARCH=$(uname -m)
+OS=$(uname -s)
+
+if [ "${OS}" == "Linux"  ];
+then
+    REALPATH=$(dirname "$(readlink -f "$0")")
+fi
+if [ "${OS}" == "Darwin"  ];
+then
+    REALPATH=$(dirname "$0")
+    readlink "$0" && REALPATH=$(dirname "$(readlink "$0")")
+fi
+
+if [[ ${OS} != "Linux" && ${OS} != "Darwin" ]];
+then
+    echo "Unsupported O/S ${OS}. Trying to launch anyway - anticipating a crash!"
+fi
+
+if [[ ${ARCH} != "x86_64" && ${ARCH} != "arm64" && ${ARCH} != "aarch64" ]];
+then
+    echo "Unsupported architecture ${ARCH}. Trying to launch anyway - anticipating a crash!"
+fi
+
+test -z ${REALPATH} && echo "REALPATH could not be deduced" && exit 1
+export PATH="${REALPATH}/bin/:${PATH}"
+
+blue-crab "$@"
+exit_code=$?
+exit "$exit_code"
+
+
+
