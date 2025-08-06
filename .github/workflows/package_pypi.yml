@@ -175,5 +175,6 @@ jobs:
           tar xf blue-crab_test_data.tar.gz
       - name: test on data
         run: |
+          cd artifact/blue-crab-*
           export PATH=$PWD:$PATH
           ./test/test.sh
