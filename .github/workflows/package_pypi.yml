@@ -58,6 +58,8 @@ jobs:
           path: build_dir/blue-crab-*.tar.gz
   build-package-macos-x86_64:
     runs-on: macos-13
+    outputs:
+      artifact_name: ${{ steps.artifact_name.outputs.artifact_name }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -90,6 +92,7 @@ jobs:
           echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
           LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "artifact_name=$BASENAME" >> $GITHUB_OUTPUT
       - name: quick run
         run: |
           ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
@@ -148,3 +151,29 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: build_dir/blue-crab-*.tar.gz
+  test-artifact-macos-13:
+    needs: build-package-x86_64-macos
+    runs-on: macos-13
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-package-x86_64-macos.outputs.artifact_name }}
+          path: ./artifact
+      - name: Decompress artifact
+        run: |
+          cd artifact
+          tar -xzf blue-crab-*.tar.gz
+      - name: Run compatibility checks
+        run: |
+          ./artifact/blue-crab-*/blue-crab --help
+          ./artifact/blue-crab-*/blue-crab --version
+      - name: Download sample dataset
+        run: |
+          cd artifact/blue-crab-*
+          curl -L https://www.dropbox.com/scl/fi/jbp82f9tt1xsxybjsc85l/blue-crab_test_data.tar.gz?rlkey=0sqdpyl59ucdlxapu07kx56wg&st=borepmgu&dl=1 -o blue-crab_test_data.tar.gz
+          tar xf blue-crab_test_data.tar.gz
+      - name: test on data
+        run: |
+          export PATH=$PWD:$PATH
+          ./test/test.sh
