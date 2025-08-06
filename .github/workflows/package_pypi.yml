@@ -8,7 +8,7 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
-  build-package-linux-x86_64:
+  build-package-x86_64-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -56,7 +56,7 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: build_dir/blue-crab-*.tar.gz
-  build-package-macos-x86_64:
+  build-package-x86_64-macos:
     runs-on: macos-13
     outputs:
       artifact_name: ${{ steps.artifact_name.outputs.artifact_name }}
@@ -105,7 +105,7 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: build_dir/blue-crab-*.tar.gz
-  build-package-macos-arm64:
+  build-package-arm64-macos:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v2

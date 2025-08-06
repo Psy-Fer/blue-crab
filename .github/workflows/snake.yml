@@ -107,4 +107,6 @@ jobs:
     # - name: install
     #   run:  pip3 install --break-system-packages . && blue-crab --help
     - name: test
-      run: test/test.sh
+      run: |
+       source venv/bin/activate
+       test/test.sh
