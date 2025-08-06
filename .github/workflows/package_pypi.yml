@@ -107,6 +107,8 @@ jobs:
           path: build_dir/blue-crab-*.tar.gz
   build-package-arm64-macos:
     runs-on: macos-14
+    outputs:
+      artifact_name: ${{ steps.artifact_name.outputs.artifact_name }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -159,6 +161,33 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build-package-x86_64-macos.outputs.artifact_name }}
+          path: ./artifact
+      - name: Decompress artifact
+        run: |
+          cd artifact
+          tar -xzf blue-crab-*.tar.gz
+      - name: Run compatibility checks
+        run: |
+          ./artifact/blue-crab-*/blue-crab --help
+          ./artifact/blue-crab-*/blue-crab --version
+      - name: Download sample dataset
+        run: |
+          cd artifact/blue-crab-*
+          curl -L "https://www.dropbox.com/scl/fi/jbp82f9tt1xsxybjsc85l/blue-crab_test_data.tar.gz?rlkey=0sqdpyl59ucdlxapu07kx56wg&st=borepmgu&dl=1" -o blue-crab_test_data.tar.gz
+          tar xf blue-crab_test_data.tar.gz
+      - name: test on data
+        run: |
+          cd artifact/blue-crab-*
+          export PATH=$PWD:$PATH
+          ./test/test.sh
+  test-artifact-macos-14:
+    needs: build-package-arm64-macos
+    runs-on: macos-14
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-package-arm64-macos.outputs.artifact_name }}
           path: ./artifact
       - name: Decompress artifact
         run: |
