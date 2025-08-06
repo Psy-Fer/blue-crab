@@ -171,7 +171,7 @@ jobs:
       - name: Download sample dataset
         run: |
           cd artifact/blue-crab-*
-          curl -L https://www.dropbox.com/scl/fi/jbp82f9tt1xsxybjsc85l/blue-crab_test_data.tar.gz?rlkey=0sqdpyl59ucdlxapu07kx56wg&st=borepmgu&dl=1 -o blue-crab_test_data.tar.gz
+          curl -L "https://www.dropbox.com/scl/fi/jbp82f9tt1xsxybjsc85l/blue-crab_test_data.tar.gz?rlkey=0sqdpyl59ucdlxapu07kx56wg&st=borepmgu&dl=1" -o blue-crab_test_data.tar.gz
           tar xf blue-crab_test_data.tar.gz
       - name: test on data
         run: |
