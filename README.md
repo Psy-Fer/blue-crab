@@ -29,6 +29,23 @@ You may use commands like [slow5tools](https://hasindu2008.github.io/slow5tools/
 
 ## Quickstart
 
+The easiest way to setup blue-crab would be to use precompiled binaries. Choose the commands for your OS.
+```
+VERSION=v0.4.0
+# For x86_64-inux 
+wget "https://github.com/Psy-Fer/blue-crab/releases/download/$VERSION/blue-crab-$VERSION-x86_64-linux-binaries.tar.gz" && tar xvf blue-crab-$VERSION-x86_64-linux-binaries.tar.gz && cd blue-crab-$VERSION/
+
+# For x86_64-macos
+curl -L "https://github.com/Psy-Fer/blue-crab/releases/download/$VERSION/blue-crab-$VERSION-x86_64-macos-binaries.tar.gz" -o blue-crab-$VERSION-x86_64-macos-binaries.tar.gz && tar xvf blue-crab-$VERSION-x86_64-macos-binaries.tar.gz && cd blue-crab-$VERSION/
+
+# For arm64-macos
+curl -L "https://github.com/Psy-Fer/blue-crab/releases/download/$VERSION/blue-crab-$VERSION-arm64-macos-binaries.tar.gz" -o blue-crab-$VERSION-arm64-macos-binaries.tar.gz && tar xvf blue-crab-$VERSION-arm64-macos-binaries.tar.gz && cd blue-crab-$VERSION/
+
+./blue-crab --help
+
+```
+or use a python env,
+
 ```
 python3 -m venv ./blue-crab-venv
 source ./blue-crab-venv/bin/activate
@@ -38,7 +55,11 @@ pip install blue-crab
 
 blue-crab --help
 ```
+or conda,
 
+```
+conda install bioconda::blue-crab
+```
 
 ## Setup
 
