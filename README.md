@@ -44,6 +44,8 @@ curl -L "https://github.com/Psy-Fer/blue-crab/releases/download/$VERSION/blue-cr
 ./blue-crab --help
 
 ```
+`export PATH=[path_to_blue-crab-$VERSION]:$PATH` to execute `blue-crab` from any location.
+
 or use a python env,
 
 ```
