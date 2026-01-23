@@ -2,7 +2,7 @@ import setuptools
 from os import path
 
 PKG_NAME = "blue-crab"
-MOD_NAME = "src"
+MOD_NAME = "blue-crab"
 
 # add readme to long description as that's what pypi sees
 with open(path.join(path.abspath(path.dirname(__file__)),"README.md"), "r") as f:
