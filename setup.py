@@ -2,7 +2,7 @@ import setuptools
 from os import path
 
 PKG_NAME = "blue-crab"
-MOD_NAME = "blue-crab"
+MOD_NAME = "blue_crab"
 
 # add readme to long description as that's what pypi sees
 with open(path.join(path.abspath(path.dirname(__file__)),"README.md"), "r") as f:
@@ -36,7 +36,7 @@ setuptools.setup(
     python_requires=">=3.8",
     install_requires=install_requires,
     setup_requires=["numpy"],
-    entry_points={"console_scripts":["blue-crab=blue-crab.blue_crab:main"],},
+    entry_points={"console_scripts":["blue-crab=blue_crab.blue_crab:main"],},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         "Programming Language :: Python :: 3",
