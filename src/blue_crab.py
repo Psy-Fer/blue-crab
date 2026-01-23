@@ -146,6 +146,7 @@ def get_data_from_pod5_record(read):
     predicted_scaling = read.predicted_scaling
     predicted_scaling_shift = predicted_scaling.shift
     predicted_scaling_scale = predicted_scaling.scale
+    open_pore_level = getattr(read, 'open_pore_level', np.nan)
     if pore_data.pore_type not in ["not_set", "R10.4.1", ""]:
         logger.error("pore_type is '{}' expected to be 'not_set'. Please contact developers with this message.".format(pore_data.pore_type))
         kill_program()
@@ -175,6 +176,7 @@ def get_data_from_pod5_record(read):
         "num_reads_since_mux_change": read.num_reads_since_mux_change,
         "time_since_mux_change": read.time_since_mux_change,
         "num_minknow_events": read.num_minknow_events,
+        "open_pore_level": open_pore_level,
     }
     info_dic = run_info_to_flat_dic(read.run_info)
     yield pod5_read, info_dic
@@ -621,6 +623,7 @@ def process_pod52slow5(read, record, aux, sampling_rate):
     aux["num_reads_since_mux_change"] = read.get("num_reads_since_mux_change", None)
     aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
     aux["num_minknow_events"] = read.get("num_minknow_events", None)
+    aux["open_pore_level"] = read.get("open_pore_level", None)
     
     return record, aux
 
@@ -972,6 +975,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                     num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
                     time_since_mux_change=read.get("time_since_mux_change", 0.0),
                     num_minknow_events=read.get("num_minknow_events", 0),
+                    open_pore_level=read.get("open_pore_level", float("nan")),
                 )
 
                 
@@ -1169,6 +1173,7 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                     num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
                     time_since_mux_change=read.get("time_since_mux_change", 0.0),
                     num_minknow_events=read.get("num_minknow_events", 0),
+                    open_pore_level=read.get("open_pore_level", float("nan")),
                 )
 
                 
@@ -1427,6 +1432,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                 num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
                 time_since_mux_change=read.get("time_since_mux_change", 0.0),
                 num_minknow_events=read.get("num_minknow_events", 0),
+                open_pore_level=read.get("open_pore_level", float("nan")),
             )
 
             
