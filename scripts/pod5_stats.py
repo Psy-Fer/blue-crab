@@ -3,6 +3,9 @@
 import argparse
 import sys
 import os
+import datetime
+import iso8601
+import pytz
 
 import pod5 as p5
 from pod5.signal_tools import DEFAULT_SIGNAL_CHUNK_SIZE, vbz_compress_signal_chunked
