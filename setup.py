@@ -36,7 +36,7 @@ setuptools.setup(
     python_requires=">=3.8",
     install_requires=install_requires,
     setup_requires=["numpy"],
-    entry_points={"console_scripts":["blue-crab=src.blue_crab:main"],},
+    entry_points={"console_scripts":["blue-crab=blue-crab.blue_crab:main"],},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         "Programming Language :: Python :: 3",
