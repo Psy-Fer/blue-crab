@@ -140,13 +140,22 @@ def get_data_from_pod5_record(read):
     # the lower case string of end_reason
     end_reason = p2s_end_reason_convert(end_reason_data.name)
     end_reason_forced = end_reason_data.forced
-    tracked_scaling = read.tracked_scaling
-    tracked_scaling_shift = tracked_scaling.shift
-    tracked_scaling_scale = tracked_scaling.scale
-    predicted_scaling = read.predicted_scaling
-    predicted_scaling_shift = predicted_scaling.shift
-    predicted_scaling_scale = predicted_scaling.scale
-    open_pore_level = getattr(read, 'open_pore_level', np.nan)
+    tracked_scaling = getattr(read, 'tracked_scaling', None)
+    if tracked_scaling is not None:
+        tracked_scaling_shift = tracked_scaling.shift
+        tracked_scaling_scale = tracked_scaling.scale
+    else:
+        tracked_scaling_shift = None
+        tracked_scaling_scale = None
+    predicted_scaling = getattr(read, 'predicted_scaling', None)
+    if predicted_scaling is not None:
+        predicted_scaling_shift = predicted_scaling.shift
+        predicted_scaling_scale = predicted_scaling.scale
+    else:
+        predicted_scaling_shift = None
+        predicted_scaling_scale = None
+
+    open_pore_level = getattr(read, 'open_pore_level', None)
     if pore_data.pore_type not in ["not_set", "R10.4.1", ""]:
         logger.error("pore_type is '{}' expected to be 'not_set'. Please contact developers with this message.".format(pore_data.pore_type))
         kill_program()
