@@ -940,7 +940,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         sequencing_kit = str(header.get("sequencing_kit", "") or ""),
                         sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
                         sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
-                        software = "blue-crab SLOW5<->POD5 converter v{}".format(__version__),
+                        software = str(header.get("software", "") or ""),
                         system_name = str(header.get("system_name", system_name) or ""),
                         system_type = str(header.get("system_type", system_type) or ""),
                         tracking_id = tracking_id
@@ -1153,7 +1153,7 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         sequencing_kit = str(header.get("sequencing_kit", "") or ""),
                         sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
                         sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
-                        software = "blue-crab SLOW5<->POD5 converter v{}".format(__version__),
+                        software = str(header.get("software", "") or ""),
                         system_name = str(header.get("system_name", system_name) or ""),
                         system_type = str(header.get("system_type", system_type) or ""),
                         tracking_id = tracking_id
@@ -1427,7 +1427,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                     sequencing_kit = str(header.get("sequencing_kit", "") or ""),
                     sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
                     sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
-                    software = "blue-crab SLOW5<->POD5 converter v{}".format(__version__),
+                    software = str(header.get("software", "") or ""),
                     system_name = str(header.get("system_name", system_name) or ""),
                     system_type = str(header.get("system_type", system_type) or ""),
                     tracking_id = tracking_id
