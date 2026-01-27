@@ -953,6 +953,21 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                 signal_chunks, signal_chunk_lengths = vbz_compress_signal_chunked(
                     signal, DEFAULT_SIGNAL_CHUNK_SIZE
                 )
+
+                # handle None types
+                num_reads_since_mux_change=read.get("num_reads_since_mux_change")
+                if num_reads_since_mux_change is None:
+                    num_reads_since_mux_change = 0
+                time_since_mux_change=read.get("time_since_mux_change")
+                if time_since_mux_change is None:
+                    time_since_mux_change = 0.0
+                num_minknow_events=read.get("num_minknow_events")
+                if num_minknow_events is None:
+                    num_minknow_events = 0
+                open_pore_level=read.get("open_pore_level")
+                if open_pore_level is None:
+                    open_pore_level = float("nan")
+
                 read = p5.CompressedRead(
                     read_id=uuid.UUID(read["read_id"]),
                     end_reason=end_reason,
@@ -972,10 +987,10 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         read.get("predicted_scaling_shift", float("nan")),
                         read.get("predicted_scaling_scale", float("nan")),
                     ),
-                    num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
-                    time_since_mux_change=read.get("time_since_mux_change", 0.0),
-                    num_minknow_events=read.get("num_minknow_events", 0),
-                    open_pore_level=read.get("open_pore_level", float("nan")),
+                    num_reads_since_mux_change=num_reads_since_mux_change,
+                    time_since_mux_change=time_since_mux_change,
+                    num_minknow_events=num_minknow_events,
+                    open_pore_level=open_pore_level,
                 )
 
                 
@@ -1151,6 +1166,21 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                 signal_chunks, signal_chunk_lengths = vbz_compress_signal_chunked(
                     signal, DEFAULT_SIGNAL_CHUNK_SIZE
                 )
+
+                # handle None types
+                num_reads_since_mux_change=read.get("num_reads_since_mux_change")
+                if num_reads_since_mux_change is None:
+                    num_reads_since_mux_change = 0
+                time_since_mux_change=read.get("time_since_mux_change")
+                if time_since_mux_change is None:
+                    time_since_mux_change = 0.0
+                num_minknow_events=read.get("num_minknow_events")
+                if num_minknow_events is None:
+                    num_minknow_events = 0
+                open_pore_level=read.get("open_pore_level")
+                if open_pore_level is None:
+                    open_pore_level = float("nan")
+
                 read = p5.CompressedRead(
                     read_id=uuid.UUID(read["read_id"]),
                     end_reason=end_reason,
@@ -1170,10 +1200,10 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         read.get("predicted_scaling_shift", float("nan")),
                         read.get("predicted_scaling_scale", float("nan")),
                     ),
-                    num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
-                    time_since_mux_change=read.get("time_since_mux_change", 0.0),
-                    num_minknow_events=read.get("num_minknow_events", 0),
-                    open_pore_level=read.get("open_pore_level", float("nan")),
+                    num_reads_since_mux_change=num_reads_since_mux_change,
+                    time_since_mux_change=time_since_mux_change,
+                    num_minknow_events=num_minknow_events,
+                    open_pore_level=open_pore_level,
                 )
 
                 
@@ -1410,6 +1440,21 @@ def s2s_s2p_worker(args, sfile, pod5_out):
             signal_chunks, signal_chunk_lengths = vbz_compress_signal_chunked(
                 signal, DEFAULT_SIGNAL_CHUNK_SIZE
             )
+
+            # handle None types
+            num_reads_since_mux_change=read.get("num_reads_since_mux_change")
+            if num_reads_since_mux_change is None:
+                num_reads_since_mux_change = 0
+            time_since_mux_change=read.get("time_since_mux_change")
+            if time_since_mux_change is None:
+                time_since_mux_change = 0.0
+            num_minknow_events=read.get("num_minknow_events")
+            if num_minknow_events is None:
+                num_minknow_events = 0
+            open_pore_level=read.get("open_pore_level")
+            if open_pore_level is None:
+                open_pore_level = float("nan")
+
             read = p5.CompressedRead(
                 read_id=uuid.UUID(read["read_id"]),
                 end_reason=end_reason,
@@ -1429,10 +1474,10 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                     read.get("predicted_scaling_shift", float("nan")),
                     read.get("predicted_scaling_scale", float("nan")),
                 ),
-                num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
-                time_since_mux_change=read.get("time_since_mux_change", 0.0),
-                num_minknow_events=read.get("num_minknow_events", 0),
-                open_pore_level=read.get("open_pore_level", float("nan")),
+                num_reads_since_mux_change=num_reads_since_mux_change,
+                time_since_mux_change=time_since_mux_change,
+                num_minknow_events=num_minknow_events,
+                open_pore_level=open_pore_level,
             )
 
             
