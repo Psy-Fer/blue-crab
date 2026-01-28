@@ -1,10 +1,10 @@
 name: Package_Build
 
 on:
-  push:
-    branches: [ '**' ]
-    tags:
-      - '*'  # Run on any new tag
+  # push:
+  #   branches: [ '**' ]
+  #   tags:
+  #     - '*'  # Run on any new tag
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
