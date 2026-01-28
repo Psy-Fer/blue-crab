@@ -70,21 +70,21 @@ jobs:
   #         ldd --version && gcc --version && python3 --version &&
   #         git clone https://github.com/hasindu2008/slow5lib && cd slow5lib && pip3 install . && cd .. &&
   #         pip3 install --upgrade pip && rm /usr/lib/python3/dist-packages/pip && pip3 --version && pip3 install .  && blue-crab --help && test/test.sh"
-  os_x_13:
-    name: macos-13
-    runs-on: macos-13
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-    - name: install packages
-      run: pip3 install --upgrade pip && pip3 install numpy
-    - name: slow5lib
-      run: git clone https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install . && cd ..
-    - name: install
-      run:  pip3 install . && blue-crab --help
-    - name: test
-      run: test/test.sh
+  # os_x_13:
+  #   name: macos-13
+  #   runs-on: macos-13
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       submodules: recursive
+  #   - name: install packages
+  #     run: pip3 install --upgrade pip && pip3 install numpy
+  #   - name: slow5lib
+  #     run: git clone https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install . && cd ..
+  #   - name: install
+  #     run:  pip3 install . && blue-crab --help
+  #   - name: test
+  #     run: test/test.sh
   os_x_14:
     name: macos-14
     runs-on: macos-14
@@ -107,6 +107,19 @@ jobs:
     # - name: install
     #   run:  pip3 install --break-system-packages . && blue-crab --help
     - name: test
-      run: |
-       source venv/bin/activate
-       test/test.sh
+      run: test/test.sh
+  os_x_15:
+    name: macos-15
+    runs-on: macos-15
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: install packages
+      run: pip3 install --break-system-packages --upgrade pip && pip3 install --break-system-packages numpy
+    - name: slow5lib
+      run: git clone https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install --break-system-packages . && cd ..
+    - name: install
+      run:  pip3 install --break-system-packages . && blue-crab --help
+    - name: test
+      run: test/test.sh
