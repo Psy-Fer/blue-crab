@@ -497,3 +497,185 @@ read_id, filename, read_number, channel,mux,end_reason,start_time,start_sample,d
 
 /usr/bin/time -v blue-crab s2p FAW84365_pass_f93564bc_c6df34f0_0.blow5 FAW84365_pass_f93564bc_c6df34f0_0_4.pod5
 
+
+
+New run info stuff
+
+run_info:
+RunInfo(
+    acquisition_id='cf997deb197aba460e926890521b07eb1d3d1aa9',
+    acquisition_start_time=datetime.datetime(2026, 1, 20, 2, 10, 0, 952000, tzinfo=<UTC>),
+    adc_max=2047,
+    adc_min=0,
+    context_tags={
+        'barcoding_enabled': '0',
+        'estimate_poly_a': '0', <-----------------------------------------------------------------------NEW
+        'experiment_type': 'genomic_dna',
+        'local_basecalling': '0',
+        'package': 'bream4',
+        'package_version': '8.8.3',
+        'sample_frequency': '5000',
+        'selected_speed_bases_per_second': '400',  <-----------------------------------------------------------------------NEW
+        'sequencing_kit': 'sqk-lsk114'},
+    experiment_name='PGXXHW260013',
+    flow_cell_id='PBI98662',
+    flow_cell_product_code='FLO-PRO114M',
+    protocol_name='sequencing/sequencing_PRO114_DNA_e8_2_400K:FLO-PRO114M:SQK-LSK114:400',
+    protocol_run_id='940e7584-9029-4028-900b-ecae440525d2',
+    protocol_start_time=datetime.datetime(2026, 1, 20, 2, 3, 52, 868000, tzinfo=<UTC>),
+    sample_id='GR_2',
+    sample_rate=5000,
+    sequencing_kit='sqk-lsk114',
+    sequencer_position='3G',
+    sequencer_position_type='PromethION',
+    software='MinKNOW 25.09.16 (Bream 8.8.3, Core 6.8.11, Dorado 7.11.2+85fc2b9f5)',  <----------------------------------------------NEW
+    system_name='PCA100463',
+    system_type='PromethION A-Series',
+    tracking_id={
+        'asic_id': '0004A30B01171F7C',
+        'asic_id_eeprom': '0004A30B01171F7C',
+        'asic_temp': '47.905567',
+        'asic_version': 'Unknown',
+        'configuration_version': '6.8.9',
+        'data_source': 'real_device', <-----------------------------------------------------------------------NEW
+        'device_id': '3G',
+        'device_type': 'promethion',
+        'distribution_status': 'stable',
+        'distribution_version': '25.09.16',
+        'exp_script_name': 'sequencing/sequencing_PRO114_DNA_e8_2_400K:FLO-PRO114M:SQK-LSK114:400',
+        'exp_script_purpose': 'sequencing_run',
+        'exp_start_time': '2026-01-20T13:10:00.952722+11:00',
+        'flow_cell_id': 'PBI98662',
+        'flow_cell_product_code': 'FLO-PRO114M',
+        'guppy_version': '7.11.2+85fc2b9f5',
+        'heatsink_temp': '34.179996',
+        'host_manufacturer': 'Oxford Nanopore Technologies plc', <-----------------------------------------------------------------------NEW
+        'host_manufacturer_product_name': '',
+        'host_product_code': 'PRO-PRCA100',  <-----------------------------------------------------------------------NEW
+        'host_product_serial_number': 'PCA100463', <-----------------------------------------------------------------------NEW
+        'host_provenance': 'Oxford Nanopore Technologies plc',  <-----------------------------------------------------------------------NEW
+        'hostname': 'PCA100463',
+        'hublett_board_id': '00015b8e173f317c',
+        'hublett_firmware_version': '2.1.10',
+        'installation_type': 'nc',
+        'internal_temperature': '0.000000',  <-----------------------------------------------------------------------NEW
+        'is_simulated': '0',  <-----------------------------------------------------------------------NEW
+        'operating_system': 'ubuntu 20.04',
+        'os_kernel_version': '5.15.0-139-generic',  <-----------------------------------------------------------------------NEW
+        'protocol_group_id': 'PGXXHW260013',
+        'protocol_run_id': '940e7584-9029-4028-900b-ecae440525d2',
+        'protocol_start_time': '2026-01-20T13:03:52.868240+11:00', <-----------------------------------------------------------------------NEW
+        'protocols_version': '8.8.3',
+        'run_id': 'cf997deb197aba460e926890521b07eb1d3d1aa9',
+        'sample_id': 'GR_2',
+        'satellite_board_id': '0137914e34258491',
+        'satellite_firmware_version': '2.3.0',
+        'sequencer_hardware_revision': '',
+        'sequencer_product_code': 'PRO-SEQ048', <-----------------------------------------------------------------------NEW
+        'sequencer_serial_number': '',
+        'system_family': 'promethion', <-----------------------------------------------------------------------NEW
+        'usb_config': 'fx3_0.0.0#fpga_0.0.0#unknown#unknown',
+        'version': '6.8.11'}
+        )
+
+new fields
+
+basecall_model_simplex
+data_source
+estimate_poly_a
+host_manufacturer
+host_product_code
+host_product_serial_number
+host_provenance
+internal_temperature
+is_simulated
+os_kernel_version
+protocol_start_time
+selected_speed_bases_per_second
+sequencer_product_code
+software
+system_family
+
+
+with basecalling on
+
+run_info:
+    RunInfo(
+        acquisition_id='be46623be3934795bdce54fed736901d02600ce3', 
+        acquisition_start_time=datetime.datetime(2026, 1, 27, 0, 51, 30, 479000, tzinfo=<UTC>), 
+        adc_max=2047, 
+        adc_min=0, 
+        context_tags={
+            'barcoding_enabled': '0', 
+            'basecall_model_simplex': 'dna_r10.4.1_e8.2_400bps_hac@v5.2.0', 
+            'basecall_models_modified': '', 
+            'estimate_poly_a': '0', 
+            'experiment_type': 'genomic_dna', 
+            'local_basecalling': '1', 
+            'package': 'bream4', 
+            'package_version': '8.8.3', 
+            'sample_frequency': '5000', 
+            'selected_speed_bases_per_second': '400', 
+            'sequencing_kit': 'sqk-lsk114'
+        },
+        experiment_name='test_bcon_deleteme', 
+        flow_cell_id='PBG57287', 
+        flow_cell_product_code='FLO-PRO114M', 
+        protocol_name='sequencing/sequencing_PRO114_DNA_e8_2_400K:FLO-PRO114M:SQK-LSK114:400', 
+        protocol_run_id='4b6fceaf-a95a-4b32-aacd-f3ef536019a6', 
+        protocol_start_time=datetime.datetime(2026, 1, 27, 0, 45, 22, 123000, tzinfo=<UTC>), 
+        sample_id='test_bcon_deleteme', 
+        sample_rate=5000, 
+        sequencing_kit='sqk-lsk114', 
+        sequencer_position='1E', 
+        sequencer_position_type='PromethION', 
+        software='MinKNOW 25.09.16 (Bream 8.8.3, Core 6.8.11, Dorado 7.11.2+85fc2b9f5)', 
+        system_name='PCA100463', 
+        system_type='PromethION A-Series', 
+        tracking_id={
+            'asic_id': '0004A30B01131B12', 
+            'asic_id_eeprom': '0004A30B01131B12', 
+            'asic_temp': '51.642185', 
+            'asic_version': 'Unknown', 
+            'configuration_version': '6.8.9', 
+            'data_source': 'real_device', 
+            'device_id': '1E', 
+            'device_type': 'promethion', 
+            'distribution_status': 'stable', 
+            'distribution_version': '25.09.16', 
+            'exp_script_name': 'sequencing/sequencing_PRO114_DNA_e8_2_400K:FLO-PRO114M:SQK-LSK114:400', 
+            'exp_script_purpose': 'sequencing_run', 
+            'exp_start_time': '2026-01-27T11:51:30.479494+11:00', 
+            'flow_cell_id': 'PBG57287', 
+            'flow_cell_product_code': 'FLO-PRO114M', 
+            'guppy_version': '7.11.2+85fc2b9f5', 
+            'heatsink_temp': '34.242016', 
+            'host_manufacturer': 'Oxford Nanopore Technologies plc', 
+            'host_manufacturer_product_name': '', 
+            'host_product_code': 'PRO-PRCA100', 
+            'host_product_serial_number': 'PCA100463', 
+            'host_provenance': 'Oxford Nanopore Technologies plc', 
+            'hostname': 'PCA100463', 
+            'hublett_board_id': '013802e1ddd8d6e0', 
+            'hublett_firmware_version': '2.1.10', 
+            'installation_type': 'nc', 
+            'internal_temperature': '0.000000', 
+            'is_simulated': '0', 
+            'operating_system': 'ubuntu 20.04', 
+            'os_kernel_version': '5.15.0-139-generic', 
+            'protocol_group_id': 'test_bcon_deleteme', 
+            'protocol_run_id': '4b6fceaf-a95a-4b32-aacd-f3ef536019a6', 
+            'protocol_start_time': '2026-01-27T11:45:22.123778+11:00', 
+            'protocols_version': '8.8.3', 
+            'run_id': 'be46623be3934795bdce54fed736901d02600ce3', 
+            'sample_id': 'test_bcon_deleteme', 
+            'satellite_board_id': '013c8b5db24007ba', 
+            'satellite_firmware_version': '2.3.0', 
+            'sequencer_hardware_revision': '', 
+            'sequencer_product_code': 'PRO-SEQ048', 
+            'sequencer_serial_number': '', 
+            'system_family': 'promethion', 
+            'usb_config': 'fx3_0.0.0#fpga_0.0.0#unknown#unknown', 
+            'version': '6.8.11'
+            }
+        )

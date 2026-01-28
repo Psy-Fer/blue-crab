@@ -92,12 +92,20 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - name: install packages
-      run: pip3 install --break-system-packages --upgrade pip && pip3 install --break-system-packages numpy
-    - name: slow5lib
-      run: git clone https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install --break-system-packages . && cd ..
-    - name: install
-      run:  pip3 install --break-system-packages . && blue-crab --help
+    - name: Set up Python virtual environment
+      run: |
+        python3.11 -m venv venv
+        source venv/bin/activate
+        python --version
+        pip install --upgrade pip
+        pip install .
+        blue-crab --help
+    # - name: install packages
+    #   run: pip3 install --break-system-packages --upgrade pip && pip3 install --break-system-packages numpy
+    # - name: slow5lib
+    #   run: git clone https://github.com/hasindu2008/slow5lib && cd slow5lib  && pip3 install --break-system-packages . && cd ..
+    # - name: install
+    #   run:  pip3 install --break-system-packages . && blue-crab --help
     - name: test
       run: test/test.sh
   os_x_15:

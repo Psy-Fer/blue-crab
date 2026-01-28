@@ -78,13 +78,14 @@ diff -q $EXP_SLOW5_DIR/pod5-output/z1.blow5 $OUTPUT_DIR/out.blow5 || die "ERROR:
 echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 
 #if fail due to binary diff in floats, patch the tests like
-#file=z2 or z1 or directory_z.blow5
+#file=z2 or z1 or directory_z
 #slow5tools view test//data/exp/p2s/pod5-output/${file}.blow5 -o ${file}.slow5 &&  slow5tools view test//data/out/p2s/out.blow5 -o out.slow5 && diff ${file}.slow5 out.slow5
-#the should should only fail for the header (enum). If, so run the following commands to patch the test
-#test//data/out/p2s/out.blow5 test//data/exp/p2s/pod5-output/${file}.blow5
+#this should should only fail for the header (enum). If, so run the following commands to patch the test
+#mv test//data/out/p2s/out.blow5 test//data/exp/p2s/pod5-output/${file}.blow5
+
 #file=b1
 #slow5tools view test//data/exp/p2s/pod5-output/${file}.blow5 -o ${file}.slow5 &&  slow5tools view test//data/out/p2s/pod5/b1.blow5 -o out.slow5 && diff ${file}.slow5 out.slow5
-#the should should only fail for the header (enum). If, so run the following commands to patch the test
+#this should should only fail for the header (enum). If, so run the following commands to patch the test
 #mv test//data/out/p2s/pod5/b1.blow5 test//data/exp/p2s/pod5-output/${file}.blow5
 
 TESTCASE_NO=1.3

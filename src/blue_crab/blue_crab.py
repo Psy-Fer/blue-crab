@@ -140,12 +140,22 @@ def get_data_from_pod5_record(read):
     # the lower case string of end_reason
     end_reason = p2s_end_reason_convert(end_reason_data.name)
     end_reason_forced = end_reason_data.forced
-    tracked_scaling = read.tracked_scaling
-    tracked_scaling_shift = tracked_scaling.shift
-    tracked_scaling_scale = tracked_scaling.scale
-    predicted_scaling = read.predicted_scaling
-    predicted_scaling_shift = predicted_scaling.shift
-    predicted_scaling_scale = predicted_scaling.scale
+    tracked_scaling = getattr(read, 'tracked_scaling', None)
+    if tracked_scaling is not None:
+        tracked_scaling_shift = tracked_scaling.shift
+        tracked_scaling_scale = tracked_scaling.scale
+    else:
+        tracked_scaling_shift = None
+        tracked_scaling_scale = None
+    predicted_scaling = getattr(read, 'predicted_scaling', None)
+    if predicted_scaling is not None:
+        predicted_scaling_shift = predicted_scaling.shift
+        predicted_scaling_scale = predicted_scaling.scale
+    else:
+        predicted_scaling_shift = None
+        predicted_scaling_scale = None
+
+    open_pore_level = getattr(read, 'open_pore_level', None)
     if pore_data.pore_type not in ["not_set", "R10.4.1", ""]:
         logger.error("pore_type is '{}' expected to be 'not_set'. Please contact developers with this message.".format(pore_data.pore_type))
         kill_program()
@@ -175,6 +185,7 @@ def get_data_from_pod5_record(read):
         "num_reads_since_mux_change": read.num_reads_since_mux_change,
         "time_since_mux_change": read.time_since_mux_change,
         "num_minknow_events": read.num_minknow_events,
+        "open_pore_level": open_pore_level,
     }
     info_dic = run_info_to_flat_dic(read.run_info)
     yield pod5_read, info_dic
@@ -621,6 +632,7 @@ def process_pod52slow5(read, record, aux, sampling_rate):
     aux["num_reads_since_mux_change"] = read.get("num_reads_since_mux_change", None)
     aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
     aux["num_minknow_events"] = read.get("num_minknow_events", None)
+    aux["open_pore_level"] = read.get("open_pore_level", None)
     
     return record, aux
 
@@ -856,6 +868,9 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
 
                     context_list = [
                         "barcoding_enabled",
+                        "basecall_model_simplex",
+                        "basecall_models_modified",
+                        "estimate_poly_a",
                         "basecall_config_filename",
                         "experiment_duration_set",
                         "experiment_type",
@@ -863,6 +878,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         "package",
                         "package_version",
                         "sample_frequency",
+                        "selected_speed_bases_per_second",
                         "sequencing_kit",
                     ]
                     context_tags = {}
@@ -882,6 +898,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         "auto_update_source",
                         "bream_is_standard",
                         "configuration_version",
+                        "data_source",
                         "device_id",
                         "device_type",
                         "distribution_status",
@@ -893,21 +910,34 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         "flow_cell_product_code",
                         "guppy_version",
                         "heatsink_temp",
+                        "host_manufacturer",
+                        "host_manufacturer_product_name",
+                        "host_product_code",
+                        "host_product_serial_number",
+                        "host_provenance",
                         "hostname",
                         "hublett_board_id",
                         "hublett_firmware_version",
                         "installation_type",
-                        "ip_address",
+                        "internal_temperature",
+                        "is_simulated",
+                        # "ip_address",
                         "local_firmware_file",
-                        "mac_address",
+                        # "mac_address",
                         "operating_system",
+                        "os_kernel_version",
                         "protocol_group_id",
                         "protocol_run_id",
+                        "protocol_start_time",
                         "protocols_version",
                         "run_id",
                         "sample_id",
                         "satellite_board_id",
                         "satellite_firmware_version",
+                        "sequencer_hardware_revision",
+                        "sequencer_product_code",
+                        "sequencer_serial_number",
+                        "system_family",
                         "usb_config",
                         "version"
                     ]
@@ -937,7 +967,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         sequencing_kit = str(header.get("sequencing_kit", "") or ""),
                         sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
                         sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
-                        software = "blue-crab SLOW5<->POD5 converter v{}".format(__version__),
+                        software = str(header.get("software", "") or ""),
                         system_name = str(header.get("system_name", system_name) or ""),
                         system_type = str(header.get("system_type", system_type) or ""),
                         tracking_id = tracking_id
@@ -950,6 +980,21 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                 signal_chunks, signal_chunk_lengths = vbz_compress_signal_chunked(
                     signal, DEFAULT_SIGNAL_CHUNK_SIZE
                 )
+
+                # handle None types
+                num_reads_since_mux_change=read.get("num_reads_since_mux_change")
+                if num_reads_since_mux_change is None:
+                    num_reads_since_mux_change = 0
+                time_since_mux_change=read.get("time_since_mux_change")
+                if time_since_mux_change is None:
+                    time_since_mux_change = 0.0
+                num_minknow_events=read.get("num_minknow_events")
+                if num_minknow_events is None:
+                    num_minknow_events = 0
+                open_pore_level=read.get("open_pore_level")
+                if open_pore_level is None:
+                    open_pore_level = float("nan")
+
                 read = p5.CompressedRead(
                     read_id=uuid.UUID(read["read_id"]),
                     end_reason=end_reason,
@@ -969,9 +1014,10 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         read.get("predicted_scaling_shift", float("nan")),
                         read.get("predicted_scaling_scale", float("nan")),
                     ),
-                    num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
-                    time_since_mux_change=read.get("time_since_mux_change", 0.0),
-                    num_minknow_events=read.get("num_minknow_events", 0),
+                    num_reads_since_mux_change=num_reads_since_mux_change,
+                    time_since_mux_change=time_since_mux_change,
+                    num_minknow_events=num_minknow_events,
+                    open_pore_level=open_pore_level,
                 )
 
                 
@@ -1053,6 +1099,9 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
 
                     context_list = [
                         "barcoding_enabled",
+                        "basecall_model_simplex",
+                        "basecall_models_modified",
+                        "estimate_poly_a",
                         "basecall_config_filename",
                         "experiment_duration_set",
                         "experiment_type",
@@ -1060,6 +1109,7 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         "package",
                         "package_version",
                         "sample_frequency",
+                        "selected_speed_bases_per_second",
                         "sequencing_kit",
                     ]
                     context_tags = {}
@@ -1079,6 +1129,7 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         "auto_update_source",
                         "bream_is_standard",
                         "configuration_version",
+                        "data_source",
                         "device_id",
                         "device_type",
                         "distribution_status",
@@ -1090,21 +1141,34 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         "flow_cell_product_code",
                         "guppy_version",
                         "heatsink_temp",
+                        "host_manufacturer",
+                        "host_manufacturer_product_name",
+                        "host_product_code",
+                        "host_product_serial_number",
+                        "host_provenance",
                         "hostname",
                         "hublett_board_id",
                         "hublett_firmware_version",
                         "installation_type",
-                        "ip_address",
+                        "internal_temperature",
+                        "is_simulated",
+                        # "ip_address",
                         "local_firmware_file",
-                        "mac_address",
+                        # "mac_address",
                         "operating_system",
+                        "os_kernel_version",
                         "protocol_group_id",
                         "protocol_run_id",
+                        "protocol_start_time",
                         "protocols_version",
                         "run_id",
                         "sample_id",
                         "satellite_board_id",
                         "satellite_firmware_version",
+                        "sequencer_hardware_revision",
+                        "sequencer_product_code",
+                        "sequencer_serial_number",
+                        "system_family",
                         "usb_config",
                         "version"
                     ]
@@ -1134,7 +1198,7 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         sequencing_kit = str(header.get("sequencing_kit", "") or ""),
                         sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
                         sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
-                        software = "blue-crab SLOW5<->POD5 converter v{}".format(__version__),
+                        software = str(header.get("software", "") or ""),
                         system_name = str(header.get("system_name", system_name) or ""),
                         system_type = str(header.get("system_type", system_type) or ""),
                         tracking_id = tracking_id
@@ -1147,6 +1211,21 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                 signal_chunks, signal_chunk_lengths = vbz_compress_signal_chunked(
                     signal, DEFAULT_SIGNAL_CHUNK_SIZE
                 )
+
+                # handle None types
+                num_reads_since_mux_change=read.get("num_reads_since_mux_change")
+                if num_reads_since_mux_change is None:
+                    num_reads_since_mux_change = 0
+                time_since_mux_change=read.get("time_since_mux_change")
+                if time_since_mux_change is None:
+                    time_since_mux_change = 0.0
+                num_minknow_events=read.get("num_minknow_events")
+                if num_minknow_events is None:
+                    num_minknow_events = 0
+                open_pore_level=read.get("open_pore_level")
+                if open_pore_level is None:
+                    open_pore_level = float("nan")
+
                 read = p5.CompressedRead(
                     read_id=uuid.UUID(read["read_id"]),
                     end_reason=end_reason,
@@ -1166,9 +1245,10 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         read.get("predicted_scaling_shift", float("nan")),
                         read.get("predicted_scaling_scale", float("nan")),
                     ),
-                    num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
-                    time_since_mux_change=read.get("time_since_mux_change", 0.0),
-                    num_minknow_events=read.get("num_minknow_events", 0),
+                    num_reads_since_mux_change=num_reads_since_mux_change,
+                    time_since_mux_change=time_since_mux_change,
+                    num_minknow_events=num_minknow_events,
+                    open_pore_level=open_pore_level,
                 )
 
                 
@@ -1258,6 +1338,9 @@ def s2s_s2p_worker(args, sfile, pod5_out):
 
                 context_list = [
                     "barcoding_enabled",
+                    "basecall_model_simplex",
+                    "basecall_models_modified",
+                    "estimate_poly_a",
                     "basecall_config_filename",
                     "experiment_duration_set",
                     "experiment_type",
@@ -1265,6 +1348,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                     "package",
                     "package_version",
                     "sample_frequency",
+                    "selected_speed_bases_per_second",
                     "sequencing_kit",
                 ]
                 context_tags = {}
@@ -1284,6 +1368,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                     "auto_update_source",
                     "bream_is_standard",
                     "configuration_version",
+                    "data_source",
                     "device_id",
                     "device_type",
                     "distribution_status",
@@ -1295,21 +1380,34 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                     "flow_cell_product_code",
                     "guppy_version",
                     "heatsink_temp",
+                    "host_manufacturer",
+                    "host_manufacturer_product_name",
+                    "host_product_code",
+                    "host_product_serial_number",
+                    "host_provenance",
                     "hostname",
                     "hublett_board_id",
                     "hublett_firmware_version",
                     "installation_type",
-                    "ip_address",
+                    "internal_temperature",
+                    "is_simulated",
+                    # "ip_address",
                     "local_firmware_file",
-                    "mac_address",
+                    # "mac_address",
                     "operating_system",
+                    "os_kernel_version",
                     "protocol_group_id",
                     "protocol_run_id",
+                    "protocol_start_time",
                     "protocols_version",
                     "run_id",
                     "sample_id",
                     "satellite_board_id",
                     "satellite_firmware_version",
+                    "sequencer_hardware_revision",
+                    "sequencer_product_code",
+                    "sequencer_serial_number",
+                    "system_family",
                     "usb_config",
                     "version"
                 ]
@@ -1392,7 +1490,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                     sequencing_kit = str(header.get("sequencing_kit", "") or ""),
                     sequencer_position = str(header.get("sequencer_position", sequencer_position) or ""),
                     sequencer_position_type = str(header.get("sequencer_position_type", sequencer_position_type) or ""),
-                    software = "blue-crab SLOW5<->POD5 converter v{}".format(__version__),
+                    software = str(header.get("software", "") or ""),
                     system_name = str(header.get("system_name", system_name) or ""),
                     system_type = str(header.get("system_type", system_type) or ""),
                     tracking_id = tracking_id
@@ -1405,6 +1503,21 @@ def s2s_s2p_worker(args, sfile, pod5_out):
             signal_chunks, signal_chunk_lengths = vbz_compress_signal_chunked(
                 signal, DEFAULT_SIGNAL_CHUNK_SIZE
             )
+
+            # handle None types
+            num_reads_since_mux_change=read.get("num_reads_since_mux_change")
+            if num_reads_since_mux_change is None:
+                num_reads_since_mux_change = 0
+            time_since_mux_change=read.get("time_since_mux_change")
+            if time_since_mux_change is None:
+                time_since_mux_change = 0.0
+            num_minknow_events=read.get("num_minknow_events")
+            if num_minknow_events is None:
+                num_minknow_events = 0
+            open_pore_level=read.get("open_pore_level")
+            if open_pore_level is None:
+                open_pore_level = float("nan")
+
             read = p5.CompressedRead(
                 read_id=uuid.UUID(read["read_id"]),
                 end_reason=end_reason,
@@ -1424,9 +1537,10 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                     read.get("predicted_scaling_shift", float("nan")),
                     read.get("predicted_scaling_scale", float("nan")),
                 ),
-                num_reads_since_mux_change=read.get("num_reads_since_mux_change", 0),
-                time_since_mux_change=read.get("time_since_mux_change", 0.0),
-                num_minknow_events=read.get("num_minknow_events", 0),
+                num_reads_since_mux_change=num_reads_since_mux_change,
+                time_since_mux_change=time_since_mux_change,
+                num_minknow_events=num_minknow_events,
+                open_pore_level=open_pore_level,
             )
 
             

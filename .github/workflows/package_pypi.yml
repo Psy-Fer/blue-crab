@@ -8,7 +8,7 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
-  build-package-linux-x86_64:
+  build-package-x86_64-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -56,95 +56,155 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: build_dir/blue-crab-*.tar.gz
-  build-package-macos-x86_64:
+  build-package-x86_64-macos:
+    runs-on: macos-13
+    outputs:
+      artifact_name: ${{ steps.artifact_name.outputs.artifact_name }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: make build_dir dir
+        run: |
+          mkdir -p build_dir && \
+          cp test/package/package.sh build_dir/ && \
+          chmod +x build_dir/package.sh
+      - name: run without docker
+        run: |
+          cd build_dir && \
+          ./package.sh && \
+          cd ..
+      - name: decompress blue-crab tar.gz
+        run: |
+          if [ -f build_dir/blue-crab-*.tar.gz ]; then
+            cp build_dir/blue-crab-*.tar.gz .
+            echo "Decompressing blue-crab tar.gz"
+            tar -xzf blue-crab-*.tar.gz
+          else
+            echo "No blue-crab tar.gz found!"
+            exit 1
+          fi
+      - name: Get artifact filename
+        id: artifact_name
+        run: |
+          FILE=$(ls build_dir/blue-crab-*.tar.gz)
+          BASENAME=$(basename "$FILE" .tar.gz)
+          echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
+          LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "artifact_name=$BASENAME" >> $GITHUB_OUTPUT
+      - name: quick run
+        run: |
+          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
+      - name: Add blue-crab to PATH
+        run: echo "${{ github.workspace }}/blue-crab-${{ env.LATEST_TAG }}" >> $GITHUB_PATH
+      - name: test
+        run: test/test.sh
+      - name: Upload blue-crab tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: build_dir/blue-crab-*.tar.gz
+  build-package-arm64-macos:
+    runs-on: macos-14
+    outputs:
+      artifact_name: ${{ steps.artifact_name.outputs.artifact_name }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: make build_dir dir
+        run: |
+          mkdir -p build_dir && \
+          cp test/package/package.sh build_dir/ && \
+          chmod +x build_dir/package.sh
+      - name: run without docker
+        run: |
+          cd build_dir && \
+          ./package.sh && \
+          cd ..
+      - name: decompress blue-crab tar.gz
+        run: |
+          if [ -f build_dir/blue-crab-*.tar.gz ]; then
+            cp build_dir/blue-crab-*.tar.gz .
+            echo "Decompressing blue-crab tar.gz"
+            tar -xzf blue-crab-*.tar.gz
+          else
+            echo "No blue-crab tar.gz found!"
+            exit 1
+          fi
+      - name: Get artifact filename
+        id: artifact_name
+        run: |
+          FILE=$(ls build_dir/blue-crab-*.tar.gz)
+          BASENAME=$(basename "$FILE" .tar.gz)
+          echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
+          LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "artifact_name=$BASENAME" >> $GITHUB_OUTPUT
+      - name: quick run
+        run: |
+          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
+      - name: Add blue-crab to PATH
+        run: echo "${{ github.workspace }}/blue-crab-${{ env.LATEST_TAG }}" >> $GITHUB_PATH
+      - name: test
+        run: test/test.sh
+      - name: Upload blue-crab tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: build_dir/blue-crab-*.tar.gz
+  test-artifact-macos-13:
+    needs: build-package-x86_64-macos
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v2
+      - name: Download artifact
+        uses: actions/download-artifact@v4
         with:
-          submodules: recursive
-      - name: make build_dir dir
+          name: ${{ needs.build-package-x86_64-macos.outputs.artifact_name }}
+          path: ./artifact
+      - name: Decompress artifact
         run: |
-          mkdir -p build_dir && \
-          cp test/package/package.sh build_dir/ && \
-          chmod +x build_dir/package.sh
-      - name: run without docker
+          cd artifact
+          tar -xzf blue-crab-*.tar.gz
+      - name: Run compatibility checks
         run: |
-          cd build_dir && \
-          ./package.sh && \
-          cd ..
-      - name: decompress blue-crab tar.gz
+          ./artifact/blue-crab-*/blue-crab --help
+          ./artifact/blue-crab-*/blue-crab --version
+      - name: Download sample dataset
         run: |
-          if [ -f build_dir/blue-crab-*.tar.gz ]; then
-            cp build_dir/blue-crab-*.tar.gz .
-            echo "Decompressing blue-crab tar.gz"
-            tar -xzf blue-crab-*.tar.gz
-          else
-            echo "No blue-crab tar.gz found!"
-            exit 1
-          fi
-      - name: Get artifact filename
-        id: artifact_name
+          cd artifact/blue-crab-*
+          curl -L "https://www.dropbox.com/scl/fi/jbp82f9tt1xsxybjsc85l/blue-crab_test_data.tar.gz?rlkey=0sqdpyl59ucdlxapu07kx56wg&st=borepmgu&dl=1" -o blue-crab_test_data.tar.gz
+          tar xf blue-crab_test_data.tar.gz
+      - name: test on data
         run: |
-          FILE=$(ls build_dir/blue-crab-*.tar.gz)
-          BASENAME=$(basename "$FILE" .tar.gz)
-          echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
-          LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-      - name: quick run
-        run: |
-          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
-      - name: Add blue-crab to PATH
-        run: echo "${{ github.workspace }}/blue-crab-${{ env.LATEST_TAG }}" >> $GITHUB_PATH
-      - name: test
-        run: test/test.sh
-      - name: Upload blue-crab tar.gz
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: build_dir/blue-crab-*.tar.gz
-  build-package-macos-arm64:
+          cd artifact/blue-crab-*
+          export PATH=$PWD:$PATH
+          ./test/test.sh
+  test-artifact-macos-14:
+    needs: build-package-arm64-macos
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v2
+      - name: Download artifact
+        uses: actions/download-artifact@v4
         with:
-          submodules: recursive
-      - name: make build_dir dir
+          name: ${{ needs.build-package-arm64-macos.outputs.artifact_name }}
+          path: ./artifact
+      - name: Decompress artifact
         run: |
-          mkdir -p build_dir && \
-          cp test/package/package.sh build_dir/ && \
-          chmod +x build_dir/package.sh
-      - name: run without docker
+          cd artifact
+          tar -xzf blue-crab-*.tar.gz
+      - name: Run compatibility checks
         run: |
-          cd build_dir && \
-          ./package.sh && \
-          cd ..
-      - name: decompress blue-crab tar.gz
+          ./artifact/blue-crab-*/blue-crab --help
+          ./artifact/blue-crab-*/blue-crab --version
+      - name: Download sample dataset
         run: |
-          if [ -f build_dir/blue-crab-*.tar.gz ]; then
-            cp build_dir/blue-crab-*.tar.gz .
-            echo "Decompressing blue-crab tar.gz"
-            tar -xzf blue-crab-*.tar.gz
-          else
-            echo "No blue-crab tar.gz found!"
-            exit 1
-          fi
-      - name: Get artifact filename
-        id: artifact_name
+          cd artifact/blue-crab-*
+          curl -L "https://www.dropbox.com/scl/fi/jbp82f9tt1xsxybjsc85l/blue-crab_test_data.tar.gz?rlkey=0sqdpyl59ucdlxapu07kx56wg&st=borepmgu&dl=1" -o blue-crab_test_data.tar.gz
+          tar xf blue-crab_test_data.tar.gz
+      - name: test on data
         run: |
-          FILE=$(ls build_dir/blue-crab-*.tar.gz)
-          BASENAME=$(basename "$FILE" .tar.gz)
-          echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
-          LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-      - name: quick run
-        run: |
-          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
-      - name: Add blue-crab to PATH
-        run: echo "${{ github.workspace }}/blue-crab-${{ env.LATEST_TAG }}" >> $GITHUB_PATH
-      - name: test
-        run: test/test.sh
-      - name: Upload blue-crab tar.gz
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: build_dir/blue-crab-*.tar.gz
+          cd artifact/blue-crab-*
+          export PATH=$PWD:$PATH
+          ./test/test.sh

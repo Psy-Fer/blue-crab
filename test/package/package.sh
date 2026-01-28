@@ -10,7 +10,7 @@ PY_VENV="blue-crab-venv"
 ARCH=$(uname -m)
 OS=$(uname -s)
 REPO_LINK="https://github.com/Psy-Fer/blue-crab.git"
-BRANCH="package"
+BRANCH="dev"
 TOOL="blue-crab"
 
 echo "O/S:${OS} architecture:${ARCH} python:${PYTHON_VERSION}"

@@ -2,7 +2,7 @@ import setuptools
 from os import path
 
 PKG_NAME = "blue-crab"
-MOD_NAME = "src"
+MOD_NAME = "blue_crab"
 
 # add readme to long description as that's what pypi sees
 with open(path.join(path.abspath(path.dirname(__file__)),"README.md"), "r") as f:
@@ -11,7 +11,7 @@ with open(path.join(path.abspath(path.dirname(__file__)),"README.md"), "r") as f
 
 # get version from file rather than here so change isn't in this file
 __version__ = ""
-exec(open("{}/_version.py".format(MOD_NAME)).read())
+exec(open("src/{}/_version.py".format(MOD_NAME)).read())
 
 # create package install list
 # User can set version of ont-pyguppy-client-lib to match guppy version
@@ -32,11 +32,12 @@ setuptools.setup(
     keywords = ['nanopore','slow5', 'pod5'],
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(where="src"),
+    package_dir={"": "src"},
     python_requires=">=3.9",
     install_requires=install_requires,
     setup_requires=["numpy"],
-    entry_points={"console_scripts":["blue-crab=src.blue_crab:main"],},
+    entry_points={"console_scripts":["blue-crab=blue_crab.blue_crab:main"],},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         "Programming Language :: Python :: 3",
