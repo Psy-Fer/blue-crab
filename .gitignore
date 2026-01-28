@@ -112,6 +112,7 @@ venv.bak/
 blue-crab-env
 blue-crab-v*
 blue-crab-p*
+venv*
 
 # Spyder project settings
 .spyderproject
