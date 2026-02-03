@@ -31,7 +31,7 @@ You may use commands like [slow5tools](https://hasindu2008.github.io/slow5tools/
 
 The easiest way to setup blue-crab would be to use precompiled binaries. Choose the commands for your OS.
 ```
-VERSION=v0.4.0
+VERSION=v0.5.0
 # For x86_64-inux 
 wget "https://github.com/Psy-Fer/blue-crab/releases/download/$VERSION/blue-crab-$VERSION-x86_64-linux-binaries.tar.gz" && tar xvf blue-crab-$VERSION-x86_64-linux-binaries.tar.gz && cd blue-crab-$VERSION/
 
@@ -65,7 +65,7 @@ conda install bioconda::blue-crab
 
 ## Setup
 
-blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). Using a virtual environment is recommended.
+blue-crab requires python 3.10 or higher (limitation due to ONT's pod5 library). Using a virtual environment is recommended.
 
 1. Install zlib development libraries (and optionally zstd development libraries).
 
@@ -86,7 +86,7 @@ blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). 
 
 ### pick option 2 or 3
 
-2. Create a virtual environment using Python 3.8+ and install blue-crab from pip
+2. Create a virtual environment using Python 3.10+ and install blue-crab from pip
 
     ```
     python3 -m venv ./blue-crab-venv
@@ -101,7 +101,7 @@ blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). 
     blue-crab --help
     ```
 
-3. Create a virtual environment using Python 3.8+ and install blue-crab from source
+3. Create a virtual environment using Python 3.10+ and install blue-crab from source
 
     ```
     # clone the repo
@@ -120,16 +120,16 @@ blue-crab requires python 3.8 or higher (limitation due to ONT's pod5 library). 
     blue-crab --help
     ```
 
-    You can check your Python version by invoking `python3 --version`. If your native python3 meets this requirement of >=3.8, you can use that, or use a
-specific version installed with deadsnakes below. If you install with deadsnakes, you will need to call that specific python, such as python3.8 or python3.9, in all the following commands until you create a virtual environment with venv. Then once activated, you can just use python3. To install a specific version of python, the deadsnakes ppa is a good place to start:
+    You can check your Python version by invoking `python3 --version`. If your native python3 meets this requirement of >=3.10, you can use that, or use a
+specific version installed with deadsnakes below. If you install with deadsnakes, you will need to call that specific python, such as python3.10 or python3.11, in all the following commands until you create a virtual environment with venv. Then once activated, you can just use python3. To install a specific version of python, the deadsnakes ppa is a good place to start:
 
     ```
-    # This is an example for installing python3.8
+    # This is an example for installing python3.10
     # you can then call that specific python version
-    # > python3.8 -m pip --version
+    # > python3.10 -m pip --version
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt-get update
-    sudo apt install python3.8 python3.8-dev python3.8-venv
+    sudo apt install python3.10 python3.10-dev python3.10-venv
     ```
 
 
