@@ -16,7 +16,7 @@ jobs:
   build-package-x86_64-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: make build_dir dir
@@ -56,14 +56,14 @@ jobs:
       - name: test
         run: test/test.sh
       - name: Upload blue-crab tar.gz
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: build_dir/blue-crab-*.tar.gz
   build-package-macos-x86_64:
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: make build_dir dir
@@ -100,7 +100,7 @@ jobs:
       - name: test
         run: test/test.sh
       - name: Upload blue-crab tar.gz
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: build_dir/blue-crab-*.tar.gz
@@ -108,7 +108,7 @@ jobs:
   build-package-macos-arm64:
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: make build_dir dir
@@ -145,7 +145,7 @@ jobs:
       - name: test
         run: test/test.sh
       - name: Upload blue-crab tar.gz
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: build_dir/blue-crab-*.tar.gz
