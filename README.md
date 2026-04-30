@@ -32,17 +32,13 @@ You may use commands like [slow5tools](https://hasindu2008.github.io/slow5tools/
 The easiest way to setup blue-crab would be to use precompiled binaries. Choose the commands for your OS.
 ```
 VERSION=v0.5.0
-# For x86_64-inux 
+# For x86_64-inux
 wget "https://github.com/Psy-Fer/blue-crab/releases/download/$VERSION/blue-crab-$VERSION-x86_64-linux-binaries.tar.gz" && tar xvf blue-crab-$VERSION-x86_64-linux-binaries.tar.gz && cd blue-crab-$VERSION/
-
-# For x86_64-macos
-curl -L "https://github.com/Psy-Fer/blue-crab/releases/download/$VERSION/blue-crab-$VERSION-x86_64-macos-binaries.tar.gz" -o blue-crab-$VERSION-x86_64-macos-binaries.tar.gz && tar xvf blue-crab-$VERSION-x86_64-macos-binaries.tar.gz && cd blue-crab-$VERSION/
 
 # For arm64-macos
 curl -L "https://github.com/Psy-Fer/blue-crab/releases/download/$VERSION/blue-crab-$VERSION-arm64-macos-binaries.tar.gz" -o blue-crab-$VERSION-arm64-macos-binaries.tar.gz && tar xvf blue-crab-$VERSION-arm64-macos-binaries.tar.gz && cd blue-crab-$VERSION/
 
 ./blue-crab --help
-
 ```
 `export PATH=[path_to_blue-crab-$VERSION]:$PATH` to execute `blue-crab` from any location.
 
@@ -218,5 +214,21 @@ I have included an example `blow5-xxx` to show that we can make the files even s
   pages={1--4},
   year={2022},
   publisher={Nature Publishing Group}
+}
+```
+
+and
+
+> Hasindu Gamaarachchi, Sasha Jenner, Hiruna Samarakoon, James M Ferguson, Ira W Deveson, The enduring advantages of the SLOW5 file format for raw nanopore sequencing data, GigaScience, Volume 14, 2025, giaf118, https://doi.org/10.1093/gigascience/giaf118
+
+```
+@article{gamaarachchi2025enduring,
+  title={The enduring advantages of the SLOW5 file format for raw nanopore sequencing data},
+  author={Gamaarachchi, Hasindu and Jenner, Sasha and Samarakoon, Hiruna and Ferguson, James M and Deveson, Ira W},
+  journal={GigaScience},
+  volume={14},
+  pages={giaf118},
+  year={2025},
+  publisher={Oxford University Press}
 }
 ```
