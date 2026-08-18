@@ -31,7 +31,7 @@ You may use commands like [slow5tools](https://hasindu2008.github.io/slow5tools/
 
 The easiest way to setup blue-crab would be to use precompiled binaries. Choose the commands for your OS.
 ```
-VERSION=v0.5.0
+VERSION=v0.6.0
 # For x86_64-inux
 wget "https://github.com/Psy-Fer/blue-crab/releases/download/$VERSION/blue-crab-$VERSION-x86_64-linux-binaries.tar.gz" && tar xvf blue-crab-$VERSION-x86_64-linux-binaries.tar.gz && cd blue-crab-$VERSION/
 
