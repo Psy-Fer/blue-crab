@@ -156,6 +156,8 @@ def get_data_from_pod5_record(read):
         predicted_scaling_scale = None
 
     open_pore_level = getattr(read, 'open_pore_level', None)
+    expected_open_pore_level = getattr(read, 'expected_open_pore_level', None)
+    selected_read_level = getattr(read, 'selected_read_level', None)
     if pore_data.pore_type not in ["not_set", "R10.4.1", ""]:
         logger.error("pore_type is '{}' expected to be 'not_set'. Please contact developers with this message.".format(pore_data.pore_type))
         kill_program()
@@ -178,14 +180,16 @@ def get_data_from_pod5_record(read):
         "scale": read.calibration.scale,
         "offset": read.calibration.offset,
         "signal": read.signal,
-        "tracked_scaling_shift": tracked_scaling_shift,
-        "tracked_scaling_scale": tracked_scaling_scale,
-        "predicted_scaling_shift": predicted_scaling_shift,
-        "predicted_scaling_scale": predicted_scaling_scale,
-        "num_reads_since_mux_change": read.num_reads_since_mux_change,
-        "time_since_mux_change": read.time_since_mux_change,
+        "tracked_scaling_shift": tracked_scaling_shift, # Deprecated: will be removed in pod5 0.4.0
+        "tracked_scaling_scale": tracked_scaling_scale, # Deprecated: will be removed in pod5 0.4.0
+        "predicted_scaling_shift": predicted_scaling_shift, # Deprecated: will be removed in pod5 0.4.0
+        "predicted_scaling_scale": predicted_scaling_scale, # Deprecated: will be removed in pod5 0.4.0
+        "num_reads_since_mux_change": read.num_reads_since_mux_change, # Deprecated: will be removed in pod5 0.4.0
+        "time_since_mux_change": read.time_since_mux_change, # Deprecated: will be removed in pod5 0.4.0
         "num_minknow_events": read.num_minknow_events,
         "open_pore_level": open_pore_level,
+        "expected_open_pore_level": expected_open_pore_level,
+        "selected_read_level": selected_read_level,
     }
     info_dic = run_info_to_flat_dic(read.run_info)
     yield pod5_read, info_dic
@@ -204,7 +208,7 @@ def pod52slow5(args):
         - writes matching 1 blow5 file
         - closes
         - pulls next pod5 file from queue repeat
-    
+
         - check length of list to not spin up more procs than files
 
     '''
@@ -252,7 +256,7 @@ def pod52slow5(args):
                         else:
                             pod5_filename_set.add(pfile)
 
-                            
+
         else:
             if args.retain:
                  logger.error("--retain cannot be used with single files")
@@ -265,7 +269,7 @@ def pod52slow5(args):
                 logger.error("File name duplicates present. This will cause problems with file output. duplicate filename: {}".format(os.path.join(dirpath, pfile)))
                 kill_program()
 
-    
+
     # check that pod5 files are actually found, otherwise exit
     if len(pod5_filepath_list) < 1:
         logger.error("no .pod5 files detected... exiting")
@@ -288,13 +292,13 @@ def pod52slow5(args):
                 # add kill switches for the procs at the end to consume
                 for _ in range(args.iop):
                     input_queue.put(None)
-                
+
                 # start up many to many workers
                 for i in range(args.iop):
                     m2m_worker_proc = mp.Process(target=m2m_worker, args=(args, input_queue, slow5_out), daemon=True, name='m2m_worker{}'.format(i))
                     m2m_worker_proc.start()
                     processes.append(m2m_worker_proc)
-                
+
                 # monitor the procs and exit with error if one breaks
                 while True:
                     p_sum = 0
@@ -309,7 +313,7 @@ def pod52slow5(args):
                     if p_sum == 0:
                         break
                     time.sleep(5)
-                
+
                 for p in processes:
                     if p.exitcode != 0:
                         logger.error("An error was encountered in a worker process. Exitcode: {}".format(p.exitcode))
@@ -323,7 +327,7 @@ def pod52slow5(args):
         else:
              logger.error("--out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
              kill_program()
-    
+
     if args.output:
         if args.output.endswith(('.slow5', '.blow5')):
             slow5_out = args.output
@@ -338,10 +342,10 @@ def pod52slow5(args):
         else:
              logger.error("--output is not a slow5/blow5 file. For directory output please use --out-dir. output: {}".format(args.output))
              kill_program()
-    
+
     logger.info("pod5 -> s/blow5 complete")
 
-    
+
 
 def m2m_worker(args, input_queue, slow5_out):
     '''
@@ -536,7 +540,7 @@ def s2s_worker(args, pfile, slow5_out):
         slow5_filepath = os.path.join(slow5_out, slow5_filename)
     else:
         slow5_filepath = slow5_out
-     
+
     # open slow5 file for writing
     logger.info("opening slow5 file: {}".format(slow5_filepath))
     s5 = slow5.Open(slow5_filepath, 'w', rec_press=args.compress, sig_press=args.sig_compress, DEBUG=0)
@@ -633,7 +637,9 @@ def process_pod52slow5(read, record, aux, sampling_rate):
     aux["time_since_mux_change"] = read.get("time_since_mux_change", None)
     aux["num_minknow_events"] = read.get("num_minknow_events", None)
     aux["open_pore_level"] = read.get("open_pore_level", None)
-    
+    aux["expected_open_pore_level"] = read.get("expected_open_pore_level", None)
+    aux["selected_read_level"] = read.get("selected_read_level", None)
+
     return record, aux
 
 
@@ -698,7 +704,7 @@ def slow52pod5(args):
                 kill_program()
 
     logger.debug("slow5_filename_set: {}".format(slow5_filename_set))
-    
+
     # check that slow5 files are actually found, otherwise exit
     if len(slow5_filepath_list) < 1:
         logger.error("no .slow5 or .blow5 files detected... exiting")
@@ -721,7 +727,7 @@ def slow52pod5(args):
                 # add kill switches for the procs at the end to consume
                 for _ in range(args.iop):
                     input_queue.put(None)
-                
+
                 # start up many to many workers
                 for i in range(args.iop):
                     m2m_worker_proc = mp.Process(target=m2m_s2p_worker, args=(args, input_queue, pod5_out), daemon=True, name='m2m_s2p_worker{}'.format(i))
@@ -742,7 +748,7 @@ def slow52pod5(args):
                     if p_sum == 0:
                         break
                     time.sleep(5)
-                    
+
                 for p in processes:
                     if p.exitcode != 0:
                         logger.error("An error was encountered in a worker process. Exitcode: {}".format(p.exitcode))
@@ -756,7 +762,7 @@ def slow52pod5(args):
         else:
              logger.error("--out-dir is not a directory. For single files please use --output. out-dir: {}".format(args.out_dir))
              kill_program()
-    
+
     if args.output:
         if args.output.endswith(".pod5"):
             pod5_out = args.output
@@ -771,7 +777,7 @@ def slow52pod5(args):
         else:
              logger.error("--output is not a pod5 file. For directory output please use --out-dir. output: {}".format(args.output))
              kill_program()
-    
+
     logger.info("s/blow5 -> pod5 complete")
 
 
@@ -799,7 +805,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
         else:
             # replace .s/blow5 filename extention with .pod5
             pod5_filepath = os.path.join(pod5_out, pod5_filename)
-        
+
         # create slow5 reads generator
         run_info_cache = {}
         with p5.Writer(pod5_filepath) as writer:
@@ -844,12 +850,12 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                     sys.exit(1)
                 reason, forced = s2p_end_reason_convert(s5_end_reason)
                 end_reason = p5.EndReason(reason=reason, forced=forced)
-        
+
                 #https://github.com/nanoporetech/pod5-file-format/blob/master/python/pod5/src/pod5/tools/pod5_convert_from_fast5.py#L401
-                
+
                 # cache the run_info and re-use based on acquisition_id
                 acq_id = header["run_id"]
-                
+
                 # TODO: Put this in a function to stop the repetition
                 if acq_id not in run_info_cache:
                     acquisition_id = header.get("run_id", "")
@@ -941,7 +947,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         "usb_config",
                         "version"
                     ]
-                                    
+
                     tracking_id = {}
 
                     for key in tracking_list:
@@ -949,7 +955,7 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                         if a is None:
                             a = ""
                         tracking_id[key] = a
-                    
+
                     run_info = p5.RunInfo(
                         acquisition_id = header.get("acquisition_id", acquisition_id),
                         acquisition_start_time = int(timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))) or 0),
@@ -994,6 +1000,13 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                 open_pore_level=read.get("open_pore_level")
                 if open_pore_level is None:
                     open_pore_level = float("nan")
+                expected_open_pore_level=read.get("expected_open_pore_level")
+                if expected_open_pore_level is None:
+                    expected_open_pore_level = float("nan")
+                selected_read_level=read.get("selected_read_level")
+                if selected_read_level is None:
+                    selected_read_level = float("nan")
+
 
                 read = p5.CompressedRead(
                     read_id=uuid.UUID(read["read_id"]),
@@ -1018,9 +1031,11 @@ def m2m_s2p_worker(args, input_queue, pod5_out):
                     time_since_mux_change=time_since_mux_change,
                     num_minknow_events=num_minknow_events,
                     open_pore_level=open_pore_level,
+                    expected_open_pore_level=expected_open_pore_level,
+                    selected_read_level=selected_read_level,
                 )
 
-                
+
                 # Write the read object
                 writer.add_read(read)
         input_queue.task_done()
@@ -1076,12 +1091,12 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                     sys.exit(1)
                 reason, forced = s2p_end_reason_convert(s5_end_reason)
                 end_reason = p5.EndReason(reason=reason, forced=forced)
-        
+
                 #https://github.com/nanoporetech/pod5-file-format/blob/master/python/pod5/src/pod5/tools/pod5_convert_from_fast5.py#L401
-                
+
                 # cache the run_info and re-use based on acquisition_id
                 acq_id = header["run_id"]
-                
+
                 if acq_id not in run_info_cache:
                     acquisition_id = header.get("run_id", "")
                     protocol_name = header.get("exp_script_name", "")
@@ -1172,7 +1187,7 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         "usb_config",
                         "version"
                     ]
-                                    
+
                     tracking_id = {}
 
                     for key in tracking_list:
@@ -1180,7 +1195,7 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                         if a is None:
                             a = ""
                         tracking_id[key] = a
-                    
+
                     run_info = p5.RunInfo(
                         acquisition_id = header.get("acquisition_id", acquisition_id),
                         acquisition_start_time = int(timestamp_to_int(convert_datetime_as_epoch_ms(header.get("acquisition_start_time", acquisition_start_time))) or 0),
@@ -1225,6 +1240,13 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                 open_pore_level=read.get("open_pore_level")
                 if open_pore_level is None:
                     open_pore_level = float("nan")
+                expected_open_pore_level=read.get("expected_open_pore_level")
+                if expected_open_pore_level is None:
+                    expected_open_pore_level = float("nan")
+                selected_read_level=read.get("selected_read_level")
+                if selected_read_level is None:
+                    selected_read_level = float("nan")
+
 
                 read = p5.CompressedRead(
                     read_id=uuid.UUID(read["read_id"]),
@@ -1249,9 +1271,11 @@ def m2s_s2p_worker(args, slow5_filepath_set, pod5_out):
                     time_since_mux_change=time_since_mux_change,
                     num_minknow_events=num_minknow_events,
                     open_pore_level=open_pore_level,
+                    expected_open_pore_level=expected_open_pore_level,
+                    selected_read_level=selected_read_level,
                 )
 
-                
+
                 # Write the read object
                 writer.add_read(read)
 
@@ -1315,12 +1339,12 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                 sys.exit(1)
             reason, forced = s2p_end_reason_convert(s5_end_reason)
             end_reason = p5.EndReason(reason=reason, forced=forced)
-    
+
             #https://github.com/nanoporetech/pod5-file-format/blob/master/python/pod5/src/pod5/tools/pod5_convert_from_fast5.py#L401
-            
+
             # cache the run_info and re-use based on acquisition_id
             acq_id = header["run_id"]
-            
+
             if acq_id not in run_info_cache:
                 acquisition_id = header.get("run_id", "")
                 protocol_name = header.get("exp_script_name", "")
@@ -1411,7 +1435,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                     "usb_config",
                     "version"
                 ]
-                                 
+
                 tracking_id = {}
 
                 for key in tracking_list:
@@ -1469,7 +1493,7 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                 arg18: str,None
                 arg19: List[Tuple[str, str]])[('asic_id', '0004A30B00F25467'), ('asic_id_eeprom', '0004A30B00F25467'), ('asic_temp', '31.996552'), ('asic_version', 'Unknown'), ('auto_update', '0'), ('auto_update_source', 'https://mirror.oxfordnanoportal.com/software/MinKNOW/'), ('bream_is_standard', '0'), ('configuration_version', '4.0.13'), ('device_id', '3A'), ('device_type', 'promethion'), ('distribution_status', 'stable'), ('distribution_version', '20.06.9'), ('exp_script_name', 'sequencing/sequencing_PRO002_DNA:FLO-PRO002:SQK-LSK109'), ('exp_script_purpose', 'sequencing_run'), ('exp_start_time', '2020-10-27T05:41:50Z'), ('flow_cell_id', 'PAF25452'), ('flow_cell_product_code', 'FLO-PRO002'), ('guppy_version', '4.0.11+f1071ce'), ('heatsink_temp', '32.164288'), ('hostname', 'PC24A004'), ('hublett_board_id', '013b01308fa78662'), ('hublett_firmware_version', '2.0.14'), ('installation_type', 'nc'), ('ip_address', 'None'), ('local_firmware_file', '1'), ('mac_address', 'None'), ('operating_system', 'ubuntu 16.04'), ('protocol_group_id', 'PLPN243131'), ('protocol_run_id', '97d631c6-c622-473d-9e7d-3cb9297b0036'), ('protocols_version', '6.0.7'), ('run_id', 'bfdfd1d840e2acaf5c061241fd9b8e5c3cfe729f'), ('sample_id', 'NA12878_SRE'), ('satellite_board_id', '013c763bef6cca9d'), ('satellite_firmware_version', '2.0.14'), ('usb_config', 'firm_1.2.3_ware#rbt_4.5.6_rbt#ctrl#USB3'), ('version', '4.0.3')]
                 Invoked with: <lib_pod5.pod5_format_pybind.FileWriter object at 0x7fbec82150b0>
-                , , , , , , , , , , , , , , , , , , , , 
+                , , , , , , , , , , , , , , , , , , , ,
 
 
                 '''
@@ -1517,6 +1541,12 @@ def s2s_s2p_worker(args, sfile, pod5_out):
             open_pore_level=read.get("open_pore_level")
             if open_pore_level is None:
                 open_pore_level = float("nan")
+            expected_open_pore_level=read.get("expected_open_pore_level")
+            if expected_open_pore_level is None:
+                expected_open_pore_level = float("nan")
+            selected_read_level=read.get("selected_read_level")
+            if selected_read_level is None:
+                selected_read_level = float("nan")
 
             read = p5.CompressedRead(
                 read_id=uuid.UUID(read["read_id"]),
@@ -1541,9 +1571,11 @@ def s2s_s2p_worker(args, sfile, pod5_out):
                 time_since_mux_change=time_since_mux_change,
                 num_minknow_events=num_minknow_events,
                 open_pore_level=open_pore_level,
+                expected_open_pore_level=expected_open_pore_level,
+                selected_read_level=selected_read_level,
             )
 
-            
+
             # Write the read object
             writer.add_read(read)
 
@@ -1632,7 +1664,7 @@ def main():
         if len(sys.argv) == 1:
             parser.print_help(sys.stderr)
             sys.exit(1)
-        
+
         # set up logging level
         if args.verbose > 0:
             logger.setLevel(logging.DEBUG)
@@ -1640,7 +1672,7 @@ def main():
         else:
             logger.setLevel(logging.INFO)
             loghandler.setLevel(logging.INFO)
-        
+
 
         if args.profile:
             pr = cProfile.Profile()
@@ -1678,16 +1710,16 @@ def main():
                 else:
                     logger.info("Creating directory: {}".format(args.out_dir))
                     Path(args.out_dir).mkdir(parents=True, exist_ok=False)
-            
+
             pod52slow5(args)
 
-        
+
         elif args.command == "s2p":
             # let's do some arg validation
             if not args.output and not args.out_dir:
                 logger.error("--output or --out-dir must be provided. stdout writing not supported")
                 kill_program()
-            
+
             for sfile in args.input:
                 if not os.path.isdir(sfile):
                     if not sfile.endswith((".slow5", ".blow5")):
@@ -1714,13 +1746,13 @@ def main():
                 else:
                     logger.info("Creating directory: {}".format(args.out_dir))
                     Path(args.out_dir).mkdir(parents=True, exist_ok=False)
-            
+
 
             slow52pod5(args)
         else:
             parser.print_help(sys.stderr)
             sys.exit(1)
-        
+
         # if profiling, dump info into log files in current dir
         if args.profile:
             pr.disable()

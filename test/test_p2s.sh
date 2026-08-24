@@ -81,6 +81,10 @@ echo -e "${GREEN}testcase $TESTCASE_NO passed${NC}" 1>&3 2>&4
 #file=z2 or z1 or directory_z
 #slow5tools view test//data/exp/p2s/pod5-output/${file}.blow5 -o ${file}.slow5 &&  slow5tools view test//data/out/p2s/out.blow5 -o out.slow5 && diff ${file}.slow5 out.slow5
 #this should should only fail for the header (enum). If, so run the following commands to patch the test
+### if new fields added, slow5tools skim ${file}.slow5 > a.txt && slow5tools skim out.slow5 > b.txt and see the diff manually.
+### Also, slow5tools skim --hdr ${file}.slow5 > a.txt && slow5tools skim --hdr out.slow5 > b.txt and see the diff manually.
+### Also see slow5tools view  ${file}.slow5 | cut -f 8 > a.txt && slow5tools view out.slow5 | cut -f 8 > b.txt && diff a.txt b.txt  passes
+###
 #mv test//data/out/p2s/out.blow5 test//data/exp/p2s/pod5-output/${file}.blow5
 
 #file=b1

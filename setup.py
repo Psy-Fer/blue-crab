@@ -34,7 +34,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(where="src"),
     package_dir={"": "src"},
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     install_requires=install_requires,
     setup_requires=["numpy"],
     entry_points={"console_scripts":["blue-crab=blue_crab.blue_crab:main"],},
