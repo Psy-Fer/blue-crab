@@ -8,8 +8,8 @@ on:
   workflow_dispatch:  # Allow manual trigger
     inputs:
       branch:
-        description: 'Branch to clone and package'
-        default: 'dev'
+        description: 'Branch to checkout and package'
+        default: 'main'
         required: false
 
 jobs:
@@ -18,17 +18,17 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.branch }}
           submodules: recursive
       - name: make build_dir dir
         run: |
           mkdir -p build_dir && \
           cp test/package/package.sh build_dir/ && \
           chmod +x build_dir/package.sh
-      - name: Run package.sh inside Ubuntu 14.04 Docker
+      # glibc 2.28, the oldest that pyarrow>=21 (pulled in by pod5 on python>=3.10) ships wheels for
+      - name: Run package.sh inside manylinux_2_28 Docker
         run: |
-          docker run --rm -v ${{ github.workspace }}/build_dir:/host/ ubuntu:14.04 /bin/bash -c "
-            apt-get update && \
-            apt-get install -y git && \
+          docker run --rm -v ${{ github.workspace }}/build_dir:/host/ -v ${{ github.workspace }}:/repo:ro -e REPO_DIR=/repo quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
             /host/package.sh docker ${{ inputs.branch }}
           "
       - name: decompress blue-crab tar.gz
@@ -60,56 +60,15 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: build_dir/blue-crab-*.tar.gz
-  build-package-macos-x86_64:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
-      - name: make build_dir dir
-        run: |
-          mkdir -p build_dir && \
-          cp test/package/package.sh build_dir/ && \
-          chmod +x build_dir/package.sh
-      - name: Run package.sh
-        run: |
-          cd build_dir && \
-          ./package.sh "" ${{ inputs.branch }}
-      - name: decompress blue-crab tar.gz
-        run: |
-          if [ -f build_dir/blue-crab-*.tar.gz ]; then
-            cp build_dir/blue-crab-*.tar.gz .
-            echo "Decompressing blue-crab tar.gz"
-            tar -xzf blue-crab-*.tar.gz
-          else
-            echo "No blue-crab tar.gz found!"
-            exit 1
-          fi
-      - name: Get artifact filename and version
-        run: |
-          FILE=$(ls build_dir/blue-crab-*.tar.gz)
-          BASENAME=$(basename "$FILE" .tar.gz)
-          echo "ARTIFACT_NAME=$BASENAME" >> $GITHUB_ENV
-          LATEST_TAG=$(echo "$BASENAME" | cut -d'-' -f3)
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-      - name: quick run
-        run: |
-          ./blue-crab-${{ env.LATEST_TAG }}/blue-crab --help || exit 1
-      - name: Add blue-crab to PATH
-        run: echo "${{ github.workspace }}/blue-crab-${{ env.LATEST_TAG }}" >> $GITHUB_PATH
-      - name: test
-        run: test/test.sh
-      - name: Upload blue-crab tar.gz
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: build_dir/blue-crab-*.tar.gz
+  # no macos x86_64 job: lib_pod5 has not published macOS x86_64 wheels since
+  # 0.3.28 (and has no sdist), so pod5>=0.3.35 cannot be installed there
 
   build-package-macos-arm64:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.branch }}
           submodules: recursive
       - name: make build_dir dir
         run: |
@@ -119,7 +78,7 @@ jobs:
       - name: Run package.sh
         run: |
           cd build_dir && \
-          ./package.sh "" ${{ inputs.branch }}
+          REPO_DIR=${{ github.workspace }} ./package.sh "" "${{ inputs.branch }}"
       - name: decompress blue-crab tar.gz
         run: |
           if [ -f build_dir/blue-crab-*.tar.gz ]; then
