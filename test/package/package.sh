@@ -5,33 +5,47 @@ die (){
     exit 1
 }
 
-PYTHON_VERSION="python3.9"
+# blue-crab needs python>=3.10, and pyslow5 only ships wheels up to cp311,
+# so 3.11 both satisfies the package and avoids building htslib from source
+PYTHON_PATCH="3.11.13"
+PBS_RELEASE="20250712"
+PYTHON_VERSION="python${PYTHON_PATCH%.*}"
+PBS_URL="https://github.com/astral-sh/python-build-standalone/releases/download/${PBS_RELEASE}"
 PY_VENV="blue-crab-venv"
 ARCH=$(uname -m)
 OS=$(uname -s)
 REPO_LINK="https://github.com/Psy-Fer/blue-crab.git"
-BRANCH="${2:-dev}"
+BRANCH="${2:-main}"
 TOOL="blue-crab"
+MOD="blue_crab"
+# set REPO_DIR to an existing checkout to skip the clone, the workflow mounts one in
+REPO_DIR="${REPO_DIR:-}"
 
 echo "O/S:${OS} architecture:${ARCH} python:${PYTHON_VERSION}"
 
 if [ "${OS}" == "Linux"  ] && [ "${ARCH}" == "x86_64" ];
 then
-    apt-get update || die "apt-get update failed"
-    apt install wget gcc make zlib1g-dev git -y || die "system tools install failed"
-    wget https://github.com/indygreg/python-build-standalone/releases/download/20250712/cpython-3.9.23+20250712-x86_64-unknown-linux-gnu-install_only.tar.gz || die "python wget failed"
-    tar xf cpython-3.9.23+20250712-x86_64-unknown-linux-gnu-install_only.tar.gz || die "untar python failed"
+    # pyarrow (via pod5) only ships manylinux_2_28 wheels on python>=3.10,
+    # so this has to be built on a glibc>=2.28 image, see package_pypi.yml
+    if command -v dnf > /dev/null 2>&1; then
+        dnf install -y wget gcc make zlib-devel git || die "system tools install failed"
+    else
+        apt-get update || die "apt-get update failed"
+        apt install wget gcc make zlib1g-dev git -y || die "system tools install failed"
+    fi
+    PY_TARBALL="cpython-${PYTHON_PATCH}+${PBS_RELEASE}-x86_64-unknown-linux-gnu-install_only.tar.gz"
 elif [[ "${OS}" == "Darwin" && ( "${ARCH}" == "arm64" || "${ARCH}" == "aarch64" ) ]];
 then
-    wget https://github.com/indygreg/python-build-standalone/releases/download/20250712/cpython-3.9.23+20250712-aarch64-apple-darwin-install_only.tar.gz || die "python wget failed"
-    tar xf cpython-3.9.23+20250712-aarch64-apple-darwin-install_only.tar.gz || die "untar python failed"
+    PY_TARBALL="cpython-${PYTHON_PATCH}+${PBS_RELEASE}-aarch64-apple-darwin-install_only.tar.gz"
 elif [ "${OS}" == "Darwin"  ] && [ "${ARCH}" == "x86_64" ];
 then
-    wget https://github.com/indygreg/python-build-standalone/releases/download/20250712/cpython-3.9.23+20250712-x86_64-apple-darwin-install_only.tar.gz || die "python wget failed"
-    tar xf cpython-3.9.23+20250712-x86_64-apple-darwin-install_only.tar.gz || die "untar python failed"
+    PY_TARBALL="cpython-${PYTHON_PATCH}+${PBS_RELEASE}-x86_64-apple-darwin-install_only.tar.gz"
 else
     die "Unsupported O/S ${OS} or architecture ${ARCH} for packaging."
 fi
+
+wget ${PBS_URL}/${PY_TARBALL} || die "python wget failed"
+tar xf ${PY_TARBALL} || die "untar python failed"
 
 python/bin/${PYTHON_VERSION} -m venv ${PY_VENV} || die "create venv failed"
 source ${PY_VENV}/bin/activate || die "sourcing venv failed"
@@ -47,25 +61,50 @@ else
     pip install ${TOOL} --no-cache || die "pip install ${TOOL} failed"
 fi
 
-find ./ -name __pycache__ -type d | xargs rm -r || die "removing pycache failed"
+# name the tarball after what pip actually installed, not the newest git tag,
+# as pip quietly falls back to an older release when the current one is not installable
+VERSION=$(pip show ${TOOL} | awk '/^Version:/ {print $2}')
+test -z "${VERSION}" && die "could not determine installed ${TOOL} version"
+echo "installed ${TOOL} version: ${VERSION}"
+
+find ./ -name __pycache__ -type d -prune -exec rm -rf {} + || die "removing pycache failed"
 mv ${PY_VENV}/bin/${TOOL} python/bin/ || die "moving ${TOOL} to bin failed"
 cp -r ${PY_VENV}/lib/${PYTHON_VERSION}/site-packages/* python/lib/${PYTHON_VERSION}/site-packages/ || die "copying site-packages failed"
 
 if [ "${OS}" == "Linux"  ]; then
-    sed -i "s/${PY_VENV}\/bin\/${PYTHON_VERSION}/\/usr\/bin\/env ${PYTHON_VERSION}/g" python/bin/${TOOL}  || die "changing headerline failed"
+    sed -i "1s|.*|#!/usr/bin/env ${PYTHON_VERSION}|" python/bin/${TOOL}  || die "changing headerline failed"
 elif [ "${OS}" == "Darwin"  ]; then
     sed -i '' "1s/.*/#\!\/usr\/bin\/env ${PYTHON_VERSION}/" python/bin/${TOOL} || die "changing headerline failed"
 fi
 
-git clone --depth 1 --branch ${BRANCH} ${REPO_LINK} || die "Failed to clone ${TOOL}"
-cp -r ${TOOL}/docs python || die "docs copy failed"
-cp ${TOOL}/test/package/${TOOL} python || die "script copy failed" 
-cp ${TOOL}/LICENSE python || die "license copy failed"
-cp ${TOOL}/README.md python || die "readme copy failed"
+if [ -n "${REPO_DIR}" ] && [ -d "${REPO_DIR}/docs" ]; then
+    echo "using local source: ${REPO_DIR}"
+    SRC_DIR="${REPO_DIR}"
+else
+    git clone --depth 1 --branch "${BRANCH}" ${REPO_LINK} || die "Failed to clone ${TOOL} branch ${BRANCH}"
+    SRC_DIR="${TOOL}"
+fi
 
-rm -rf ${TOOL} || die "remove cloned dir failed"
+# catch a silent pip fallback before it gets tarred up and released
+SRC_VERSION=$(sed -n 's/^__version__[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' ${SRC_DIR}/src/${MOD}/_version.py)
+test -z "${SRC_VERSION}" && die "could not read version from ${SRC_DIR}/src/${MOD}/_version.py"
+if [ "${SRC_VERSION}" != "${VERSION}" ]; then
+    if [[ "$1" == "test_pypi" ]]; then
+        echo >&2 "warning: source is ${SRC_VERSION} but pip installed ${VERSION}"
+    else
+        die "version mismatch: source is ${SRC_VERSION} but pip installed ${VERSION} - is ${TOOL} ${SRC_VERSION} published and installable on ${PYTHON_VERSION}?"
+    fi
+fi
 
-LATEST_TAG=$(git ls-remote --tags ${REPO_LINK} | cut -d/ -f3 | grep -v '\^{}' | sort -V | tail -n1)
+cp -r ${SRC_DIR}/docs python || die "docs copy failed"
+cp ${SRC_DIR}/test/package/${TOOL} python || die "script copy failed"
+cp ${SRC_DIR}/LICENSE python || die "license copy failed"
+cp ${SRC_DIR}/README.md python || die "readme copy failed"
+
+if [ "${SRC_DIR}" == "${TOOL}" ]; then
+    rm -rf ${TOOL} || die "remove cloned dir failed"
+fi
+
 OS_NAME="linux"
 if [ "${OS}" == "Darwin"  ]; then
     OS_NAME="macos"
@@ -74,8 +113,8 @@ ARCH_NAME="x86_64"
 if [ "${ARCH}" == "arm64"  ] || [ "${ARCH}" == "aarch64" ]; then
     ARCH_NAME="arm64"
 fi
-TOOL_NAME=${TOOL}-${LATEST_TAG}
-TAR_NAME=${TOOL}-${LATEST_TAG}-${ARCH_NAME}-${OS_NAME}-binaries.tar.gz
+TOOL_NAME=${TOOL}-v${VERSION}
+TAR_NAME=${TOOL_NAME}-${ARCH_NAME}-${OS_NAME}-binaries.tar.gz
 echo "TOOL_NAME: ${TOOL_NAME}"
 echo "TAR_NAME: ${TAR_NAME}"
 
