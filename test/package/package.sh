@@ -5,8 +5,8 @@ die (){
     exit 1
 }
 
-# blue-crab needs python>=3.10, and pyslow5 only ships wheels up to cp311,
-# so 3.11 both satisfies the package and avoids building htslib from source
+# blue-crab needs python>=3.10, and pyslow5 ships no wheels past cp311,
+# so 3.11 is the newest version that satisfies both
 PYTHON_PATCH="3.11.13"
 PBS_RELEASE="20250712"
 PYTHON_VERSION="python${PYTHON_PATCH%.*}"
@@ -50,8 +50,8 @@ tar xf ${PY_TARBALL} || die "untar python failed"
 python/bin/${PYTHON_VERSION} -m venv ${PY_VENV} || die "create venv failed"
 source ${PY_VENV}/bin/activate || die "sourcing venv failed"
 pip install --upgrade pip || die "upgrade pip failed"
+# pyslow5 has no macOS wheels, so it builds slow5lib from sdist there
 export CC=gcc
-export HTSLIB_CONFIGURE_OPTIONS="--enable-bz2=no --enable-lzma=no --with-libdeflate=no --enable-libcurl=no  --enable-gcs=no --enable-s3=no"
 
 if [[ "$1" == "test_pypi" ]]; then
     echo "Installing from Test PyPI"
